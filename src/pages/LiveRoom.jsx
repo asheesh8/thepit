@@ -157,11 +157,11 @@ export default function LiveRoom({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', alignItems: 'flex-start', marginBottom: '18px' }}>
+      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '18px' }}>
+        <div className="room-header">
           <div>
             <Link to="/rooms" style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em' }}>BACK TO ROOMS</Link>
-            <h1 style={{ fontSize: '3rem', lineHeight: 1, marginTop: '8px' }}>{room.title}</h1>
+            <h1 style={{ fontSize: '2.35rem', lineHeight: 1, marginTop: '6px' }}>{room.title}</h1>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
               <span className="tag" style={{ color: type.color }}>{type.label}</span>
               <span className="tag" style={{ color: room.status === 'live' ? 'var(--green)' : 'var(--dim)' }}>{room.status}</span>
@@ -169,7 +169,7 @@ export default function LiveRoom({ session }) {
               <span className="tag" style={{ color: 'var(--dim)' }}>{participants.length} PRESENT</span>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div className="room-header-actions">
             <button onClick={copyInvite} className="btn" style={{ padding: '9px 12px', fontSize: '10px' }}>COPY INVITE</button>
             {isHost && room.status === 'live' && <button onClick={completeRoom} className="btn btn-green" style={{ padding: '9px 12px', fontSize: '10px' }}>MARK COMPLETE</button>}
           </div>

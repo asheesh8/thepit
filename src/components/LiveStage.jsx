@@ -34,7 +34,13 @@ export default function LiveStage({ localStream, remoteStreams, mediaState, rtc 
 
   const openMenu = (event, tile) => {
     event.preventDefault()
-    setMenu({ tile, x: event.clientX, y: event.clientY })
+    const menuWidth = 220
+    const menuHeight = tile.id === 'local' ? 120 : 190
+    setMenu({
+      tile,
+      x: Math.min(event.clientX, window.innerWidth - menuWidth - 12),
+      y: Math.min(event.clientY, window.innerHeight - menuHeight - 12),
+    })
   }
 
   const closeMenu = () => setMenu(null)
@@ -55,6 +61,7 @@ export default function LiveStage({ localStream, remoteStreams, mediaState, rtc 
           orderedTiles.map((tile, index) => {
             const prefs = { muted: false, volume: 1, ...audioPrefs[tile.id] }
             const isLocal = tile.id === 'local'
+            const isFeatured = !!pinnedId && index === 0
             return (
             <ParticipantTile
               key={tile.id}
@@ -63,7 +70,7 @@ export default function LiveStage({ localStream, remoteStreams, mediaState, rtc 
               muted={tile.muted || prefs.muted}
               volume={isLocal ? 0 : prefs.volume}
               mirror={!mediaState.sharing || tile.id !== 'local'}
-              featured={orderedTiles.length <= 2 || (pinnedId && index === 0)}
+              featured={isFeatured}
               active={tile.active}
               pinned={tile.id === pinnedId}
               onContextMenu={event => openMenu(event, tile)}
