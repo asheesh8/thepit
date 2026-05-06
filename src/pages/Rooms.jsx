@@ -21,7 +21,7 @@ export default function Rooms({ session }) {
     setError('')
     const { data, error: loadError } = await supabase
       .from('live_rooms')
-      .select('*, profiles(username, avatar_url), live_room_presence(user_id, last_seen, profiles(username, avatar_url))')
+      .select('*, profiles!live_rooms_host_id_profiles_fkey(username, avatar_url), live_room_presence(user_id, last_seen, profiles!live_room_presence_user_id_profiles_fkey(username, avatar_url))')
       .order('created_at', { ascending: false })
       .limit(40)
     if (loadError) setError(loadError.message)

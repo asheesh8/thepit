@@ -86,7 +86,7 @@ export default function LiveRoom({ session }) {
     const [{ data: roomData, error: roomError }, { data: messageData }, { data: actionData }] = await Promise.all([
       supabase
         .from('live_rooms')
-        .select('*, profiles(username, avatar_url), entries(*, profiles(username), strategies(name)), strategies(*)')
+        .select('*, profiles!live_rooms_host_id_profiles_fkey(username, avatar_url), entries(*, profiles(username), strategies(name)), strategies(*)')
         .eq('id', id)
         .single(),
       supabase
@@ -112,7 +112,7 @@ export default function LiveRoom({ session }) {
   }
 
   const completeRoom = async () => {
-    const { data } = await supabase.from('live_rooms').update({ status: 'complete', updated_at: new Date().toISOString() }).eq('id', id).select('*, profiles(username, avatar_url), entries(*, profiles(username), strategies(name)), strategies(*)').single()
+    const { data } = await supabase.from('live_rooms').update({ status: 'complete', updated_at: new Date().toISOString() }).eq('id', id).select('*, profiles!live_rooms_host_id_profiles_fkey(username, avatar_url), entries(*, profiles(username), strategies(name)), strategies(*)').single()
     if (data) {
       setRoom(data)
       broadcastRefresh({ kind: 'room' })

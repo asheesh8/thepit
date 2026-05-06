@@ -8,6 +8,7 @@ export default function Navbar({ session }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [profile, setProfile] = useState(null)
+  const [showMore, setShowMore] = useState(false)
   const { theme, toggle } = useTheme()
 
   useEffect(() => {
@@ -26,6 +27,31 @@ export default function Navbar({ session }) {
   }
 
   const isActive = (path) => location.pathname === path
+  const primaryLinks = [
+    { path: '/feed', label: 'FLOOR' },
+    { path: '/journal', label: 'JOURNAL' },
+    { path: '/strategies', label: 'STRATEGIES' },
+    { path: '/rooms', label: 'ROOMS' },
+    { path: '/new', label: '+ LOG TRADE' },
+  ]
+  const moreLinks = [
+    { path: '/backtesting', label: 'BACKTEST' },
+    { path: '/calendar', label: 'CALENDAR' },
+    { path: '/review', label: 'REVIEW' },
+    { path: '/search', label: 'SEARCH' },
+    { path: '/connections', label: 'CONNECTIONS' },
+  ]
+  const moreActive = moreLinks.some(link => isActive(link.path))
+
+  const navLinkStyle = (active) => ({
+    padding: '6px 14px',
+    fontFamily: 'Space Mono',
+    fontSize: '10px',
+    letterSpacing: '0.1em',
+    color: active ? 'var(--text)' : 'var(--dim)',
+    borderBottom: active ? '1px solid var(--red)' : '1px solid transparent',
+    transition: 'all 0.15s',
+  })
 
   return (
     <nav style={{
@@ -43,30 +69,58 @@ export default function Navbar({ session }) {
       </Link>
 
       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-        {[
-          { path: '/feed', label: 'FLOOR' },
-          { path: '/journal', label: 'JOURNAL' },
-          { path: '/strategies', label: 'STRATEGIES' },
-          { path: '/backtesting', label: 'BACKTEST' },
-          { path: '/calendar', label: 'CALENDAR' },
-          { path: '/review', label: 'REVIEW' },
-          { path: '/rooms', label: 'ROOMS' },
-          { path: '/search', label: 'SEARCH' },
-          { path: '/connections', label: 'CONNECTIONS' },
-          { path: '/new', label: '+ LOG TRADE' },
-        ].map(({ path, label }) => (
-          <Link key={path} to={path} style={{
-            padding: '6px 14px',
-            fontFamily: 'Space Mono',
-            fontSize: '10px',
-            letterSpacing: '0.1em',
-            color: isActive(path) ? 'var(--text)' : 'var(--dim)',
-            borderBottom: isActive(path) ? '1px solid var(--red)' : '1px solid transparent',
-            transition: 'all 0.15s',
-          }}>
+        {primaryLinks.map(({ path, label }) => (
+          <Link key={path} to={path} style={navLinkStyle(isActive(path))}>
             {label}
           </Link>
         ))}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowMore(prev => !prev)}
+            style={{
+              ...navLinkStyle(moreActive),
+              background: 'none',
+              borderTop: 'none',
+              borderLeft: 'none',
+              borderRight: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            MORE
+          </button>
+          {showMore && (
+            <div style={{
+              position: 'absolute',
+              top: '32px',
+              right: 0,
+              minWidth: '180px',
+              background: 'var(--dark)',
+              border: '1px solid var(--border)',
+              padding: '8px',
+              zIndex: 200,
+              boxShadow: '0 18px 40px rgba(0,0,0,0.35)',
+            }}>
+              {moreLinks.map(({ path, label }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  onClick={() => setShowMore(false)}
+                  style={{
+                    display: 'block',
+                    padding: '10px 12px',
+                    fontFamily: 'Space Mono',
+                    fontSize: '10px',
+                    letterSpacing: '0.1em',
+                    color: isActive(path) ? 'var(--red)' : 'var(--dim)',
+                    borderBottom: '1px solid var(--border)',
+                  }}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
