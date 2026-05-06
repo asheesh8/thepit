@@ -25,7 +25,7 @@ export default function RoomCreateForm({ session, onCreate }) {
   const [form, setForm] = useState({
     title: '',
     room_type: 'trade_review',
-    is_public: true,
+    room_password: '',
     linked_entry_id: '',
     linked_strategy_id: '',
     agenda: '',
@@ -66,7 +66,7 @@ export default function RoomCreateForm({ session, onCreate }) {
         <label style={labelStyle}>ROOM TITLE</label>
         <input value={form.title} onChange={event => set('title', event.target.value)} required placeholder="NQ London review desk" style={inputStyle} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '12px' }}>
         <div>
           <label style={labelStyle}>ROOM TYPE</label>
           <select value={form.room_type} onChange={event => set('room_type', event.target.value)} style={inputStyle}>
@@ -74,10 +74,8 @@ export default function RoomCreateForm({ session, onCreate }) {
           </select>
         </div>
         <div>
-          <label style={labelStyle}>VISIBILITY</label>
-          <button type="button" onClick={() => set('is_public', !form.is_public)} className={`btn ${form.is_public ? 'btn-green' : ''}`} style={{ width: '100%', justifyContent: 'center', padding: '11px', fontSize: '10px' }}>
-            {form.is_public ? 'PUBLIC' : 'PRIVATE'}
-          </button>
+          <label style={labelStyle}>PASSWORD OPTIONAL</label>
+          <input value={form.room_password} onChange={event => set('room_password', event.target.value)} placeholder="leave open or set code" style={inputStyle} />
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

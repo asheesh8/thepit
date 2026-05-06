@@ -19,6 +19,9 @@ export default function LiveRoom({ session }) {
   const [messages, setMessages] = useState([])
   const [actions, setActions] = useState([])
   const [activeTool, setActiveTool] = useState('chat')
+  const [passwordInput, setPasswordInput] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [roomUnlocked, setRoomUnlocked] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -32,6 +35,7 @@ export default function LiveRoom({ session }) {
   const rtc = useWebRTCRoom({ userId: session.user.id, participants, sendSignal })
   const type = getRoomType(room?.room_type)
   const isHost = room?.host_id === session.user.id
+  const needsPassword = !!room?.room_password && !isHost && !roomUnlocked
   const tools = [
     { key: 'chat', label: 'CHAT' },
     { key: 'notes', label: 'NOTES' },
@@ -42,6 +46,32 @@ export default function LiveRoom({ session }) {
   useEffect(() => {
     loadRoom()
   }, [id])
+
+  useEffect(() => {
+    if (!room) return
+    const stored = sessionStorage.getItem(`room-unlocked:${room.id}`) === 'true'
+    setRoomUnlocked(!room.room_password || room.host_id === session.user.id || stored)
+  }, [room?.id, room?.room_password, room?.host_id, session.user.id])
+
+  useEffect(() => {
+    if (!room || needsPassword) return
+
+    const markPresence = async () => {
+      await supabase.from('live_room_presence').upsert({
+        room_id: room.id,
+        user_id: session.user.id,
+        last_seen: new Date().toISOString(),
+      })
+    }
+
+    markPresence()
+    const interval = setInterval(markPresence, 30000)
+
+    return () => {
+      clearInterval(interval)
+      supabase.from('live_room_presence').delete().eq('room_id', room.id).eq('user_id', session.user.id)
+    }
+  }, [room?.id, needsPassword, session.user.id])
 
   useEffect(() => {
     if (pendingSignals.length === 0) return
@@ -56,7 +86,7 @@ export default function LiveRoom({ session }) {
     const [{ data: roomData, error: roomError }, { data: messageData }, { data: actionData }] = await Promise.all([
       supabase
         .from('live_rooms')
-        .select('*, profiles(username), entries(*, profiles(username), strategies(name)), strategies(*)')
+        .select('*, profiles(username, avatar_url), entries(*, profiles(username), strategies(name)), strategies(*)')
         .eq('id', id)
         .single(),
       supabase
@@ -82,15 +112,49 @@ export default function LiveRoom({ session }) {
   }
 
   const completeRoom = async () => {
-    const { data } = await supabase.from('live_rooms').update({ status: 'complete', updated_at: new Date().toISOString() }).eq('id', id).select('*, profiles(username), entries(*, profiles(username), strategies(name)), strategies(*)').single()
+    const { data } = await supabase.from('live_rooms').update({ status: 'complete', updated_at: new Date().toISOString() }).eq('id', id).select('*, profiles(username, avatar_url), entries(*, profiles(username), strategies(name)), strategies(*)').single()
     if (data) {
       setRoom(data)
       broadcastRefresh({ kind: 'room' })
     }
   }
 
+  const unlockRoom = (event) => {
+    event.preventDefault()
+    if (passwordInput === room.room_password) {
+      sessionStorage.setItem(`room-unlocked:${room.id}`, 'true')
+      setRoomUnlocked(true)
+      setPasswordError('')
+      return
+    }
+    setPasswordError('Wrong room password.')
+  }
+
   if (loading) return <div style={{ paddingTop: '100px', textAlign: 'center', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)' }}>LOADING ROOM...</div>
   if (error || !room) return <div style={{ paddingTop: '100px', textAlign: 'center', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--red)' }}>{error || 'ROOM NOT FOUND'}</div>
+
+  if (needsPassword) {
+    return (
+      <div style={{ paddingTop: '56px', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 24px' }}>
+        <form onSubmit={unlockRoom} className="card" style={{ width: '100%', maxWidth: '420px', padding: '24px' }}>
+          <h1 style={{ fontSize: '2.7rem', lineHeight: 1, marginBottom: '8px' }}>ROOM LOCKED</h1>
+          <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginBottom: '18px' }}>
+            ENTER THE ROOM PASSWORD TO JOIN.
+          </p>
+          <input
+            value={passwordInput}
+            onChange={event => setPasswordInput(event.target.value)}
+            type="password"
+            autoFocus
+            placeholder="room password"
+            style={{ width: '100%', background: 'var(--black)', border: '1px solid var(--border)', color: 'var(--text)', padding: '12px 14px', outline: 'none', marginBottom: '12px' }}
+          />
+          {passwordError && <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', marginBottom: '12px' }}>{passwordError}</div>}
+          <button type="submit" className="btn btn-red" style={{ width: '100%', justifyContent: 'center' }}>JOIN ROOM</button>
+        </form>
+      </div>
+    )
+  }
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>

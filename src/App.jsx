@@ -17,6 +17,7 @@ import Review from './pages/Review'
 import Rooms from './pages/Rooms'
 import LiveRoom from './pages/LiveRoom'
 import Navbar from './components/Navbar'
+import RoomSidebarWidget from './components/RoomSidebarWidget'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -42,6 +43,7 @@ export default function App() {
   return (
     <BrowserRouter>
       {session && <Navbar session={session} />}
+      {session && <RoomSidebarWidget />}
       <Routes>
         <Route path="/" element={session ? <Navigate to="/feed" /> : <Landing />} />
         <Route path="/auth" element={session ? <Navigate to="/feed" /> : <Auth />} />

@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/immutability */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -21,19 +21,22 @@ export default function Rooms({ session }) {
     setError('')
     const { data, error: loadError } = await supabase
       .from('live_rooms')
-      .select('*, profiles(username)')
-      .or(`is_public.eq.true,host_id.eq.${session.user.id}`)
+      .select('*, profiles(username, avatar_url), live_room_presence(user_id, last_seen, profiles(username, avatar_url))')
       .order('created_at', { ascending: false })
       .limit(40)
     if (loadError) setError(loadError.message)
-    setRooms(data || [])
+    const cutoff = Date.now() - 5 * 60 * 1000
+    setRooms((data || []).map(room => ({
+      ...room,
+      active_presence: (room.live_room_presence || []).filter(row => new Date(row.last_seen).getTime() > cutoff),
+    })))
     setLoading(false)
   }
 
   const createRoom = async (payload) => {
     const { data, error: insertError } = await supabase
       .from('live_rooms')
-      .insert({ ...payload, host_id: session.user.id, status: 'live' })
+      .insert({ ...payload, room_password: payload.room_password?.trim() || '', is_public: true, host_id: session.user.id, status: 'live' })
       .select('id')
       .single()
     if (insertError) return { error: insertError.message }

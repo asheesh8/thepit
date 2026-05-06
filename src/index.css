@@ -124,3 +124,21 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 }
 
 .fade-in { animation: fadeIn 0.3s ease forwards; }
+
+.rooms-side-rail {
+  position: fixed;
+  right: 28px;
+  top: 96px;
+  width: 250px;
+  max-height: calc(100vh - 124px);
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--border);
+  background: rgba(34, 34, 34, 0.82);
+  backdrop-filter: blur(12px);
+  z-index: 50;
+}
+
+@media (max-width: 1480px) {
+  .rooms-side-rail { display: none; }
+}
