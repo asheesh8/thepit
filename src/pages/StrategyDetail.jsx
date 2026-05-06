@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import EntryCard from '../components/EntryCard'
 import StrategyForm from '../components/StrategyForm'
 import { EMPTY_STRATEGY, formatPosterText, STRATEGY_FIELDS } from '../lib/discipline'
+import { isPublicStrategyViewable } from '../lib/community'
 
 function posterSection(title, lines) {
   if (lines.length === 0) return ''
@@ -33,6 +34,7 @@ export default function StrategyDetail({ session }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const isOwner = strategy?.user_id === session.user.id
 
   useEffect(() => {
     loadStrategy()
@@ -42,12 +44,17 @@ export default function StrategyDetail({ session }) {
     setLoading(true)
     setError('')
     const [{ data: strategyData, error: strategyError }, { data: entryData }] = await Promise.all([
-      supabase.from('strategies').select('*').eq('id', id).eq('user_id', session.user.id).single(),
-      supabase.from('entries').select('*, profiles(username), strategies(name)').eq('strategy_id', id).order('created_at', { ascending: false }),
+      supabase.from('strategies').select('*, profiles(username)').eq('id', id).single(),
+      supabase.from('entries').select('*, profiles(username), strategies(name)').eq('strategy_id', id).eq('is_public', true).order('created_at', { ascending: false }),
     ])
     if (strategyError) setError(strategyError.message)
-    setStrategy(strategyData)
-    setForm({ ...EMPTY_STRATEGY, ...(strategyData || {}) })
+    if (strategyData && !isPublicStrategyViewable(strategyData, session.user.id)) {
+      setStrategy(null)
+      setError('Strategy is private.')
+    } else {
+      setStrategy(strategyData)
+      setForm({ ...EMPTY_STRATEGY, ...(strategyData || {}) })
+    }
     setEntries(entryData || [])
     setLoading(false)
   }
@@ -70,6 +77,38 @@ export default function StrategyDetail({ session }) {
       setForm({ ...EMPTY_STRATEGY, ...data })
     }
     setSaving(false)
+  }
+
+  const togglePublic = async () => {
+    const { data, error: updateError } = await supabase
+      .from('strategies')
+      .update({ is_public: !strategy.is_public, updated_at: new Date().toISOString() })
+      .eq('id', strategy.id)
+      .eq('user_id', session.user.id)
+      .select('*, profiles(username)')
+      .single()
+    if (updateError) setError(updateError.message)
+    if (data) setStrategy(data)
+  }
+
+  const cloneStrategy = async () => {
+    const copy = Object.fromEntries(STRATEGY_FIELDS.map(field => [field.key, strategy[field.key] || '']))
+    const { data, error: cloneError } = await supabase
+      .from('strategies')
+      .insert({
+        ...copy,
+        name: `Copy of ${strategy.name}`,
+        user_id: session.user.id,
+        is_public: false,
+        source_strategy_id: strategy.id,
+      })
+      .select('id')
+      .single()
+    if (cloneError) {
+      setError(cloneError.message)
+      return
+    }
+    if (data) window.location.href = `/strategies/${data.id}`
   }
 
   const posterHtml = useMemo(() => {
@@ -138,14 +177,36 @@ export default function StrategyDetail({ session }) {
               {(strategy.market || 'MARKET TBD').toUpperCase()} {strategy.timeframes ? ` / ${strategy.timeframes.toUpperCase()}` : ''}
             </p>
           </div>
-          <button onClick={downloadPoster} className="btn btn-green" style={{ fontSize: '11px', padding: '10px 18px' }}>DOWNLOAD POSTER</button>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {isOwner ? (
+              <button onClick={togglePublic} className={`btn ${strategy.is_public ? 'btn-green' : ''}`} style={{ fontSize: '11px', padding: '10px 18px' }}>
+                {strategy.is_public ? 'PUBLIC' : 'MAKE PUBLIC'}
+              </button>
+            ) : (
+              <button onClick={cloneStrategy} className="btn btn-red" style={{ fontSize: '11px', padding: '10px 18px' }}>CLONE STRATEGY</button>
+            )}
+            <button onClick={downloadPoster} className="btn btn-green" style={{ fontSize: '11px', padding: '10px 18px' }}>DOWNLOAD POSTER</button>
+          </div>
         </div>
 
         {error && <div className="card" style={{ padding: '14px', marginBottom: '18px', color: 'var(--gold)', fontFamily: 'Space Mono', fontSize: '10px' }}>{error}</div>}
 
-        <div className="card" style={{ padding: '22px', marginBottom: '28px' }}>
-          <StrategyForm value={form} onChange={setForm} onSubmit={saveStrategy} loading={saving} />
-        </div>
+        {isOwner ? (
+          <div className="card" style={{ padding: '22px', marginBottom: '28px' }}>
+            <StrategyForm value={form} onChange={setForm} onSubmit={saveStrategy} loading={saving} />
+          </div>
+        ) : (
+          <div className="card" style={{ padding: '22px', marginBottom: '28px' }}>
+            {STRATEGY_FIELDS.filter(field => field.key !== 'name').map(field => (
+              strategy[field.key] ? (
+                <section key={field.key} style={{ marginBottom: '18px' }}>
+                  <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--red)', letterSpacing: '0.1em', marginBottom: '6px' }}>{field.label.toUpperCase()}</div>
+                  <p style={{ fontSize: '14px', color: 'var(--text)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{strategy[field.key]}</p>
+                </section>
+              ) : null
+            ))}
+          </div>
+        )}
 
         <h2 style={{ fontSize: '2rem', marginBottom: '12px' }}>LINKED TRADES</h2>
         {entries.length === 0 ? (

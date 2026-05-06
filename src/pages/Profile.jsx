@@ -5,6 +5,9 @@ import { supabase } from '../lib/supabase'
 import EntryCard from '../components/EntryCard'
 import BadgeStrip from '../components/BadgeStrip'
 import { deriveBadgeKeys } from '../lib/discipline'
+import { calculateProfileStats } from '../lib/community'
+import ProfileStatsStrip from '../components/ProfileStatsStrip'
+import PublicStrategyPanel from '../components/PublicStrategyPanel'
 
 const CATEGORIES = ['mentorship', 'psychology', 'strategy', 'tools', 'other']
 const CATEGORY_COLORS = {
@@ -17,10 +20,12 @@ export default function Profile({ session }) {
   const [profile, setProfile] = useState(null)
   const [entries, setEntries] = useState([])
   const [resources, setResources] = useState([])
+  const [publicStrategies, setPublicStrategies] = useState([])
+  const [profileStats, setProfileStats] = useState(null)
   const [isOwn, setIsOwn] = useState(false)
   const [isFollowing, setIsFollowing] = useState(false)
   const [followerCount, setFollowerCount] = useState(0)
-  const [tab, setTab] = useState('trades') // trades | resources
+  const [tab, setTab] = useState('trades') // trades | strategies | resources
   const [badges, setBadges] = useState({ badgeKeys: [], currentStreak: 0 })
   const [loading, setLoading] = useState(true)
 
@@ -79,10 +84,12 @@ export default function Profile({ session }) {
 
     const [{ data: allEntries }, { data: strategies }, { data: reflections }] = await Promise.all([
       supabase.from('entries').select('*, strategies(name)').eq('user_id', prof.id),
-      supabase.from('strategies').select('id').eq('user_id', prof.id),
+      supabase.from('strategies').select('*').eq('user_id', prof.id),
       supabase.from('backtest_reflections').select('*').eq('user_id', prof.id),
     ])
     setBadges(deriveBadgeKeys({ entries: allEntries || [], strategies: strategies || [], reflections: reflections || [] }))
+    setProfileStats(calculateProfileStats({ entries: allEntries || [], strategies: strategies || [], reflections: reflections || [] }))
+    setPublicStrategies((strategies || []).filter(strategy => strategy.is_public || prof.id === session.user.id))
 
     // resources
     const { data: resData } = await supabase
@@ -157,11 +164,12 @@ export default function Profile({ session }) {
           <div style={{ marginTop: '18px' }}>
             <BadgeStrip badgeKeys={badges.badgeKeys} currentStreak={badges.currentStreak} compact />
           </div>
+          {profileStats && <ProfileStatsStrip stats={profileStats} />}
         </div>
 
         {/* tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid #242424', marginBottom: '24px' }}>
-          {[['trades', 'TRADES'], ['resources', 'RESOURCE LIBRARY']].map(([key, label]) => (
+          {[['trades', 'TRADES'], ['strategies', 'STRATEGIES'], ['resources', 'RESOURCE LIBRARY']].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)} style={{
               padding: '10px 20px', background: 'none', border: 'none', cursor: 'pointer',
               fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.08em',
@@ -183,6 +191,10 @@ export default function Profile({ session }) {
           ) : entries.map(entry => (
             <EntryCard key={entry.id} entry={entry} session={session} />
           ))
+        )}
+
+        {tab === 'strategies' && (
+          <PublicStrategyPanel strategies={publicStrategies} />
         )}
 
         {/* resources tab */}

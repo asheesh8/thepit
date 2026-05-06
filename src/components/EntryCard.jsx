@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
 import { getTradeContext } from '../lib/discipline'
+import CalloutThreadList from './CalloutThreadList'
 
 export default function EntryCard({ entry, session, showActions = true }) {
   const [comments, setComments] = useState([])
   const [showComments, setShowComments] = useState(false)
   const [commentText, setCommentText] = useState('')
+  const [showCallouts, setShowCallouts] = useState(false)
   const [reactions, setReactions] = useState({ props: entry.props_count || 0, callout: entry.callout_count || 0 })
   const [userReaction, setUserReaction] = useState(entry.user_reaction || null)
   const [pitBossLoading, setPitBossLoading] = useState(false)
@@ -197,6 +199,9 @@ Give your honest assessment:`
           }}>
             👁 CALLOUT {reactions.callout > 0 && reactions.callout}
           </button>
+          <button onClick={() => setShowCallouts(prev => !prev)} className="btn btn-gold" style={{ padding: '6px 12px', fontSize: '10px' }}>
+            REVIEW THREADS
+          </button>
           <button onClick={loadComments} className="btn" style={{ padding: '6px 12px', fontSize: '10px', color: '#444440', borderColor: '#242424' }}>
             💬 {showComments ? 'HIDE' : 'COMMENTS'}
           </button>
@@ -207,6 +212,8 @@ Give your honest assessment:`
           )}
         </div>
       )}
+
+      {showCallouts && <CalloutThreadList entry={entry} session={session} />}
 
       {/* comments section */}
       {showComments && (

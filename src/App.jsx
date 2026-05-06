@@ -13,6 +13,7 @@ import Strategies from './pages/Strategies'
 import StrategyDetail from './pages/StrategyDetail'
 import Backtesting from './pages/Backtesting'
 import Calendar from './pages/Calendar'
+import Review from './pages/Review'
 import Navbar from './components/Navbar'
 
 export default function App() {
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="/strategies/:id" element={session ? <StrategyDetail session={session} /> : <Navigate to="/" />} />
         <Route path="/backtesting" element={session ? <Backtesting session={session} /> : <Navigate to="/" />} />
         <Route path="/calendar" element={session ? <Calendar session={session} /> : <Navigate to="/" />} />
+        <Route path="/review" element={session ? <Review session={session} /> : <Navigate to="/" />} />
         <Route path="/profile/:username" element={session ? <Profile session={session} /> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

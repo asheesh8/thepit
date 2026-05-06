@@ -10,7 +10,9 @@ export default function StrategyCard({ strategy, entryCount = 0, reflectionCount
             {(strategy.market || 'MARKET TBD').toUpperCase()} {strategy.timeframes ? ` / ${strategy.timeframes.toUpperCase()}` : ''}
           </div>
         </div>
-        <span className="tag" style={{ color: 'var(--red)', whiteSpace: 'nowrap' }}>PLAYBOOK</span>
+        <span className="tag" style={{ color: strategy.is_public ? 'var(--green)' : 'var(--red)', whiteSpace: 'nowrap' }}>
+          {strategy.is_public ? 'PUBLIC' : 'PRIVATE'}
+        </span>
       </div>
       <p style={{ fontSize: '13px', color: 'var(--dim)', lineHeight: 1.6, marginBottom: '14px' }}>
         {strategy.setup_conditions || strategy.entry_rules || 'No rules written yet. Open this strategy and make it obeyable.'}
