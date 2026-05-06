@@ -9,6 +9,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
   const localVideoRef = useRef(null)
   const peersRef = useRef(new Map())
   const localStreamRef = useRef(null)
+  const cameraTrackRef = useRef(null)
   const [localStream, setLocalStream] = useState(null)
   const [remoteStreams, setRemoteStreams] = useState([])
   const [mediaState, setMediaState] = useState({ joined: false, mic: true, camera: true, sharing: false, error: '' })
@@ -19,8 +20,16 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
 
   const attachLocalStream = (stream) => {
     localStreamRef.current = stream
+    cameraTrackRef.current = stream.getVideoTracks()[0] || null
     setLocalStream(stream)
     if (localVideoRef.current) localVideoRef.current.srcObject = stream
+  }
+
+  const replaceVideoTrack = (track) => {
+    peersRef.current.forEach(peer => {
+      const sender = peer.getSenders().find(item => item.track?.kind === 'video')
+      if (sender) sender.replaceTrack(track)
+    })
   }
 
   const getOrCreatePeer = (peerId) => {
@@ -73,6 +82,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     peersRef.current.forEach(peer => peer.close())
     peersRef.current.clear()
     localStreamRef.current = null
+    cameraTrackRef.current = null
     setLocalStream(null)
     setRemoteStreams([])
     setMediaState({ joined: false, mic: true, camera: true, sharing: false, error: '' })
@@ -97,15 +107,20 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
       const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
       const screenTrack = displayStream.getVideoTracks()[0]
       const currentVideo = localStreamRef.current?.getVideoTracks()[0]
-      peersRef.current.forEach(peer => {
-        const sender = peer.getSenders().find(item => item.track?.kind === 'video')
-        if (sender) sender.replaceTrack(screenTrack)
-      })
+      replaceVideoTrack(screenTrack)
       if (currentVideo) localStreamRef.current.removeTrack(currentVideo)
       localStreamRef.current.addTrack(screenTrack)
+      setLocalStream(new MediaStream(localStreamRef.current.getTracks()))
       setMediaState(prev => ({ ...prev, sharing: true }))
       screenTrack.onended = () => {
-        setMediaState(prev => ({ ...prev, sharing: false }))
+        const cameraTrack = cameraTrackRef.current
+        if (cameraTrack && localStreamRef.current) {
+          localStreamRef.current.removeTrack(screenTrack)
+          localStreamRef.current.addTrack(cameraTrack)
+          replaceVideoTrack(cameraTrack)
+          setLocalStream(new MediaStream(localStreamRef.current.getTracks()))
+        }
+        setMediaState(prev => ({ ...prev, sharing: false, camera: !!cameraTrack && cameraTrack.enabled }))
       }
     } catch (error) {
       setMediaState(prev => ({ ...prev, error: error.message || 'Screenshare failed.' }))

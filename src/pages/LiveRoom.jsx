@@ -6,7 +6,6 @@ import { getRoomType } from '../lib/liveRooms'
 import useRoomRealtime from '../hooks/useRoomRealtime'
 import useWebRTCRoom from '../hooks/useWebRTCRoom'
 import LiveStage from '../components/LiveStage'
-import CallControls from '../components/CallControls'
 import RoomContextPanel from '../components/RoomContextPanel'
 import RoomChat from '../components/RoomChat'
 import RoomNotes from '../components/RoomNotes'
@@ -176,9 +175,11 @@ export default function LiveRoom({ session }) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 360px', gap: '16px', alignItems: 'start' }}>
-          <main style={{ display: 'grid', gap: '14px' }}>
-            <LiveStage localStream={rtc.localStream} remoteStreams={rtc.remoteStreams} />
+        <div className="discord-room-shell">
+          <main style={{ minWidth: 0 }}>
+            <LiveStage localStream={rtc.localStream} remoteStreams={rtc.remoteStreams} mediaState={rtc.mediaState} rtc={rtc} />
+          </main>
+          <aside className="room-functions-panel">
             <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
               <div style={{
                 display: 'flex',
@@ -186,8 +187,6 @@ export default function LiveRoom({ session }) {
                 gap: '2px',
                 borderBottom: '1px solid var(--border)',
                 background: 'var(--dark)',
-                position: 'sticky',
-                top: '56px',
                 zIndex: 5,
               }}>
                 {tools.map(tool => (
@@ -225,16 +224,8 @@ export default function LiveRoom({ session }) {
                 )}
               </div>
             </div>
-            <CallControls
-              mediaState={rtc.mediaState}
-              onJoin={rtc.joinMedia}
-              onLeave={rtc.leaveMedia}
-              onMic={rtc.toggleMic}
-              onCamera={rtc.toggleCamera}
-              onShare={rtc.shareScreen}
-            />
-          </main>
-          <RoomContextPanel room={room} session={session} />
+            <RoomContextPanel room={room} session={session} />
+          </aside>
         </div>
       </div>
     </div>

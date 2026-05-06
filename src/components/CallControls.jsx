@@ -1,6 +1,6 @@
 export default function CallControls({ mediaState, onJoin, onLeave, onMic, onCamera, onShare }) {
   return (
-    <div className="card" style={{ position: 'sticky', bottom: 16, zIndex: 20, padding: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+    <div className="call-dock">
       {!mediaState.joined ? (
         <button onClick={onJoin} className="btn btn-green" style={{ padding: '10px 16px', fontSize: '10px' }}>JOIN CALL</button>
       ) : (

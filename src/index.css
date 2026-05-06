@@ -191,6 +191,116 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   white-space: nowrap;
 }
 
+.discord-room-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 16px;
+  align-items: start;
+}
+
+.room-functions-panel {
+  display: grid;
+  gap: 14px;
+  position: sticky;
+  top: 76px;
+  max-height: calc(100vh - 92px);
+  overflow: auto;
+}
+
+.call-stage {
+  min-height: calc(100vh - 178px);
+  border: 1px solid var(--border);
+  background: #0f0f0f;
+  display: grid;
+  grid-template-rows: auto minmax(360px, 1fr) auto;
+}
+
+.call-stage-topbar {
+  min-height: 62px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(34, 34, 34, 0.78);
+}
+
+.call-grid {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+  align-content: center;
+}
+
+.call-grid.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.call-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.participant-tile {
+  position: relative;
+  min-height: 190px;
+  aspect-ratio: 16 / 10;
+  background: var(--dark);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.participant-tile-featured {
+  min-height: 420px;
+}
+
+.call-empty {
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  border: 1px dashed var(--border);
+}
+
+.call-dock {
+  min-height: 66px;
+  border-top: 1px solid var(--border);
+  padding: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  background: rgba(26, 26, 26, 0.96);
+}
+
+@media (max-width: 1040px) {
+  .discord-room-shell {
+    grid-template-columns: 1fr;
+  }
+  .room-functions-panel {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .call-grid,
+  .call-grid.two {
+    grid-template-columns: 1fr;
+  }
+  .participant-tile,
+  .participant-tile-featured {
+    min-height: 240px;
+  }
+  .call-stage {
+    min-height: auto;
+  }
+}
+
 @media (max-width: 1180px) {
   .floor-shell {
     grid-template-columns: minmax(0, 680px) 250px;
