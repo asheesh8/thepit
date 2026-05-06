@@ -21,8 +21,16 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
   const attachLocalStream = (stream) => {
     localStreamRef.current = stream
     cameraTrackRef.current = stream.getVideoTracks()[0] || null
+    peersRef.current.forEach(peer => addMissingLocalTracks(peer, stream))
     setLocalStream(stream)
     if (localVideoRef.current) localVideoRef.current.srcObject = stream
+  }
+
+  const addMissingLocalTracks = (peer, stream) => {
+    const sentTrackIds = new Set(peer.getSenders().map(sender => sender.track?.id).filter(Boolean))
+    stream.getTracks().forEach(track => {
+      if (!sentTrackIds.has(track.id)) peer.addTrack(track, stream)
+    })
   }
 
   const replaceVideoTrack = (track) => {
@@ -51,7 +59,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     }
 
     const stream = localStreamRef.current
-    if (stream) stream.getTracks().forEach(track => peer.addTrack(track, stream))
+    if (stream) addMissingLocalTracks(peer, stream)
     peersRef.current.set(peerId, peer)
     return peer
   }
@@ -59,6 +67,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
   const callPeer = async (peerId) => {
     if (!localStreamRef.current || peerId === userId) return
     const peer = getOrCreatePeer(peerId)
+    addMissingLocalTracks(peer, localStreamRef.current)
     const offer = await peer.createOffer()
     await peer.setLocalDescription(offer)
     await sendSignal(makePeerSignal({ kind: 'offer', from: userId, to: peerId, data: offer }))
@@ -69,6 +78,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
       attachLocalStream(stream)
       setMediaState({ joined: true, mic: true, camera: true, sharing: false, error: '' })
+      await sendSignal(makePeerSignal({ kind: 'peer-ready', from: userId }))
       for (const participant of participants) {
         if (participant.user_id !== userId) await callPeer(participant.user_id)
       }
@@ -142,6 +152,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
 
     const peer = getOrCreatePeer(signal.from)
     if (signal.kind === 'offer') {
+      if (localStreamRef.current) addMissingLocalTracks(peer, localStreamRef.current)
       await peer.setRemoteDescription(new RTCSessionDescription(signal.data))
       const answer = await peer.createAnswer()
       await peer.setLocalDescription(answer)
