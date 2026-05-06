@@ -1,6 +1,10 @@
-import { useState } from 'react'
+/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
+import TradeContextPicker from '../components/TradeContextPicker'
+import StrategySelect from '../components/StrategySelect'
+import { DEFAULT_TRADE_CONTEXT } from '../lib/discipline'
 
 const MINDSET_LABELS = {
   1: 'Revenge trading', 2: 'Emotional wreck', 3: 'Distracted',
@@ -12,14 +16,34 @@ export default function NewEntry({ session }) {
   const navigate = useNavigate()
   const [form, setForm] = useState({
     symbol: '', direction: 'long', entry_price: '', exit_price: '',
-    pnl: '', mindset_rating: 5, reflection: '', what_id_do_differently: '', is_public: false
+    pnl: '', mindset_rating: 5, reflection: '', what_id_do_differently: '', is_public: false,
+    trade_context: DEFAULT_TRADE_CONTEXT, strategy_id: null,
   })
+  const [strategies, setStrategies] = useState([])
+  const [strategiesLoading, setStrategiesLoading] = useState(true)
+  const [strategyError, setStrategyError] = useState('')
   const [chartFile, setChartFile] = useState(null)
   const [chartPreview, setChartPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }))
+
+  useEffect(() => {
+    loadStrategies()
+  }, [])
+
+  const loadStrategies = async () => {
+    setStrategiesLoading(true)
+    const { data, error } = await supabase
+      .from('strategies')
+      .select('id, name')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+    if (error) setStrategyError(error.message)
+    setStrategies(data || [])
+    setStrategiesLoading(false)
+  }
 
   const handleChartChange = (e) => {
     const file = e.target.files[0]
@@ -62,6 +86,8 @@ export default function NewEntry({ session }) {
       reflection: form.reflection,
       what_id_do_differently: form.what_id_do_differently,
       is_public: form.is_public,
+      trade_context: form.trade_context,
+      strategy_id: form.strategy_id || null,
       chart_url,
     })
 
@@ -131,6 +157,24 @@ export default function NewEntry({ session }) {
                   style={inputStyle} placeholder="0.00" />
               </div>
             ))}
+          </div>
+
+          {/* context + strategy */}
+          <div>
+            <label style={labelStyle}>TRADE CONTEXT</label>
+            <TradeContextPicker value={form.trade_context} onChange={value => set('trade_context', value)} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>LINK STRATEGY</label>
+            <StrategySelect
+              value={form.strategy_id}
+              onChange={value => set('strategy_id', value)}
+              strategies={strategies}
+              loading={strategiesLoading}
+              error={strategyError}
+              strongPrompt={form.trade_context === 'backtest'}
+            />
           </div>
 
           {/* mindset rating */}

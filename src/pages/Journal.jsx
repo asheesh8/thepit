@@ -1,12 +1,16 @@
+/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import EntryCard from '../components/EntryCard'
 import { Link } from 'react-router-dom'
+import BadgeStrip from '../components/BadgeStrip'
+import { deriveBadgeKeys, persistEarnedBadges } from '../lib/discipline'
 
 export default function Journal({ session }) {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState(null)
+  const [badges, setBadges] = useState({ badgeKeys: [], currentStreak: 0 })
 
   useEffect(() => {
     loadEntries()
@@ -15,12 +19,18 @@ export default function Journal({ session }) {
   const loadEntries = async () => {
     const { data } = await supabase
       .from('entries')
-      .select('*, profiles(username)')
+      .select('*, profiles(username), strategies(name)')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
     const all = data || []
     setEntries(all)
+
+    const [{ data: strategies }, { data: reflections }, { data: badgeRows }] = await Promise.all([
+      supabase.from('strategies').select('id').eq('user_id', session.user.id),
+      supabase.from('backtest_reflections').select('*').eq('user_id', session.user.id),
+      supabase.from('user_badges').select('*').eq('user_id', session.user.id),
+    ])
 
     // compute stats
     const trades = all.filter(e => e.pnl !== null)
@@ -37,6 +47,10 @@ export default function Journal({ session }) {
       totalPnl,
       avgMindset: avgMindset.toFixed(1),
     })
+
+    const derived = deriveBadgeKeys({ entries: all, strategies: strategies || [], reflections: reflections || [] })
+    await persistEarnedBadges(supabase, session.user.id, derived.badgeKeys, badgeRows || [])
+    setBadges(derived)
 
     setLoading(false)
   }
@@ -72,6 +86,8 @@ export default function Journal({ session }) {
             ))}
           </div>
         )}
+
+        <BadgeStrip badgeKeys={badges.badgeKeys} currentStreak={badges.currentStreak} />
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '60px', fontFamily: 'Space Mono', fontSize: '11px', color: '#444440' }}>LOADING...</div>

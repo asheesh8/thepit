@@ -9,6 +9,10 @@ import Profile from './pages/Profile'
 import Auth from './pages/Auth'
 import Search from './pages/Search'
 import Connections from './pages/Connections'
+import Strategies from './pages/Strategies'
+import StrategyDetail from './pages/StrategyDetail'
+import Backtesting from './pages/Backtesting'
+import Calendar from './pages/Calendar'
 import Navbar from './components/Navbar'
 
 export default function App() {
@@ -43,6 +47,10 @@ export default function App() {
         <Route path="/new" element={session ? <NewEntry session={session} /> : <Navigate to="/" />} />
         <Route path="/search" element={session ? <Search session={session} /> : <Navigate to="/" />} />
         <Route path="/connections" element={session ? <Connections session={session} /> : <Navigate to="/" />} />
+        <Route path="/strategies" element={session ? <Strategies session={session} /> : <Navigate to="/" />} />
+        <Route path="/strategies/:id" element={session ? <StrategyDetail session={session} /> : <Navigate to="/" />} />
+        <Route path="/backtesting" element={session ? <Backtesting session={session} /> : <Navigate to="/" />} />
+        <Route path="/calendar" element={session ? <Calendar session={session} /> : <Navigate to="/" />} />
         <Route path="/profile/:username" element={session ? <Profile session={session} /> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

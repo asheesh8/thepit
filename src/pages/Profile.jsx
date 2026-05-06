@@ -1,7 +1,10 @@
+/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import EntryCard from '../components/EntryCard'
+import BadgeStrip from '../components/BadgeStrip'
+import { deriveBadgeKeys } from '../lib/discipline'
 
 const CATEGORIES = ['mentorship', 'psychology', 'strategy', 'tools', 'other']
 const CATEGORY_COLORS = {
@@ -18,6 +21,7 @@ export default function Profile({ session }) {
   const [isFollowing, setIsFollowing] = useState(false)
   const [followerCount, setFollowerCount] = useState(0)
   const [tab, setTab] = useState('trades') // trades | resources
+  const [badges, setBadges] = useState({ badgeKeys: [], currentStreak: 0 })
   const [loading, setLoading] = useState(true)
 
   // resource form
@@ -60,7 +64,7 @@ export default function Profile({ session }) {
     // public entries
     const { data: entriesData } = await supabase
       .from('entries')
-      .select('*, profiles(username), reactions(type, user_id)')
+      .select('*, profiles(username), strategies(name), reactions(type, user_id)')
       .eq('user_id', prof.id)
       .eq('is_public', true)
       .order('created_at', { ascending: false })
@@ -72,6 +76,13 @@ export default function Profile({ session }) {
       user_reaction: entry.reactions?.find(r => r.user_id === session.user.id)?.type || null,
     }))
     setEntries(processed)
+
+    const [{ data: allEntries }, { data: strategies }, { data: reflections }] = await Promise.all([
+      supabase.from('entries').select('*, strategies(name)').eq('user_id', prof.id),
+      supabase.from('strategies').select('id').eq('user_id', prof.id),
+      supabase.from('backtest_reflections').select('*').eq('user_id', prof.id),
+    ])
+    setBadges(deriveBadgeKeys({ entries: allEntries || [], strategies: strategies || [], reflections: reflections || [] }))
 
     // resources
     const { data: resData } = await supabase
@@ -143,6 +154,9 @@ export default function Profile({ session }) {
           {profile.bio && (
             <p style={{ fontSize: '14px', color: '#888880', lineHeight: 1.7 }}>{profile.bio}</p>
           )}
+          <div style={{ marginTop: '18px' }}>
+            <BadgeStrip badgeKeys={badges.badgeKeys} currentStreak={badges.currentStreak} compact />
+          </div>
         </div>
 
         {/* tabs */}

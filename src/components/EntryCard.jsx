@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
+import { getTradeContext } from '../lib/discipline'
 
 export default function EntryCard({ entry, session, showActions = true }) {
   const [comments, setComments] = useState([])
@@ -12,7 +13,7 @@ export default function EntryCard({ entry, session, showActions = true }) {
   const [pitBossResponse, setPitBossResponse] = useState(null)
 
   const pnl = entry.pnl || 0
-  const pnlClass = pnl > 0 ? 'pnl-positive' : pnl < 0 ? 'pnl-negative' : 'pnl-neutral'
+  const context = getTradeContext(entry.trade_context)
   const pnlLabel = pnl > 0 ? `+$${pnl.toFixed(2)}` : pnl < 0 ? `-$${Math.abs(pnl).toFixed(2)}` : '$0.00'
 
   const loadComments = async () => {
@@ -86,7 +87,7 @@ Give your honest assessment:`
       })
       const data = await res.json()
       setPitBossResponse(data.content?.[0]?.text || 'No response.')
-    } catch (err) {
+    } catch {
       setPitBossResponse('Pit Boss is offline right now.')
     }
     setPitBossLoading(false)
@@ -111,6 +112,12 @@ Give your honest assessment:`
             <span className="tag" style={{ color: entry.direction === 'long' ? '#2ec4b6' : '#e63946', fontSize: '9px' }}>
               {entry.direction.toUpperCase()}
             </span>
+          )}
+          <span className="tag" style={{ color: context.color, fontSize: '9px' }}>{context.shortLabel}</span>
+          {entry.strategies?.name && (
+            <Link to={`/strategies/${entry.strategy_id}`} className="tag" style={{ color: 'var(--gold)', fontSize: '9px' }}>
+              {entry.strategies.name}
+            </Link>
           )}
           <span className="tag" style={{ color: '#888880', fontSize: '9px' }}>{entry.symbol}</span>
         </div>

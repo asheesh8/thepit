@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import EntryCard from '../components/EntryCard'
@@ -20,7 +21,7 @@ export default function Feed({ session }) {
     // fetch trade entries
     let entryQuery = supabase
       .from('entries')
-      .select('*, profiles(username), reactions(type, user_id)')
+      .select('*, profiles(username), strategies(name), reactions(type, user_id)')
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(30)

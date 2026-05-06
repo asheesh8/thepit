@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
