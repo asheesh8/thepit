@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function RoomActionItems({ roomId, session, items, onRefresh }) {
+export default function RoomActionItems({ roomId, session, items, onRefresh, embedded = false }) {
   const [body, setBody] = useState('')
 
   const add = async (event) => {
@@ -18,7 +18,7 @@ export default function RoomActionItems({ roomId, session, items, onRefresh }) {
   }
 
   return (
-    <section className="card" style={{ padding: '14px' }}>
+    <section className={embedded ? '' : 'card'} style={{ padding: embedded ? 0 : '14px' }}>
       <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>FOLLOW-THROUGH</h3>
       {items.length === 0 ? (
         <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', marginBottom: '10px' }}>NO ACTION ITEMS YET.</div>

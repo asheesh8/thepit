@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function MusicDeck({ room, onSaved }) {
+export default function MusicDeck({ room, onSaved, embedded = false }) {
   const audioRef = useRef(null)
   const [musicUrl, setMusicUrl] = useState(room.music_url || '')
   const [musicTitle, setMusicTitle] = useState(room.music_title || '')
@@ -24,7 +24,7 @@ export default function MusicDeck({ room, onSaved }) {
   }
 
   return (
-    <section className="card" style={{ padding: '14px' }}>
+    <section className={embedded ? '' : 'card'} style={{ padding: embedded ? 0 : '14px' }}>
       <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>MUSIC DECK</h3>
       <div style={{ display: 'grid', gap: '8px' }}>
         <input value={musicTitle} onChange={event => setMusicTitle(event.target.value)} placeholder="track title" style={{ background: 'var(--black)', border: '1px solid var(--border)', color: 'var(--text)', padding: '8px 10px', outline: 'none' }} />

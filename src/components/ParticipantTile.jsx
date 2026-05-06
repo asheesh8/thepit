@@ -10,7 +10,19 @@ export default function ParticipantTile({ label, stream, muted = false, isLocal 
   return (
     <div style={{ position: 'relative', background: 'var(--dark)', border: '1px solid var(--border)', minHeight: '120px', overflow: 'hidden' }}>
       {stream ? (
-        <video ref={ref} autoPlay playsInline muted={muted} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <video
+          ref={ref}
+          autoPlay
+          playsInline
+          muted={muted}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            display: 'block',
+            transform: isLocal ? 'scaleX(-1)' : 'none',
+          }}
+        />
       ) : (
         <div style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Bebas Neue', fontSize: '2rem', color: 'var(--border)' }}>
           {isLocal ? 'YOU' : 'PEER'}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function RoomChat({ roomId, session, messages, onRefresh }) {
+export default function RoomChat({ roomId, session, messages, onRefresh, embedded = false }) {
   const [body, setBody] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -16,7 +16,7 @@ export default function RoomChat({ roomId, session, messages, onRefresh }) {
   }
 
   return (
-    <section className="card" style={{ padding: '14px' }}>
+    <section className={embedded ? '' : 'card'} style={{ padding: embedded ? 0 : '14px' }}>
       <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>CHAT</h3>
       <div style={{ maxHeight: '220px', overflow: 'auto', marginBottom: '10px' }}>
         {messages.length === 0 ? (

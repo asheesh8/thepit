@@ -18,6 +18,7 @@ export default function LiveRoom({ session }) {
   const [room, setRoom] = useState(null)
   const [messages, setMessages] = useState([])
   const [actions, setActions] = useState([])
+  const [activeTool, setActiveTool] = useState('chat')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -31,6 +32,12 @@ export default function LiveRoom({ session }) {
   const rtc = useWebRTCRoom({ userId: session.user.id, participants, sendSignal })
   const type = getRoomType(room?.room_type)
   const isHost = room?.host_id === session.user.id
+  const tools = [
+    { key: 'chat', label: 'CHAT' },
+    { key: 'notes', label: 'NOTES' },
+    { key: 'actions', label: 'ACTIONS' },
+    { key: 'music', label: 'MUSIC' },
+  ]
 
   useEffect(() => {
     loadRoom()
@@ -108,11 +115,51 @@ export default function LiveRoom({ session }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 360px', gap: '16px', alignItems: 'start' }}>
           <main style={{ display: 'grid', gap: '14px' }}>
             <LiveStage localStream={rtc.localStream} remoteStreams={rtc.remoteStreams} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
-              <RoomChat roomId={room.id} session={session} messages={messages} onRefresh={payload => { broadcastRefresh(payload); loadRoom() }} />
-              <RoomNotes room={room} canEdit onSaved={payload => { setRoom(payload.room); broadcastRefresh(payload) }} />
-              <RoomActionItems roomId={room.id} session={session} items={actions} onRefresh={payload => { broadcastRefresh(payload); loadRoom() }} />
-              <MusicDeck room={room} onSaved={payload => { setRoom(payload.room); broadcastRefresh(payload) }} />
+            <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px',
+                borderBottom: '1px solid var(--border)',
+                background: 'var(--dark)',
+                position: 'sticky',
+                top: '56px',
+                zIndex: 5,
+              }}>
+                {tools.map(tool => (
+                  <button
+                    key={tool.key}
+                    onClick={() => setActiveTool(tool.key)}
+                    style={{
+                      flex: 1,
+                      padding: '12px 10px',
+                      background: activeTool === tool.key ? 'var(--card)' : 'transparent',
+                      border: 'none',
+                      borderBottom: activeTool === tool.key ? '1px solid var(--red)' : '1px solid transparent',
+                      color: activeTool === tool.key ? 'var(--text)' : 'var(--dim)',
+                      fontFamily: 'Space Mono',
+                      fontSize: '10px',
+                      letterSpacing: '0.1em',
+                    }}
+                  >
+                    {tool.label}
+                  </button>
+                ))}
+              </div>
+              <div style={{ padding: '16px', minHeight: '280px' }}>
+                {activeTool === 'chat' && (
+                  <RoomChat embedded roomId={room.id} session={session} messages={messages} onRefresh={payload => { broadcastRefresh(payload); loadRoom() }} />
+                )}
+                {activeTool === 'notes' && (
+                  <RoomNotes embedded room={room} canEdit onSaved={payload => { setRoom(payload.room); broadcastRefresh(payload) }} />
+                )}
+                {activeTool === 'actions' && (
+                  <RoomActionItems embedded roomId={room.id} session={session} items={actions} onRefresh={payload => { broadcastRefresh(payload); loadRoom() }} />
+                )}
+                {activeTool === 'music' && (
+                  <MusicDeck embedded room={room} onSaved={payload => { setRoom(payload.room); broadcastRefresh(payload) }} />
+                )}
+              </div>
             </div>
             <CallControls
               mediaState={rtc.mediaState}
