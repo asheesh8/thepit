@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase'
 import EntryCard from '../components/EntryCard'
 import PostCard from '../components/PostCard'
 import PostComposer from '../components/PostComposer'
+import NotificationsRail from '../components/NotificationsRail'
+import RoomSidebarWidget from '../components/RoomSidebarWidget'
 import { Link } from 'react-router-dom'
 
 export default function Feed({ session }) {
@@ -94,7 +96,9 @@ export default function Feed({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px 24px' }}>
+      <div className="floor-shell">
+        <NotificationsRail session={session} />
+        <main className="floor-feed">
 
         <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
@@ -147,6 +151,8 @@ export default function Feed({ session }) {
               : <EntryCard key={`entry-${item.id}`} entry={item} session={session} />
           )
         )}
+        </main>
+        <RoomSidebarWidget />
       </div>
     </div>
   )

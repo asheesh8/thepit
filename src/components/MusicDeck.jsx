@@ -88,6 +88,7 @@ export default function MusicDeck({ room, onSaved, embedded = false }) {
   const currentType = current ? inferTrackType(current.url) : 'audio'
   const currentEmbedUrl = current ? getEmbedUrl(current.url) : ''
   const isEmbeddedProvider = ['youtube', 'spotify', 'apple'].includes(currentType)
+  const isSpotify = currentType === 'spotify'
 
   useEffect(() => {
     if (audioRef.current && room.music_is_playing) audioRef.current.play().catch(() => {})
@@ -191,6 +192,16 @@ export default function MusicDeck({ room, onSaved, embedded = false }) {
             )}
           </div>
           {current && currentType === 'audio' && <audio ref={audioRef} src={current.url} controls style={{ width: '100%', marginTop: '10px' }} />}
+          {current && isSpotify && (
+            <div style={{ marginTop: '10px', border: '1px solid var(--gold)', padding: '10px 12px', display: 'flex', gap: '10px', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--gold)', lineHeight: 1.5 }}>
+                SPOTIFY EMBEDS CAN CAP AT PREVIEW LENGTH. OPEN SPOTIFY FOR FULL PLAYBACK.
+              </span>
+              <a href={current.url} target="_blank" rel="noopener noreferrer" className="btn btn-gold" style={{ padding: '7px 10px', fontSize: '8px' }}>
+                OPEN SPOTIFY
+              </a>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
             <button onClick={() => playIndex(currentIndex, !room.music_is_playing)} disabled={!current} className="btn btn-green" style={{ padding: '8px 12px', fontSize: '9px' }}>
               {isEmbeddedProvider ? 'SYNC CURRENT' : room.music_is_playing ? 'PAUSE SYNC' : 'PLAY SYNC'}
