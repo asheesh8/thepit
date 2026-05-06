@@ -163,3 +163,36 @@ drop policy if exists "Users can delete own room presence" on public.live_room_p
 create policy "Users can delete own room presence"
   on public.live_room_presence for delete
   using (auth.uid() = user_id);
+
+create or replace function public.cleanup_stale_live_rooms()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  deleted_count integer;
+begin
+  delete from public.live_rooms room
+  where room.status = 'live'
+    and room.created_at < now() - interval '3 hours'
+    and not exists (
+      select 1
+      from public.live_room_presence presence
+      where presence.room_id = room.id
+        and presence.last_seen > now() - interval '3 hours'
+    );
+
+  get diagnostics deleted_count = row_count;
+  return deleted_count;
+end;
+$$;
+
+grant execute on function public.cleanup_stale_live_rooms() to authenticated;
+
+-- Optional true background cleanup if pg_cron is enabled in your Supabase project:
+-- select cron.schedule(
+--   'cleanup-stale-live-rooms',
+--   '*/15 * * * *',
+--   $$select public.cleanup_stale_live_rooms();$$
+-- );

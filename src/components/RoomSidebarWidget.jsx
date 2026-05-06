@@ -39,6 +39,7 @@ export default function RoomSidebarWidget() {
   }, [])
 
   const loadRooms = async () => {
+    await supabase.rpc('cleanup_stale_live_rooms')
     const { data, error: loadError } = await supabase
       .from('live_rooms')
       .select('id, title, room_type, status, room_password, created_at, profiles!live_rooms_host_id_profiles_fkey(username, avatar_url), live_room_presence(user_id, last_seen, profiles!live_room_presence_user_id_profiles_fkey(username, avatar_url))')
