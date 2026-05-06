@@ -50,6 +50,7 @@ export default function Navbar({ session }) {
           { path: '/backtesting', label: 'BACKTEST' },
           { path: '/calendar', label: 'CALENDAR' },
           { path: '/review', label: 'REVIEW' },
+          { path: '/rooms', label: 'ROOMS' },
           { path: '/search', label: 'SEARCH' },
           { path: '/connections', label: 'CONNECTIONS' },
           { path: '/new', label: '+ LOG TRADE' },
