@@ -14,7 +14,6 @@ create table if not exists public.live_rooms (
   notes text default '',
   music_url text default '',
   music_title text default '',
-  music_cover_url text default '',
   music_queue jsonb not null default '[]'::jsonb,
   music_current_index integer not null default 0,
   music_is_playing boolean not null default false,
@@ -23,7 +22,6 @@ create table if not exists public.live_rooms (
 );
 
 alter table public.live_rooms
-  add column if not exists music_cover_url text default '',
   add column if not exists music_queue jsonb not null default '[]'::jsonb,
   add column if not exists music_current_index integer not null default 0;
 
