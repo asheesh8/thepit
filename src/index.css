@@ -277,6 +277,49 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   background: rgba(26, 26, 26, 0.96);
 }
 
+.call-context-menu {
+  position: fixed;
+  z-index: 1000;
+  width: 210px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: rgba(26, 26, 26, 0.98);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.call-menu-item {
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.call-menu-item:hover {
+  color: var(--black);
+  background: var(--text);
+}
+
+.call-volume-control {
+  display: grid;
+  gap: 8px;
+  padding: 10px 0 2px;
+  border-top: 1px solid var(--border);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--dim);
+}
+
+.call-volume-control input {
+  width: 100%;
+  accent-color: var(--green);
+}
+
 @media (max-width: 1040px) {
   .discord-room-shell {
     grid-template-columns: 1fr;
