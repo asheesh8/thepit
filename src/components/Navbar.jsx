@@ -15,7 +15,7 @@ export default function Navbar({ session }) {
     if (!session) return
     supabase
       .from('profiles')
-      .select('username')
+      .select('username, avatar_url')
       .eq('id', session.user.id)
       .single()
       .then(({ data }) => setProfile(data))
@@ -29,12 +29,12 @@ export default function Navbar({ session }) {
   const isActive = (path) => location.pathname === path
   const primaryLinks = [
     { path: '/feed', label: 'FLOOR' },
-    { path: '/journal', label: 'JOURNAL' },
-    { path: '/strategies', label: 'STRATEGIES' },
     { path: '/rooms', label: 'ROOMS' },
     { path: '/new', label: '+ LOG TRADE' },
   ]
   const moreLinks = [
+    { path: '/journal', label: 'JOURNAL' },
+    { path: '/strategies', label: 'STRATEGIES' },
     { path: '/backtesting', label: 'BACKTEST' },
     { path: '/calendar', label: 'CALENDAR' },
     { path: '/review', label: 'REVIEW' },
@@ -126,10 +126,19 @@ export default function Navbar({ session }) {
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
         {profile && (
           <Link to={`/profile/${profile.username}`} style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
             fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)',
             letterSpacing: '0.05em'
           }}>
-            @{profile.username}
+            <span style={{
+              width: '28px', height: '28px', borderRadius: '50%', border: '1px solid var(--border)',
+              background: profile.avatar_url ? `url(${profile.avatar_url}) center/cover` : 'var(--black)',
+              color: 'var(--red)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '10px'
+            }}>
+              {!profile.avatar_url && profile.username?.slice(0, 1).toUpperCase()}
+            </span>
+            <span>@{profile.username}</span>
           </Link>
         )}
         <ThemeToggle theme={theme} toggle={toggle} />

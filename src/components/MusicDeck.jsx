@@ -162,11 +162,11 @@ export default function MusicDeck({ room, onSaved, embedded = false }) {
   }
 
   return (
-    <section className={embedded ? '' : 'card'} style={{ padding: embedded ? 0 : '14px' }}>
+    <section className={embedded ? 'music-deck music-deck-embedded' : 'card music-deck'} style={{ padding: embedded ? 0 : '14px' }}>
       <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>ROOM QUEUE</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(280px, 0.9fr)', gap: '14px', alignItems: 'start' }}>
+      <div className="music-deck-grid">
         <div>
-          <div style={previewStyle}>
+          <div className="music-preview" style={previewStyle}>
             {!current ? (
               <div style={{ textAlign: 'center', padding: '24px' }}>
                 <div style={{ fontFamily: 'Bebas Neue', fontSize: '3rem', color: 'var(--border)', lineHeight: 1 }}>NO TRACK</div>
@@ -211,7 +211,7 @@ export default function MusicDeck({ room, onSaved, embedded = false }) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gap: '12px' }}>
+        <div className="music-controls-column">
           <form onSubmit={addTrack} style={{ display: 'grid', gap: '8px' }}>
             <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--red)', letterSpacing: '0.1em' }}>ADD TO QUEUE</div>
             <input value={draft.title} onChange={event => setDraft(prev => ({ ...prev, title: event.target.value }))} placeholder="track / video title" style={{ background: 'var(--black)', border: '1px solid var(--border)', color: 'var(--text)', padding: '9px 10px', outline: 'none' }} />

@@ -50,7 +50,7 @@ export default function Landing() {
   }, [])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', position: 'relative', overflow: 'hidden' }}>
+    <div className="landing-screen">
       <canvas ref={canvasRef} style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none' }} />
 
       {/* horizontal rule lines */}
@@ -59,42 +59,40 @@ export default function Landing() {
         opacity: 0.4 }} />
 
       {/* main content */}
-      <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '40px 24px', textAlign: 'center' }}>
+      <div className="landing-shell">
 
-        {/* overline */}
-        <div style={{ fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.3em',
-          color: '#e63946', marginBottom: '24px', opacity: 0.8 }}>
-          FUTURES TRADING COMMUNITY
+        <div className="landing-copy">
+          <div style={{ fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.3em',
+            color: '#2ec4b6', marginBottom: '20px', opacity: 0.9 }}>
+            FUTURES TRADING COMMUNITY
+          </div>
+          <h1 className="landing-title">THE PIT</h1>
+          <p style={{ fontFamily: 'DM Sans', fontSize: 'clamp(15px, 2vw, 19px)', fontWeight: 300,
+            color: '#b8b6ad', maxWidth: '560px', lineHeight: 1.7, marginBottom: '34px', letterSpacing: '0.02em' }}>
+            A trading floor for your journal, strategies, backtests, live review rooms, callouts, music, and public trading identity.
+          </p>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <Link to="/auth" className="btn btn-red" style={{ padding: '14px 30px', fontSize: '12px' }}>
+              ENTER THE PIT
+            </Link>
+            <Link to="/feed" className="btn btn-green" style={{ padding: '14px 30px', fontSize: '12px' }}>
+              VIEW THE FLOOR
+            </Link>
+          </div>
         </div>
 
-        {/* main title */}
-        <h1 style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(5rem, 18vw, 14rem)',
-          letterSpacing: '0.02em', lineHeight: 0.9, color: '#f0f0e8',
-          textShadow: '0 0 80px rgba(230,57,70,0.15)', marginBottom: '8px' }}>
-          THE
-        </h1>
-        <h1 style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(5rem, 18vw, 14rem)',
-          letterSpacing: '0.02em', lineHeight: 0.9,
-          WebkitTextStroke: '1px #f0f0e8', color: 'transparent', marginBottom: '40px' }}>
-          PIT
-        </h1>
-
-        {/* tagline */}
-        <p style={{ fontFamily: 'DM Sans', fontSize: 'clamp(14px, 2vw, 18px)', fontWeight: 300,
-          color: '#888880', maxWidth: '480px', lineHeight: 1.7, marginBottom: '48px', letterSpacing: '0.02em' }}>
-          Log your trades. Face the truth. Get real feedback from people who've felt the same pain.
-          No larping. No cope. Just the work.
-        </p>
-
-        {/* cta buttons */}
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Link to="/auth" className="btn btn-red" style={{ padding: '14px 36px', fontSize: '12px' }}>
-            ENTER THE PIT
-          </Link>
-          <Link to="/feed" className="btn" style={{ padding: '14px 36px', fontSize: '12px' }}>
-            VIEW THE FLOOR
-          </Link>
+        <div className="pit-3d-stack">
+          <div className="pit-glass-card pit-glass-card-back" />
+          <div className="pit-glass-card">
+            <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--green)', letterSpacing: '0.16em' }}>LIVE ROOM</div>
+            <h2 style={{ fontSize: '2.6rem', lineHeight: 1, marginTop: '12px' }}>VOICE. CAMERA. SCREEN.</h2>
+            <div className="mini-chart">
+              {Array.from({ length: 12 }).map((_, i) => <span key={i} style={{ height: `${28 + (i % 5) * 14}px`, background: i % 3 === 0 ? 'var(--red)' : 'var(--green)' }} />)}
+            </div>
+            <div className="landing-feature-grid">
+              {['JOURNAL', 'BACKTEST', 'PFP PROFILE', 'ROOMS'].map(item => <div key={item}>{item}</div>)}
+            </div>
+          </div>
         </div>
 
         {/* bottom stats strip */}

@@ -28,6 +28,8 @@ export default function Profile({ session }) {
   const [tab, setTab] = useState('trades') // trades | strategies | resources
   const [badges, setBadges] = useState({ badgeKeys: [], currentStreak: 0 })
   const [loading, setLoading] = useState(true)
+  const [profileForm, setProfileForm] = useState({ avatar_url: '', bio: '' })
+  const [savingProfile, setSavingProfile] = useState(false)
 
   // resource form
   const [showAddResource, setShowAddResource] = useState(false)
@@ -48,6 +50,7 @@ export default function Profile({ session }) {
 
     if (!prof) { setLoading(false); return }
     setProfile(prof)
+    setProfileForm({ avatar_url: prof.avatar_url || '', bio: prof.bio || '' })
     setIsOwn(prof.id === session.user.id)
 
     // check following
@@ -114,6 +117,22 @@ export default function Profile({ session }) {
     }
   }
 
+  const saveProfile = async (event) => {
+    event.preventDefault()
+    setSavingProfile(true)
+    const { data } = await supabase
+      .from('profiles')
+      .update({
+        avatar_url: profileForm.avatar_url.trim(),
+        bio: profileForm.bio.trim(),
+      })
+      .eq('id', session.user.id)
+      .select('*')
+      .single()
+    if (data) setProfile(data)
+    setSavingProfile(false)
+  }
+
   const addResource = async (e) => {
     e.preventDefault()
     const { data } = await supabase.from('resources').insert({
@@ -138,12 +157,15 @@ export default function Profile({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: '1040px', margin: '0 auto', padding: '32px 24px' }}>
 
         {/* profile header */}
-        <div style={{ marginBottom: '40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-            <div>
+        <div className="profile-hero">
+          <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start' }}>
+            <div className="profile-avatar-xl" style={{ background: profile.avatar_url ? `url(${profile.avatar_url}) center/cover` : 'var(--black)' }}>
+              {!profile.avatar_url && profile.username?.slice(0, 1).toUpperCase()}
+            </div>
+            <div style={{ minWidth: 0 }}>
               <h1 style={{ fontFamily: 'Bebas Neue', fontSize: '3.5rem', letterSpacing: '0.05em', lineHeight: 1 }}>
                 @{profile.username}
               </h1>
@@ -151,6 +173,8 @@ export default function Profile({ session }) {
                 {followerCount} FOLLOWERS · {entries.length} PUBLIC TRADES
               </div>
             </div>
+          </div>
+          <div>
             {!isOwn && (
               <button onClick={handleFollow} className={`btn ${isFollowing ? '' : 'btn-red'}`} style={{ padding: '10px 20px', fontSize: '11px' }}>
                 {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
@@ -166,6 +190,20 @@ export default function Profile({ session }) {
           </div>
           {profileStats && <ProfileStatsStrip stats={profileStats} />}
         </div>
+
+        {isOwn && (
+          <form onSubmit={saveProfile} className="card profile-edit-card">
+            <div>
+              <label style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.1em' }}>PROFILE PICTURE URL</label>
+              <input value={profileForm.avatar_url} onChange={event => setProfileForm(prev => ({ ...prev, avatar_url: event.target.value }))} placeholder="https://..." />
+            </div>
+            <div>
+              <label style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.1em' }}>BIO</label>
+              <input value={profileForm.bio} onChange={event => setProfileForm(prev => ({ ...prev, bio: event.target.value }))} placeholder="what kind of trader are you?" />
+            </div>
+            <button className="btn btn-green" style={{ padding: '11px 14px', fontSize: '10px' }}>{savingProfile ? 'SAVING...' : 'SAVE PROFILE'}</button>
+          </form>
+        )}
 
         {/* tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid #242424', marginBottom: '24px' }}>

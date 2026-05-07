@@ -7,6 +7,7 @@ export default function Auth() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -38,6 +39,7 @@ export default function Auth() {
       await supabase.from('profiles').insert({
         id: data.user.id,
         username: username.toLowerCase(),
+        avatar_url: avatarUrl.trim(),
       })
       setMessage('Check your email to confirm your account.')
     } else {
@@ -49,14 +51,20 @@ export default function Auth() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <div style={{ width: '100%', maxWidth: '400px' }}>
-        {/* logo */}
-        <Link to="/" style={{ display: 'block', textAlign: 'center', marginBottom: '48px' }}>
-          <span style={{ fontFamily: 'Bebas Neue', fontSize: '2.5rem', letterSpacing: '0.15em', color: '#e63946' }}>THE PIT</span>
-        </Link>
+    <div className="auth-screen">
+      <div className="auth-brand-panel">
+        <Link to="/" style={{ fontFamily: 'Bebas Neue', fontSize: '2rem', letterSpacing: '0.14em', color: 'var(--red)' }}>THE PIT</Link>
+        <div className="auth-orb">
+          <div className="auth-orb-core">PIT</div>
+        </div>
+        <h1 style={{ fontSize: '4.4rem', lineHeight: 0.92 }}>GET YOUR TRADING FLOOR.</h1>
+        <p style={{ color: 'var(--dim)', lineHeight: 1.7, maxWidth: '480px' }}>
+          Your profile, trades, strategies, review rooms, and backtesting reflections connected in one place.
+        </p>
+      </div>
 
-        <div className="card" style={{ padding: '40px' }}>
+      <div className="auth-card-wrap">
+        <div className="card auth-card">
           {/* tabs */}
           <div style={{ display: 'flex', marginBottom: '32px', borderBottom: '1px solid #242424' }}>
             {['login', 'signup'].map(m => (
@@ -86,6 +94,25 @@ export default function Auth() {
                     padding: '12px 14px', color: '#e8e8e0', fontSize: '14px', outline: 'none',
                   }}
                 />
+              </div>
+            )}
+            {mode === 'signup' && (
+              <div>
+                <label style={{ fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.1em', color: '#888880', display: 'block', marginBottom: '8px' }}>PROFILE PICTURE URL</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '44px minmax(0, 1fr)', gap: '10px', alignItems: 'center' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--border)', background: avatarUrl ? `url(${avatarUrl}) center/cover` : '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--dim)', fontFamily: 'Space Mono', fontSize: '10px' }}>
+                    {!avatarUrl && 'PFP'}
+                  </div>
+                  <input
+                    value={avatarUrl}
+                    onChange={e => setAvatarUrl(e.target.value)}
+                    placeholder="https://..."
+                    style={{
+                      width: '100%', background: '#111', border: '1px solid #242424',
+                      padding: '12px 14px', color: '#e8e8e0', fontSize: '14px', outline: 'none',
+                    }}
+                  />
+                </div>
               </div>
             )}
 

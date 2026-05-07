@@ -93,6 +93,14 @@ export default function Feed({ session }) {
     { key: 'winning', label: 'GREEN DAYS' },
     { key: 'losing', label: 'RED DAYS' },
   ]
+  const workbenchLinks = [
+    { to: '/journal', label: 'Journal', meta: 'private log' },
+    { to: '/strategies', label: 'Strategies', meta: 'playbook' },
+    { to: '/backtesting', label: 'Backtest', meta: 'lab notes' },
+    { to: '/calendar', label: 'Calendar', meta: 'patterns' },
+    { to: '/review', label: 'Review', meta: 'callouts' },
+    { to: '/connections', label: 'People', meta: 'network' },
+  ]
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
@@ -110,6 +118,15 @@ export default function Feed({ session }) {
           <Link to="/new" className="btn btn-red" style={{ padding: '10px 20px', fontSize: '11px' }}>
             + LOG TRADE
           </Link>
+        </div>
+
+        <div className="floor-workbench">
+          {workbenchLinks.map(link => (
+            <Link key={link.to} to={link.to} className="floor-workbench-link">
+              <span>{link.label}</span>
+              <small>{link.meta}</small>
+            </Link>
+          ))}
         </div>
 
         {/* filter tabs */}
