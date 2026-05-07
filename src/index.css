@@ -1095,6 +1095,16 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   padding-right: 34px;
 }
 
+.journal-reflection-block.only-difference {
+  min-height: 28px;
+  margin-bottom: -28px;
+  pointer-events: none;
+}
+
+.journal-reflection-block.only-difference .reflection-trash-btn {
+  pointer-events: auto;
+}
+
 .reflection-trash-btn {
   position: absolute;
   top: 0;

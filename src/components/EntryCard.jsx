@@ -18,6 +18,8 @@ export default function EntryCard({ entry, session, showActions = true, onDelete
   const pnl = entry.pnl || 0
   const context = getTradeContext(entry.trade_context)
   const pnlLabel = pnl > 0 ? `+$${pnl.toFixed(2)}` : pnl < 0 ? `-$${Math.abs(pnl).toFixed(2)}` : '$0.00'
+  const hasJournalNotes = !!entry.reflection || !!entry.what_id_do_differently
+  const canDeleteJournalNotes = !!onDeleteReflection && entry.user_id === session.user.id && hasJournalNotes
 
   const loadComments = async () => {
     if (showComments) { setShowComments(false); return }
@@ -172,13 +174,15 @@ Give your honest assessment:`
         <img src={entry.chart_url} alt="chart" style={{ width: '100%', maxHeight: '240px', objectFit: 'cover', marginBottom: '16px', border: '1px solid #242424' }} />
       )}
 
-      {/* reflection */}
-      {entry.reflection && (
-        <div className="journal-reflection-block">
+      {hasJournalNotes && (
+        <div className={`journal-reflection-block ${!entry.reflection ? 'only-difference' : ''}`}>
+          {/* reflection */}
+          {entry.reflection && (
           <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#c0c0b8', marginBottom: '12px' }}>
             {entry.reflection}
           </p>
-          {onDeleteReflection && entry.user_id === session.user.id && (
+          )}
+          {canDeleteJournalNotes && (
             <button
               type="button"
               onClick={() => onDeleteReflection(entry)}
@@ -200,7 +204,7 @@ Give your honest assessment:`
 
       {/* what i'd do differently */}
       {entry.what_id_do_differently && (
-        <div style={{ borderLeft: '2px solid #e63946', paddingLeft: '12px', marginBottom: '16px' }}>
+        <div style={{ borderLeft: '2px solid #e63946', paddingLeft: '12px', marginBottom: '16px', paddingRight: canDeleteJournalNotes && !entry.reflection ? '34px' : 0 }}>
           <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: '#e63946', letterSpacing: '0.1em', marginBottom: '4px' }}>WHAT I'D DO DIFFERENTLY</div>
           <p style={{ fontSize: '13px', color: '#888880', lineHeight: 1.6 }}>{entry.what_id_do_differently}</p>
         </div>
