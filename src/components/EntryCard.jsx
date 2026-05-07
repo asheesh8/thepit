@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { getTradeContext } from '../lib/discipline'
 import CalloutThreadList from './CalloutThreadList'
 
-export default function EntryCard({ entry, session, showActions = true }) {
+export default function EntryCard({ entry, session, showActions = true, onDeleteReflection = null }) {
   const [comments, setComments] = useState([])
   const [showComments, setShowComments] = useState(false)
   const [commentText, setCommentText] = useState('')
@@ -174,9 +174,28 @@ Give your honest assessment:`
 
       {/* reflection */}
       {entry.reflection && (
-        <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#c0c0b8', marginBottom: '12px' }}>
-          {entry.reflection}
-        </p>
+        <div className="journal-reflection-block">
+          <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#c0c0b8', marginBottom: '12px' }}>
+            {entry.reflection}
+          </p>
+          {onDeleteReflection && entry.user_id === session.user.id && (
+            <button
+              type="button"
+              onClick={() => onDeleteReflection(entry)}
+              className="reflection-trash-btn"
+              aria-label="Delete reflection"
+              title="Delete reflection"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6h18" />
+                <path d="M8 6V4h8v2" />
+                <path d="M6 6l1 15h10l1-15" />
+                <path d="M10 10v7" />
+                <path d="M14 10v7" />
+              </svg>
+            </button>
+          )}
+        </div>
       )}
 
       {/* what i'd do differently */}

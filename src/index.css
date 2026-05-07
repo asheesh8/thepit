@@ -1090,6 +1090,40 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   padding: 14px;
 }
 
+.journal-reflection-block {
+  position: relative;
+  padding-right: 34px;
+}
+
+.reflection-trash-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  background: var(--black);
+  color: var(--dim);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.reflection-trash-btn:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.reflection-trash-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 @media (max-width: 1180px) {
   .discord-room-shell {
     grid-template-columns: 1fr;

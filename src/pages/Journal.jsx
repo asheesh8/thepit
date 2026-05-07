@@ -55,6 +55,18 @@ export default function Journal({ session }) {
     setLoading(false)
   }
 
+  const deleteReflection = async (entry) => {
+    if (!window.confirm('Delete the reflection text from this trade? The trade itself stays.')) return
+    const { data } = await supabase
+      .from('entries')
+      .update({ reflection: '', what_id_do_differently: '' })
+      .eq('id', entry.id)
+      .eq('user_id', session.user.id)
+      .select('*, profiles(username), strategies(name)')
+      .single()
+    if (data) setEntries(prev => prev.map(row => row.id === data.id ? data : row))
+  }
+
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px 24px' }}>
@@ -99,7 +111,13 @@ export default function Journal({ session }) {
           </div>
         ) : (
           entries.map(entry => (
-            <EntryCard key={entry.id} entry={entry} session={session} showActions={true} />
+            <EntryCard
+              key={entry.id}
+              entry={entry}
+              session={session}
+              showActions={true}
+              onDeleteReflection={deleteReflection}
+            />
           ))
         )}
       </div>
