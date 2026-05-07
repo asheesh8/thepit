@@ -335,11 +335,11 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 }
 
 .floor-shell {
-  width: min(100%, 1240px);
+  width: min(100%, 980px);
   margin: 0 auto;
   padding: 32px 24px;
   display: grid;
-  grid-template-columns: 230px minmax(0, 680px) 250px;
+  grid-template-columns: 230px minmax(0, 680px);
   gap: 28px;
   align-items: start;
 }
@@ -577,6 +577,166 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   accent-color: var(--green);
 }
 
+.dm-home {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 28px 24px;
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 250px;
+  gap: 18px;
+  align-items: start;
+}
+
+.dm-home-sidebar,
+.dm-home-main {
+  border: 1px solid var(--border);
+  background: rgba(34, 34, 34, 0.82);
+}
+
+.dm-home-sidebar {
+  position: sticky;
+  top: 84px;
+  padding: 16px;
+  max-height: calc(100vh - 108px);
+  overflow: auto;
+}
+
+.dm-home-main {
+  min-height: calc(100vh - 112px);
+  padding: 22px;
+}
+
+.dm-home-hero {
+  margin-bottom: 24px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 82% 12%, rgba(46, 196, 182, 0.12), transparent 32%),
+    linear-gradient(135deg, rgba(28, 31, 29, 0.94), rgba(12, 14, 13, 0.94));
+}
+
+.dm-user-row,
+.dm-thread-card {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.dm-user-row {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+}
+
+.dm-user-row:hover,
+.dm-thread-card:hover {
+  border-color: var(--green);
+}
+
+.dm-thread-card {
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--black);
+  border-color: var(--border);
+}
+
+.dm-muted,
+.dm-empty {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--dim);
+}
+
+.dm-empty {
+  padding: 44px;
+  text-align: center;
+  border: 1px dashed var(--border);
+}
+
+.dm-message-list {
+  max-height: 360px;
+  overflow: auto;
+  margin-bottom: 12px;
+  padding-right: 4px;
+  display: grid;
+  gap: 10px;
+}
+
+.dm-message-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 9px;
+  align-items: end;
+}
+
+.dm-message-row.own {
+  grid-template-columns: minmax(0, 1fr) 30px;
+}
+
+.dm-message-row.own .dm-message-avatar {
+  grid-column: 2;
+}
+
+.dm-message-row.own .dm-message-bubble {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  border-color: rgba(46, 196, 182, 0.42);
+  background: rgba(46, 196, 182, 0.1);
+}
+
+.dm-message-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  color: var(--red);
+  display: grid;
+  place-items: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+}
+
+.dm-message-bubble {
+  width: fit-content;
+  max-width: min(100%, 440px);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  background: var(--black);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dm-message-meta {
+  margin-bottom: 4px;
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  color: var(--dim);
+  letter-spacing: 0.06em;
+}
+
+.dm-message-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.dm-message-form input {
+  min-width: 0;
+  background: var(--black);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  outline: none;
+}
+
 @media (max-width: 1180px) {
   .discord-room-shell {
     grid-template-columns: 1fr;
@@ -584,6 +744,12 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   .room-functions-panel {
     position: static;
     max-height: none;
+  }
+  .dm-home {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+  .dm-home-sidebar:last-child {
+    display: none;
   }
 }
 
@@ -608,11 +774,18 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   .call-stage {
     min-height: auto;
   }
+  .dm-home {
+    grid-template-columns: 1fr;
+  }
+  .dm-home-sidebar {
+    position: static;
+    max-height: none;
+  }
 }
 
 @media (max-width: 1180px) {
   .floor-shell {
-    grid-template-columns: minmax(0, 680px) 250px;
+    grid-template-columns: minmax(0, 680px);
     justify-content: center;
   }
   .notifications-rail { display: none; }

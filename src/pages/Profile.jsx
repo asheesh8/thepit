@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import EntryCard from '../components/EntryCard'
 import BadgeStrip from '../components/BadgeStrip'
@@ -17,6 +17,7 @@ const CATEGORY_COLORS = {
 
 export default function Profile({ session }) {
   const { username } = useParams()
+  const navigate = useNavigate()
   const [profile, setProfile] = useState(null)
   const [entries, setEntries] = useState([])
   const [resources, setResources] = useState([])
@@ -24,6 +25,7 @@ export default function Profile({ session }) {
   const [profileStats, setProfileStats] = useState(null)
   const [isOwn, setIsOwn] = useState(false)
   const [isFollowing, setIsFollowing] = useState(false)
+  const [isFollower, setIsFollower] = useState(false)
   const [followerCount, setFollowerCount] = useState(0)
   const [tab, setTab] = useState('trades') // trades | strategies | resources
   const [badges, setBadges] = useState({ badgeKeys: [], currentStreak: 0 })
@@ -61,6 +63,14 @@ export default function Profile({ session }) {
       .eq('following_id', prof.id)
       .single()
     setIsFollowing(!!followData)
+
+    const { data: followerData } = await supabase
+      .from('follows')
+      .select('follower_id')
+      .eq('follower_id', prof.id)
+      .eq('following_id', session.user.id)
+      .single()
+    setIsFollower(!!followerData)
 
     // follower count
     const { count } = await supabase
@@ -133,6 +143,36 @@ export default function Profile({ session }) {
     setSavingProfile(false)
   }
 
+  const openDm = async () => {
+    if (!profile?.id) return
+    const title = `DM:${[session.user.id, profile.id].sort().join(':')}`
+    const { data: existing } = await supabase
+      .from('live_rooms')
+      .select('id')
+      .eq('title', title)
+      .eq('room_type', 'dm')
+      .maybeSingle()
+    if (existing) {
+      navigate(`/rooms/${existing.id}`)
+      return
+    }
+    const { data } = await supabase
+      .from('live_rooms')
+      .insert({
+        title,
+        room_type: 'dm',
+        is_public: false,
+        room_password: '',
+        host_id: session.user.id,
+        dm_peer_id: profile.id,
+        status: 'live',
+        agenda: `Direct message with @${profile.username}`,
+      })
+      .select('id')
+      .single()
+    if (data) navigate(`/rooms/${data.id}`)
+  }
+
   const addResource = async (e) => {
     e.preventDefault()
     const { data } = await supabase.from('resources').insert({
@@ -176,9 +216,16 @@ export default function Profile({ session }) {
           </div>
           <div>
             {!isOwn && (
-              <button onClick={handleFollow} className={`btn ${isFollowing ? '' : 'btn-red'}`} style={{ padding: '10px 20px', fontSize: '11px' }}>
-                {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
-              </button>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                {isFollowing && isFollower && (
+                  <button onClick={openDm} className="btn btn-green" style={{ padding: '10px 20px', fontSize: '11px' }}>
+                    MESSAGE
+                  </button>
+                )}
+                <button onClick={handleFollow} className={`btn ${isFollowing ? '' : 'btn-red'}`} style={{ padding: '10px 20px', fontSize: '11px' }}>
+                  {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
+                </button>
+              </div>
             )}
           </div>
 

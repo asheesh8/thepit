@@ -29,16 +29,14 @@ export default function Navbar({ session }) {
   const isActive = (path) => location.pathname === path
   const primaryLinks = [
     { path: '/feed', label: 'FLOOR' },
-    { path: '/rooms', label: 'ROOMS' },
+    { path: '/rooms', label: 'DMs' },
     { path: '/new', label: '+ LOG TRADE' },
   ]
   const moreLinks = [
     { path: '/journal', label: 'JOURNAL' },
     { path: '/strategies', label: 'STRATEGIES' },
     { path: '/backtesting', label: 'BACKTEST' },
-    { path: '/calendar', label: 'CALENDAR' },
     { path: '/review', label: 'REVIEW' },
-    { path: '/search', label: 'SEARCH' },
     { path: '/connections', label: 'CONNECTIONS' },
   ]
   const moreActive = moreLinks.some(link => isActive(link.path))

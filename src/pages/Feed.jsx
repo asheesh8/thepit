@@ -5,7 +5,6 @@ import EntryCard from '../components/EntryCard'
 import PostCard from '../components/PostCard'
 import PostComposer from '../components/PostComposer'
 import NotificationsRail from '../components/NotificationsRail'
-import RoomSidebarWidget from '../components/RoomSidebarWidget'
 import { Link } from 'react-router-dom'
 
 export default function Feed({ session }) {
@@ -97,7 +96,7 @@ export default function Feed({ session }) {
     { to: '/journal', label: 'Journal', meta: 'private log' },
     { to: '/strategies', label: 'Strategies', meta: 'playbook' },
     { to: '/backtesting', label: 'Backtest', meta: 'lab notes' },
-    { to: '/calendar', label: 'Calendar', meta: 'patterns' },
+    { to: '/rooms', label: 'DMs', meta: 'mutuals' },
     { to: '/review', label: 'Review', meta: 'callouts' },
     { to: '/connections', label: 'People', meta: 'network' },
   ]
@@ -169,7 +168,6 @@ export default function Feed({ session }) {
           )
         )}
         </main>
-        <RoomSidebarWidget />
       </div>
     </div>
   )

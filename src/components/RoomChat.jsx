@@ -17,20 +17,27 @@ export default function RoomChat({ roomId, session, messages, onRefresh, embedde
 
   return (
     <section className={embedded ? '' : 'card'} style={{ padding: embedded ? 0 : '14px' }}>
-      <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>CHAT</h3>
-      <div style={{ maxHeight: '220px', overflow: 'auto', marginBottom: '10px' }}>
+      <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>MESSAGES</h3>
+      <div className="dm-message-list">
         {messages.length === 0 ? (
-          <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)' }}>NO ROOM CHAT YET.</div>
+          <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)' }}>NO MESSAGES YET.</div>
         ) : messages.map(message => (
-          <div key={message.id} style={{ borderTop: '1px solid var(--border)', padding: '8px 0' }}>
-            <span style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--red)', marginRight: '8px' }}>@{message.profiles?.username || 'user'}</span>
-            <span style={{ fontSize: '12px', color: 'var(--text)' }}>{message.body}</span>
+          <div key={message.id} className={`dm-message-row ${message.user_id === session.user.id ? 'own' : ''}`}>
+            <div className="dm-message-avatar" style={{ background: message.profiles?.avatar_url ? `url(${message.profiles.avatar_url}) center/cover` : 'var(--black)' }}>
+              {!message.profiles?.avatar_url && message.profiles?.username?.slice(0, 1).toUpperCase()}
+            </div>
+            <div className="dm-message-bubble">
+              <div className="dm-message-meta">
+                @{message.profiles?.username || 'user'} · {new Date(message.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+              </div>
+              <div>{message.body}</div>
+            </div>
           </div>
         ))}
       </div>
-      <form onSubmit={send} style={{ display: 'flex', gap: '8px' }}>
-        <input value={body} onChange={event => setBody(event.target.value)} placeholder="drop a note..." style={{ flex: 1, background: 'var(--black)', border: '1px solid var(--border)', color: 'var(--text)', padding: '8px 10px', outline: 'none' }} />
-        <button type="submit" disabled={saving} className="btn" style={{ padding: '8px 12px', fontSize: '9px' }}>{saving ? '...' : 'SEND'}</button>
+      <form onSubmit={send} className="dm-message-form">
+        <input value={body} onChange={event => setBody(event.target.value)} placeholder="message..." />
+        <button type="submit" disabled={saving} className="btn btn-green" style={{ padding: '9px 12px', fontSize: '9px' }}>{saving ? '...' : 'SEND'}</button>
       </form>
     </section>
   )

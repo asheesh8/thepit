@@ -34,7 +34,10 @@ export default function LiveRoom({ session }) {
   const rtc = useWebRTCRoom({ userId: session.user.id, participants, sendSignal })
   const type = getRoomType(room?.room_type)
   const isHost = room?.host_id === session.user.id
-  const needsPassword = !!room?.room_password && !isHost && !roomUnlocked
+  const isDm = room?.room_type === 'dm'
+  const dmPeer = isDm ? (room.host_id === session.user.id ? room.dm_peer : room.profiles) : null
+  const isDmMember = isDm && (room.host_id === session.user.id || room.dm_peer_id === session.user.id)
+  const needsPassword = !isDm && !!room?.room_password && !isHost && !roomUnlocked
   const tools = [
     { key: 'chat', label: 'CHAT' },
     { key: 'notes', label: 'NOTES' },
@@ -85,12 +88,12 @@ export default function LiveRoom({ session }) {
     const [{ data: roomData, error: roomError }, { data: messageData }, { data: actionData }] = await Promise.all([
       supabase
         .from('live_rooms')
-        .select('*, profiles!live_rooms_host_id_profiles_fkey(username, avatar_url), entries(*, profiles(username), strategies(name)), strategies(*)')
+        .select('*, profiles!live_rooms_host_id_profiles_fkey(id, username, avatar_url, bio), dm_peer:profiles!live_rooms_dm_peer_id_profiles_fkey(id, username, avatar_url, bio), entries(*, profiles(username), strategies(name)), strategies(*)')
         .eq('id', id)
         .single(),
       supabase
         .from('live_room_messages')
-        .select('*, profiles(username)')
+        .select('*, profiles(username, avatar_url)')
         .eq('room_id', id)
         .order('created_at', { ascending: true }),
       supabase
@@ -131,6 +134,7 @@ export default function LiveRoom({ session }) {
 
   if (loading) return <div style={{ paddingTop: '100px', textAlign: 'center', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)' }}>LOADING ROOM...</div>
   if (error || !room) return <div style={{ paddingTop: '100px', textAlign: 'center', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--red)' }}>{error || 'ROOM NOT FOUND'}</div>
+  if (isDm && !isDmMember) return <div style={{ paddingTop: '100px', textAlign: 'center', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--red)' }}>DM NOT AVAILABLE</div>
 
   if (needsPassword) {
     return (
@@ -160,18 +164,28 @@ export default function LiveRoom({ session }) {
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '18px' }}>
         <div className="room-header">
           <div>
-            <Link to="/rooms" style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em' }}>BACK TO ROOMS</Link>
-            <h1 style={{ fontSize: '2.35rem', lineHeight: 1, marginTop: '6px' }}>{room.title}</h1>
+            <Link to="/rooms" style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em' }}>BACK TO DMS</Link>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '8px' }}>
+              {isDm && (
+                <div style={{
+                  width: '54px', height: '54px', borderRadius: '50%', border: '1px solid var(--border)',
+                  background: dmPeer?.avatar_url ? `url(${dmPeer.avatar_url}) center/cover` : 'var(--black)',
+                  color: 'var(--red)', display: 'grid', placeItems: 'center', fontFamily: 'Bebas Neue', fontSize: '1.7rem'
+                }}>
+                  {!dmPeer?.avatar_url && dmPeer?.username?.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <h1 style={{ fontSize: '2.35rem', lineHeight: 1 }}>{isDm ? `@${dmPeer?.username || 'trader'}` : room.title}</h1>
+            </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
-              <span className="tag" style={{ color: type.color }}>{type.label}</span>
-              <span className="tag" style={{ color: room.status === 'live' ? 'var(--green)' : 'var(--dim)' }}>{room.status}</span>
+              <span className="tag" style={{ color: isDm ? 'var(--green)' : type.color }}>{isDm ? 'DIRECT MESSAGE' : type.label}</span>
               <span className="tag" style={{ color: connected ? 'var(--green)' : 'var(--red)' }}>{connected ? 'REALTIME' : 'CONNECTING'}</span>
               <span className="tag" style={{ color: 'var(--dim)' }}>{participants.length} PRESENT</span>
             </div>
           </div>
           <div className="room-header-actions">
-            <button onClick={copyInvite} className="btn" style={{ padding: '9px 12px', fontSize: '10px' }}>COPY INVITE</button>
-            {isHost && room.status === 'live' && <button onClick={completeRoom} className="btn btn-green" style={{ padding: '9px 12px', fontSize: '10px' }}>MARK COMPLETE</button>}
+            {!isDm && <button onClick={copyInvite} className="btn" style={{ padding: '9px 12px', fontSize: '10px' }}>COPY INVITE</button>}
+            {!isDm && isHost && room.status === 'live' && <button onClick={completeRoom} className="btn btn-green" style={{ padding: '9px 12px', fontSize: '10px' }}>MARK COMPLETE</button>}
           </div>
         </div>
 
@@ -224,7 +238,26 @@ export default function LiveRoom({ session }) {
                 )}
               </div>
             </div>
-            <RoomContextPanel room={room} session={session} />
+            {isDm ? (
+              <aside className="card dm-context-panel">
+                <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--red)', letterSpacing: '0.12em', marginBottom: '14px' }}>DM CONTEXT</div>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '14px' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--border)', background: dmPeer?.avatar_url ? `url(${dmPeer.avatar_url}) center/cover` : 'var(--black)', color: 'var(--red)', display: 'grid', placeItems: 'center', fontFamily: 'Bebas Neue', fontSize: '1.4rem' }}>
+                    {!dmPeer?.avatar_url && dmPeer?.username?.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.5rem', lineHeight: 1 }}>@{dmPeer?.username}</div>
+                    <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', marginTop: '4px' }}>MUTUAL FOLLOW</div>
+                  </div>
+                </div>
+                {dmPeer?.bio && <p style={{ color: 'var(--dim)', fontSize: '13px', lineHeight: 1.6, marginBottom: '14px' }}>{dmPeer.bio}</p>}
+                <div className="dm-muted" style={{ lineHeight: 1.7 }}>
+                  Use this desk for messages, trade review calls, screen share, shared music, notes, and follow-through items.
+                </div>
+              </aside>
+            ) : (
+              <RoomContextPanel room={room} session={session} />
+            )}
           </aside>
         </div>
       </div>
