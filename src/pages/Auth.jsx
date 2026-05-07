@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
 
@@ -7,7 +7,6 @@ export default function Auth() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -39,7 +38,6 @@ export default function Auth() {
       await supabase.from('profiles').insert({
         id: data.user.id,
         username: username.toLowerCase(),
-        avatar_url: avatarUrl.trim(),
       })
       setMessage('Check your email to confirm your account.')
     } else {
@@ -66,13 +64,13 @@ export default function Auth() {
       <div className="auth-card-wrap">
         <div className="card auth-card">
           {/* tabs */}
-          <div style={{ display: 'flex', marginBottom: '32px', borderBottom: '1px solid #242424' }}>
+          <div style={{ display: 'flex', marginBottom: '32px', borderBottom: '1px solid var(--border)' }}>
             {['login', 'signup'].map(m => (
               <button key={m} onClick={() => { setMode(m); setError('') }} style={{
                 flex: 1, padding: '10px', background: 'none', border: 'none',
                 fontFamily: 'Space Mono', fontSize: '11px', letterSpacing: '0.1em',
-                color: mode === m ? '#e8e8e0' : '#444440',
-                borderBottom: mode === m ? '1px solid #e63946' : '1px solid transparent',
+                color: mode === m ? 'var(--text)' : 'var(--dim)',
+                borderBottom: mode === m ? '1px solid var(--red)' : '1px solid transparent',
                 marginBottom: '-1px', cursor: 'pointer', textTransform: 'uppercase'
               }}>
                 {m === 'login' ? 'SIGN IN' : 'JOIN'}
@@ -83,75 +81,57 @@ export default function Auth() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {mode === 'signup' && (
               <div>
-                <label style={{ fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.1em', color: '#888880', display: 'block', marginBottom: '8px' }}>USERNAME</label>
+                <label style={{ fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--dim)', display: 'block', marginBottom: '8px' }}>USERNAME</label>
                 <input
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                   placeholder="your_handle"
                   required
                   style={{
-                    width: '100%', background: '#111', border: '1px solid #242424',
-                    padding: '12px 14px', color: '#e8e8e0', fontSize: '14px', outline: 'none',
+                    width: '100%', background: 'var(--dark)', border: '1px solid var(--border)',
+                    padding: '12px 14px', color: 'var(--text)', fontSize: '14px', outline: 'none',
                   }}
                 />
               </div>
             )}
-            {mode === 'signup' && (
-              <div>
-                <label style={{ fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.1em', color: '#888880', display: 'block', marginBottom: '8px' }}>PROFILE PICTURE URL</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '44px minmax(0, 1fr)', gap: '10px', alignItems: 'center' }}>
-                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--border)', background: avatarUrl ? `url(${avatarUrl}) center/cover` : '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--dim)', fontFamily: 'Space Mono', fontSize: '10px' }}>
-                    {!avatarUrl && 'PFP'}
-                  </div>
-                  <input
-                    value={avatarUrl}
-                    onChange={e => setAvatarUrl(e.target.value)}
-                    placeholder="https://..."
-                    style={{
-                      width: '100%', background: '#111', border: '1px solid #242424',
-                      padding: '12px 14px', color: '#e8e8e0', fontSize: '14px', outline: 'none',
-                    }}
-                  />
-                </div>
-              </div>
-            )}
+
 
             <div>
-              <label style={{ fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.1em', color: '#888880', display: 'block', marginBottom: '8px' }}>EMAIL</label>
+              <label style={{ fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--dim)', display: 'block', marginBottom: '8px' }}>EMAIL</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
                 style={{
-                  width: '100%', background: '#111', border: '1px solid #242424',
-                  padding: '12px 14px', color: '#e8e8e0', fontSize: '14px', outline: 'none',
+                  width: '100%', background: 'var(--dark)', border: '1px solid var(--border)',
+                  padding: '12px 14px', color: 'var(--text)', fontSize: '14px', outline: 'none',
                 }}
               />
             </div>
 
             <div>
-              <label style={{ fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.1em', color: '#888880', display: 'block', marginBottom: '8px' }}>PASSWORD</label>
+              <label style={{ fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--dim)', display: 'block', marginBottom: '8px' }}>PASSWORD</label>
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
                 style={{
-                  width: '100%', background: '#111', border: '1px solid #242424',
-                  padding: '12px 14px', color: '#e8e8e0', fontSize: '14px', outline: 'none',
+                  width: '100%', background: 'var(--dark)', border: '1px solid var(--border)',
+                  padding: '12px 14px', color: 'var(--text)', fontSize: '14px', outline: 'none',
                 }}
               />
             </div>
 
             {error && (
-              <div style={{ fontFamily: 'Space Mono', fontSize: '11px', color: '#e63946', padding: '10px', border: '1px solid #e63946', background: 'rgba(230,57,70,0.05)' }}>
+              <div style={{ fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--red)', padding: '10px', border: '1px solid var(--red)', background: 'rgba(230,57,70,0.05)' }}>
                 {error}
               </div>
             )}
 
             {message && (
-              <div style={{ fontFamily: 'Space Mono', fontSize: '11px', color: '#2ec4b6', padding: '10px', border: '1px solid #2ec4b6', background: 'rgba(46,196,182,0.05)' }}>
+              <div style={{ fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--green)', padding: '10px', border: '1px solid var(--green)', background: 'rgba(46,196,182,0.05)' }}>
                 {message}
               </div>
             )}
@@ -165,3 +145,4 @@ export default function Auth() {
     </div>
   )
 }
+

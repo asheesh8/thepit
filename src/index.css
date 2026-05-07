@@ -306,7 +306,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 
 .motivation-vault {
   margin-top: 20px;
-  min-height: 260px;
+  min-height: 320px;
   border: 1px solid var(--border);
   background:
     radial-gradient(circle at 78% 24%, rgba(244, 162, 97, 0.18), transparent 28%),
@@ -373,9 +373,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 
 .motivation-stage {
   position: relative;
-  min-height: 260px;
-  perspective: 900px;
-  transform-style: preserve-3d;
+  height: 320px;
 }
 
 .motivation-pfp-coin {
@@ -596,12 +594,12 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 }
 
 .floor-shell {
-  width: min(100%, 980px);
+  width: min(100%, 1280px);
   margin: 0 auto;
   padding: 32px 24px;
   display: grid;
-  grid-template-columns: 230px minmax(0, 680px);
-  gap: 28px;
+  grid-template-columns: 230px minmax(0, 1fr) 280px;
+  gap: 24px;
   align-items: start;
 }
 
@@ -1506,12 +1504,24 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1400px) {
   .floor-shell {
-    grid-template-columns: minmax(0, 680px);
-    justify-content: center;
+    grid-template-columns: 200px minmax(0, 1fr) 260px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .floor-shell {
+    grid-template-columns: minmax(0, 1fr) 260px;
   }
   .notifications-rail { display: none; }
+}
+
+@media (max-width: 860px) {
+  .floor-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .floor-right-rail { display: none; }
 }
 
 @media (max-width: 920px) {

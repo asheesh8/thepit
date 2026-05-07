@@ -1,5 +1,4 @@
-import { getTradeContext } from '../lib/discipline'
-
+﻿
 export default function ProfileStatsStrip({ stats }) {
   const cells = [
     { label: 'PUBLIC TRADES', value: stats.publicTradeCount },
@@ -26,12 +25,8 @@ export default function ProfileStatsStrip({ stats }) {
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-        {Object.entries(stats.contextSplit).map(([key, count]) => {
-          const context = getTradeContext(key)
-          return <span key={key} className="tag" style={{ color: context.color, fontSize: '8px' }}>{context.shortLabel}: {count}</span>
-        })}
-      </div>
+
     </div>
   )
 }
+

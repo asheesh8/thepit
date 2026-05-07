@@ -1,6 +1,7 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
+import Avatar from '../components/Avatar'
 
 export default function Search({ session }) {
   const [query, setQuery] = useState('')
@@ -13,24 +14,22 @@ export default function Search({ session }) {
     if (!query.trim()) return
     setLoading(true)
     setSearched(true)
-
     const { data } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, username, bio, avatar_url, trading_categories, experience_level')
       .ilike('username', `%${query.trim()}%`)
       .neq('id', session.user.id)
       .limit(20)
-
     setResults(data || [])
     setLoading(false)
   }
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 24px' }}>
 
-        <h1 style={{ fontSize: '3rem', letterSpacing: '0.05em', marginBottom: '4px' }}>FIND TRADERS</h1>
-        <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#444440', letterSpacing: '0.1em', marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '3rem', letterSpacing: '0.05em', lineHeight: 1, marginBottom: '4px' }}>FIND TRADERS</h1>
+        <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginBottom: '32px' }}>
           SEARCH BY USERNAME
         </p>
 
@@ -41,8 +40,8 @@ export default function Search({ session }) {
             placeholder="search username..."
             autoFocus
             style={{
-              flex: 1, background: '#111', border: '1px solid #242424',
-              padding: '14px 16px', color: '#e8e8e0', fontSize: '14px', outline: 'none',
+              flex: 1, background: 'var(--dark)', border: '1px solid var(--border)',
+              padding: '14px 16px', color: 'var(--text)', fontSize: '14px', outline: 'none',
               fontFamily: 'Space Mono',
             }}
           />
@@ -52,29 +51,44 @@ export default function Search({ session }) {
         </form>
 
         {loading && (
-          <div style={{ textAlign: 'center', padding: '40px', fontFamily: 'Space Mono', fontSize: '11px', color: '#444440' }}>
+          <div style={{ textAlign: 'center', padding: '40px', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)' }}>
             SEARCHING...
           </div>
         )}
 
         {!loading && searched && results.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ fontFamily: 'Bebas Neue', fontSize: '2rem', color: '#2a2a2a', marginBottom: '8px' }}>NO RESULTS</div>
-            <p style={{ fontFamily: 'Space Mono', fontSize: '11px', color: '#444440' }}>no traders found for "{query}"</p>
+          <div style={{ textAlign: 'center', padding: '60px 0' }}>
+            <div style={{ fontFamily: 'Bebas Neue', fontSize: '2.5rem', color: 'var(--border)', marginBottom: '8px' }}>NO RESULTS</div>
+            <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.06em' }}>no traders found for "{query}"</p>
           </div>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {results.map(user => (
             <Link key={user.id} to={`/profile/${user.username}`}>
-              <div className="card" style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'border-color 0.15s' }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = '#e63946'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = '#242424'}>
-                <div>
-                  <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.4rem', letterSpacing: '0.05em' }}>@{user.username}</div>
-                  {user.bio && <div style={{ fontFamily: 'DM Sans', fontSize: '13px', color: '#888880', marginTop: '4px' }}>{user.bio}</div>}
+              <div
+                className="card"
+                style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px', transition: 'border-color 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--red)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
+                <Avatar url={user.avatar_url} username={user.username} size={44} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.3rem', letterSpacing: '0.05em' }}>@{user.username}</div>
+                  {user.bio && (
+                    <div style={{ fontFamily: 'DM Sans', fontSize: '13px', color: 'var(--dim)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user.bio}
+                    </div>
+                  )}
+                  {user.trading_categories?.length > 0 && (
+                    <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+                      {user.trading_categories.map(cat => (
+                        <span key={cat} className="tag" style={{ fontSize: '8px', color: 'var(--dim)', opacity: 0.7 }}>{cat.toUpperCase()}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#e63946', letterSpacing: '0.1em' }}>VIEW →</span>
+                <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', letterSpacing: '0.1em', flexShrink: 0 }}>VIEW →</span>
               </div>
             </Link>
           ))}
@@ -83,3 +97,5 @@ export default function Search({ session }) {
     </div>
   )
 }
+
+

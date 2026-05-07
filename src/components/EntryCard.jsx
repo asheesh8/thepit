@@ -1,8 +1,9 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
 import { getTradeContext } from '../lib/discipline'
 import CalloutThreadList from './CalloutThreadList'
+import Avatar from './Avatar'
 
 export default function EntryCard({ entry, session, showActions = true, onDeleteReflection = null, onDeleteEntry = null }) {
   const [comments, setComments] = useState([])
@@ -25,7 +26,7 @@ export default function EntryCard({ entry, session, showActions = true, onDelete
     if (showComments) { setShowComments(false); return }
     const { data } = await supabase
       .from('comments')
-      .select('*, profiles(username)')
+      .select('*, profiles(username, avatar_url)')
       .eq('entry_id', entry.id)
       .order('created_at', { ascending: true })
     setComments(data || [])
@@ -38,7 +39,7 @@ export default function EntryCard({ entry, session, showActions = true, onDelete
     const { data } = await supabase
       .from('comments')
       .insert({ entry_id: entry.id, user_id: session.user.id, body: commentText.trim() })
-      .select('*, profiles(username)')
+      .select('*, profiles(username, avatar_url)')
       .single()
     if (data) setComments(prev => [...prev, data])
     setCommentText('')
@@ -80,7 +81,7 @@ export default function EntryCard({ entry, session, showActions = true, onDelete
             role: 'user',
             content: `You are The Pit Boss — a brutally honest trading coach. No sugarcoating, no corporate speak. Read this trader's reflection and give them real, direct feedback. Call out cope, emotional trading, bad habits. Give credit where it's genuinely due. Keep it under 150 words. Be direct, not mean.
 
-Trade: ${entry.symbol} ${entry.direction?.toUpperCase()} 
+Trade: ${entry.symbol} ${entry.direction?.toUpperCase()}
 P&L: ${pnlLabel}
 Mindset rating they gave themselves: ${entry.mindset_rating}/10
 Reflection: ${entry.reflection}
@@ -114,19 +115,23 @@ Give your honest assessment:`
     <div className="card fade-in" style={{ padding: '24px', marginBottom: '16px' }}>
       {/* header row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <Link to={`/profile/${entry.profiles?.username}`} style={{ fontFamily: 'Space Mono', fontSize: '12px', color: '#888880', letterSpacing: '0.05em' }}>
-            @{entry.profiles?.username || 'unknown'}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <Link to={`/profile/${entry.profiles?.username}`}>
+            <Avatar url={entry.profiles?.avatar_url} username={entry.profiles?.username} size={30} />
           </Link>
-          <span style={{ color: '#2a2a2a' }}>·</span>
-          <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#444440' }}>
-            {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
+          <div>
+            <Link to={`/profile/${entry.profiles?.username}`} style={{ fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--text)', letterSpacing: '0.05em' }}>
+              @{entry.profiles?.username || 'unknown'}
+            </Link>
+            <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.06em', marginTop: '1px' }}>
+              {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </div>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {entry.direction && (
-            <span className="tag" style={{ color: entry.direction === 'long' ? '#2ec4b6' : '#e63946', fontSize: '9px' }}>
+            <span className="tag" style={{ color: entry.direction === 'long' ? 'var(--green)' : 'var(--red)', fontSize: '9px' }}>
               {entry.direction.toUpperCase()}
             </span>
           )}
@@ -136,7 +141,7 @@ Give your honest assessment:`
               {entry.strategies.name}
             </Link>
           )}
-          <span className="tag" style={{ color: '#888880', fontSize: '9px' }}>{entry.symbol}</span>
+          <span className="tag" style={{ color: 'var(--dim)', fontSize: '9px' }}>{entry.symbol}</span>
           {onDeleteEntry && entry.user_id === session.user.id && (
             <button
               type="button"
@@ -164,40 +169,39 @@ Give your honest assessment:`
             style={{ fontFamily: 'Bebas Neue', fontSize: '2rem', letterSpacing: '0.05em', lineHeight: 1 }}>
             {pnlLabel}
           </div>
-          <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: '#444440', letterSpacing: '0.1em' }}>P&L</div>
+          <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.1em' }}>P&L</div>
         </div>
         {entry.entry_price && (
           <div>
-            <div style={{ fontFamily: 'Space Mono', fontSize: '12px', color: '#888880' }}>{entry.entry_price}</div>
-            <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: '#444440' }}>ENTRY</div>
+            <div style={{ fontFamily: 'Space Mono', fontSize: '12px', color: 'var(--dim)' }}>{entry.entry_price}</div>
+            <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.08em' }}>ENTRY</div>
           </div>
         )}
         {entry.exit_price && (
           <div>
-            <div style={{ fontFamily: 'Space Mono', fontSize: '12px', color: '#888880' }}>{entry.exit_price}</div>
-            <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: '#444440' }}>EXIT</div>
+            <div style={{ fontFamily: 'Space Mono', fontSize: '12px', color: 'var(--dim)' }}>{entry.exit_price}</div>
+            <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.08em' }}>EXIT</div>
           </div>
         )}
         {entry.mindset_rating && (
           <div>
-            <div style={{ fontFamily: 'Space Mono', fontSize: '12px', color: '#888880' }}>{entry.mindset_rating}/10</div>
-            <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: '#444440' }}>MINDSET</div>
+            <div style={{ fontFamily: 'Space Mono', fontSize: '12px', color: 'var(--dim)' }}>{entry.mindset_rating}/10</div>
+            <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.08em' }}>MINDSET</div>
           </div>
         )}
       </div>
 
       {/* chart image */}
       {entry.chart_url && (
-        <img src={entry.chart_url} alt="chart" style={{ width: '100%', maxHeight: '240px', objectFit: 'cover', marginBottom: '16px', border: '1px solid #242424' }} />
+        <img src={entry.chart_url} alt="chart" style={{ width: '100%', maxHeight: '240px', objectFit: 'cover', marginBottom: '16px', border: '1px solid var(--border)' }} />
       )}
 
       {hasJournalNotes && (
         <div className={`journal-reflection-block ${!entry.reflection ? 'only-difference' : ''}`}>
-          {/* reflection */}
           {entry.reflection && (
-          <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#c0c0b8', marginBottom: '12px' }}>
-            {entry.reflection}
-          </p>
+            <p style={{ fontSize: '14px', lineHeight: 1.7, color: 'var(--dim)', marginBottom: '12px' }}>
+              {entry.reflection}
+            </p>
           )}
           {canDeleteJournalNotes && (
             <button
@@ -219,44 +223,41 @@ Give your honest assessment:`
         </div>
       )}
 
-      {/* what i'd do differently */}
       {entry.what_id_do_differently && (
-        <div style={{ borderLeft: '2px solid #e63946', paddingLeft: '12px', marginBottom: '16px', paddingRight: canDeleteJournalNotes && !entry.reflection ? '34px' : 0 }}>
-          <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: '#e63946', letterSpacing: '0.1em', marginBottom: '4px' }}>WHAT I'D DO DIFFERENTLY</div>
-          <p style={{ fontSize: '13px', color: '#888880', lineHeight: 1.6 }}>{entry.what_id_do_differently}</p>
+        <div style={{ borderLeft: '2px solid var(--red)', paddingLeft: '12px', marginBottom: '16px', paddingRight: canDeleteJournalNotes && !entry.reflection ? '34px' : 0 }}>
+          <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--red)', letterSpacing: '0.1em', marginBottom: '4px' }}>WHAT I'D DO DIFFERENTLY</div>
+          <p style={{ fontSize: '13px', color: 'var(--dim)', lineHeight: 1.6 }}>{entry.what_id_do_differently}</p>
         </div>
       )}
 
-      {/* pit boss response */}
       {pitBossResponse && (
-        <div style={{ background: '#0f0f0f', border: '1px solid #e63946', padding: '16px', marginBottom: '16px' }}>
-          <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: '#e63946', letterSpacing: '0.15em', marginBottom: '10px' }}>⚡ PIT BOSS</div>
-          <p style={{ fontSize: '13px', lineHeight: 1.7, color: '#c0c0b8' }}>{pitBossResponse}</p>
+        <div style={{ background: 'var(--dark)', border: '1px solid var(--red)', padding: '16px', marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--red)', letterSpacing: '0.15em', marginBottom: '10px' }}>⚡ PIT BOSS</div>
+          <p style={{ fontSize: '13px', lineHeight: 1.7, color: 'var(--dim)' }}>{pitBossResponse}</p>
         </div>
       )}
 
-      {/* action bar */}
       {showActions && (
-        <div style={{ display: 'flex', gap: '8px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #1a1a1a', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
           <button onClick={() => handleReaction('props')} className="btn" style={{
             padding: '6px 12px', fontSize: '10px',
-            color: userReaction === 'props' ? '#2ec4b6' : '#444440',
-            borderColor: userReaction === 'props' ? '#2ec4b6' : '#242424',
+            color: userReaction === 'props' ? 'var(--green)' : 'var(--dim)',
+            borderColor: userReaction === 'props' ? 'var(--green)' : 'var(--border)',
           }}>
-            🤝 PROPS {reactions.props > 0 && reactions.props}
+            PROPS {reactions.props > 0 && reactions.props}
           </button>
           <button onClick={() => handleReaction('callout')} className="btn" style={{
             padding: '6px 12px', fontSize: '10px',
-            color: userReaction === 'callout' ? '#f4a261' : '#444440',
-            borderColor: userReaction === 'callout' ? '#f4a261' : '#242424',
+            color: userReaction === 'callout' ? 'var(--gold)' : 'var(--dim)',
+            borderColor: userReaction === 'callout' ? 'var(--gold)' : 'var(--border)',
           }}>
-            👁 CALLOUT {reactions.callout > 0 && reactions.callout}
+            CALLOUT {reactions.callout > 0 && reactions.callout}
           </button>
           <button onClick={() => setShowCallouts(prev => !prev)} className="btn btn-gold" style={{ padding: '6px 12px', fontSize: '10px' }}>
             REVIEW THREADS
           </button>
-          <button onClick={loadComments} className="btn" style={{ padding: '6px 12px', fontSize: '10px', color: '#444440', borderColor: '#242424' }}>
-            💬 {showComments ? 'HIDE' : 'COMMENTS'}
+          <button onClick={loadComments} className="btn" style={{ padding: '6px 12px', fontSize: '10px', color: 'var(--dim)', borderColor: 'var(--border)' }}>
+            {showComments ? 'HIDE COMMENTS' : 'COMMENTS'}
           </button>
           {entry.reflection && (
             <button onClick={getPitBossRoast} disabled={pitBossLoading} className="btn btn-red" style={{ padding: '6px 12px', fontSize: '10px' }}>
@@ -273,13 +274,15 @@ Give your honest assessment:`
 
       {showCallouts && <CalloutThreadList entry={entry} session={session} />}
 
-      {/* comments section */}
       {showComments && (
         <div style={{ marginTop: '16px' }}>
           {comments.map(c => (
-            <div key={c.id} style={{ padding: '10px 0', borderTop: '1px solid #1a1a1a' }}>
-              <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#e63946', marginRight: '10px' }}>@{c.profiles?.username}</span>
-              <span style={{ fontSize: '13px', color: '#888880' }}>{c.body}</span>
+            <div key={c.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '10px 0', borderTop: '1px solid var(--border)' }}>
+              <Avatar url={c.profiles?.avatar_url} username={c.profiles?.username} size={24} />
+              <div>
+                <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', marginRight: '10px' }}>@{c.profiles?.username}</span>
+                <span style={{ fontSize: '13px', color: 'var(--dim)' }}>{c.body}</span>
+              </div>
             </div>
           ))}
           <form onSubmit={submitComment} style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
@@ -288,8 +291,8 @@ Give your honest assessment:`
               onChange={e => setCommentText(e.target.value)}
               placeholder="be real..."
               style={{
-                flex: 1, background: '#111', border: '1px solid #242424',
-                padding: '8px 12px', color: '#e8e8e0', fontSize: '13px', outline: 'none',
+                flex: 1, background: 'var(--dark)', border: '1px solid var(--border)',
+                padding: '8px 12px', color: 'var(--text)', fontSize: '13px', outline: 'none',
               }}
             />
             <button type="submit" className="btn" style={{ padding: '8px 16px', fontSize: '10px' }}>POST</button>
@@ -299,3 +302,5 @@ Give your honest assessment:`
     </div>
   )
 }
+
+

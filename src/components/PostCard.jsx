@@ -1,6 +1,7 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
+import Avatar from './Avatar'
 
 export default function PostCard({ post, session }) {
   const [comments, setComments] = useState([])
@@ -16,7 +17,7 @@ export default function PostCard({ post, session }) {
     if (showComments) { setShowComments(false); return }
     const { data } = await supabase
       .from('post_comments')
-      .select('*, profiles(username)')
+      .select('*, profiles(username, avatar_url)')
       .eq('post_id', post.id)
       .order('created_at', { ascending: true })
     setComments(data || [])
@@ -29,7 +30,7 @@ export default function PostCard({ post, session }) {
     const { data } = await supabase
       .from('post_comments')
       .insert({ post_id: post.id, user_id: session.user.id, body: commentText.trim() })
-      .select('*, profiles(username)')
+      .select('*, profiles(username, avatar_url)')
       .single()
     if (data) setComments(prev => [...prev, data])
     setCommentText('')
@@ -79,14 +80,18 @@ export default function PostCard({ post, session }) {
       <div className="card fade-in" style={{ padding: '24px', marginBottom: '16px' }}>
         {/* header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <Link to={`/profile/${post.profiles?.username}`} style={{ fontFamily: 'Space Mono', fontSize: '12px', color: 'var(--dim)', letterSpacing: '0.05em' }}>
-              @{post.profiles?.username || 'unknown'}
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <Link to={`/profile/${post.profiles?.username}`}>
+              <Avatar url={post.profiles?.avatar_url} username={post.profiles?.username} size={30} />
             </Link>
-            <span style={{ color: 'var(--border)' }}>·</span>
-            <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', opacity: 0.6 }}>
-              {new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            </span>
+            <div>
+              <Link to={`/profile/${post.profiles?.username}`} style={{ fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--text)', letterSpacing: '0.05em', display: 'block' }}>
+                @{post.profiles?.username || 'unknown'}
+              </Link>
+              <span style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.06em' }}>
+                {new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
+            </div>
           </div>
           <span className="tag" style={{ color: 'var(--dim)', fontSize: '9px', opacity: 0.5 }}>POST</span>
         </div>
@@ -98,7 +103,7 @@ export default function PostCard({ post, session }) {
           </p>
         )}
 
-        {/* media — click to enlarge */}
+        {/* media â€” click to enlarge */}
         {post.media_url && (
           <div style={{ marginTop: '12px', position: 'relative', cursor: 'zoom-in' }} onClick={() => setLightbox(true)}>
             {isVideo ? (
@@ -112,7 +117,7 @@ export default function PostCard({ post, session }) {
               background: 'rgba(0,0,0,0.6)', padding: '4px 8px',
               fontFamily: 'Space Mono', fontSize: '9px', color: '#fff', letterSpacing: '0.08em',
             }}>
-              {isVideo ? '▶ PLAY' : '⤢ EXPAND'}
+              {isVideo ? 'â–¶ PLAY' : 'â¤¢ EXPAND'}
             </div>
           </div>
         )}
@@ -124,17 +129,17 @@ export default function PostCard({ post, session }) {
             color: userReaction === 'props' ? 'var(--green)' : 'var(--dim)',
             borderColor: userReaction === 'props' ? 'var(--green)' : 'var(--border)',
           }}>
-            🤝 PROPS {reactions.props > 0 && reactions.props}
+            ðŸ¤ PROPS {reactions.props > 0 && reactions.props}
           </button>
           <button onClick={() => handleReaction('callout')} className="btn" style={{
             padding: '6px 12px', fontSize: '10px',
             color: userReaction === 'callout' ? 'var(--gold)' : 'var(--dim)',
             borderColor: userReaction === 'callout' ? 'var(--gold)' : 'var(--border)',
           }}>
-            👁 CALLOUT {reactions.callout > 0 && reactions.callout}
+            ðŸ‘ CALLOUT {reactions.callout > 0 && reactions.callout}
           </button>
           <button onClick={loadComments} className="btn" style={{ padding: '6px 12px', fontSize: '10px', color: 'var(--dim)', borderColor: 'var(--border)' }}>
-            💬 {showComments ? 'HIDE' : 'COMMENTS'}
+            ðŸ’¬ {showComments ? 'HIDE' : 'COMMENTS'}
           </button>
         </div>
 
@@ -142,9 +147,12 @@ export default function PostCard({ post, session }) {
         {showComments && (
           <div style={{ marginTop: '16px' }}>
             {comments.map(c => (
-              <div key={c.id} style={{ padding: '10px 0', borderTop: '1px solid var(--border)' }}>
-                <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', marginRight: '10px' }}>@{c.profiles?.username}</span>
-                <span style={{ fontSize: '13px', color: 'var(--dim)' }}>{c.body}</span>
+              <div key={c.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '10px 0', borderTop: '1px solid var(--border)' }}>
+                <Avatar url={c.profiles?.avatar_url} username={c.profiles?.username} size={24} />
+                <div>
+                  <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', marginRight: '10px' }}>@{c.profiles?.username}</span>
+                  <span style={{ fontSize: '13px', color: 'var(--dim)' }}>{c.body}</span>
+                </div>
               </div>
             ))}
             <form onSubmit={submitComment} style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
@@ -165,3 +173,4 @@ export default function PostCard({ post, session }) {
     </>
   )
 }
+

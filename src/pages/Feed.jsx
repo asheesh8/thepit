@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
+﻿/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import EntryCard from '../components/EntryCard'
@@ -7,6 +7,9 @@ import PostComposer from '../components/PostComposer'
 import NotificationsRail from '../components/NotificationsRail'
 import BacktestReflectionCard from '../components/BacktestReflectionCard'
 import { Link } from 'react-router-dom'
+import MarketSessionWidget from '../components/MarketSessionWidget'
+import ForexNewsPanel from '../components/ForexNewsPanel'
+import TradingGlobe from '../components/TradingGlobe'
 
 export default function Feed({ session }) {
   const [items, setItems] = useState([])
@@ -23,7 +26,7 @@ export default function Feed({ session }) {
     // fetch trade entries
     let entryQuery = supabase
       .from('entries')
-      .select('*, profiles(username), strategies(name), reactions(type, user_id)')
+      .select('*, profiles(username, avatar_url), strategies(name), reactions(type, user_id)')
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(30)
@@ -47,7 +50,7 @@ export default function Feed({ session }) {
     // fetch free posts
     let postQuery = supabase
       .from('posts')
-      .select('*, profiles(username), post_reactions(type, user_id)')
+      .select('*, profiles(username, avatar_url), post_reactions(type, user_id)')
       .order('created_at', { ascending: false })
       .limit(30)
 
@@ -58,7 +61,7 @@ export default function Feed({ session }) {
     // don't show posts on winning/losing filters
     let reflectionQuery = supabase
       .from('backtest_reflections')
-      .select('*, profiles!backtest_reflections_user_id_profiles_fkey(username), strategies(name)')
+      .select('*, profiles!backtest_reflections_user_id_profiles_fkey(username, avatar_url), strategies(name)')
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(30)
@@ -193,7 +196,15 @@ export default function Feed({ session }) {
           )
         )}
         </main>
+
+        {/* right rail */}
+        <aside className="floor-right-rail" style={{ position: 'sticky', top: '76px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <TradingGlobe />
+          <ForexNewsPanel />
+        </aside>
       </div>
+      <MarketSessionWidget />
     </div>
   )
 }
+

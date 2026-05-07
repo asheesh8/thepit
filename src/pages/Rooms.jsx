@@ -124,70 +124,113 @@ export default function Rooms({ session }) {
     if (data) navigate(`/rooms/${data.id}`)
   }
 
+  const fmtTime = (iso) => {
+    if (!iso) return ''
+    const d = new Date(iso)
+    const now = new Date()
+    const diffMs = now - d
+    if (diffMs < 60000) return 'just now'
+    if (diffMs < 3600000) return `${Math.floor(diffMs / 60000)}m ago`
+    if (diffMs < 86400000) return `${Math.floor(diffMs / 3600000)}h ago`
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div className="dm-home">
-        <aside className="dm-home-sidebar">
-          <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', letterSpacing: '0.14em', marginBottom: '12px' }}>
-            MUTUALS
-          </div>
-          {loading ? (
-            <div className="dm-muted">LOADING...</div>
-          ) : mutuals.length === 0 ? (
-            <div className="dm-muted">FOLLOW EACH OTHER TO MESSAGE.</div>
-          ) : mutuals.map(user => (
-            <button key={user.id} onClick={() => openDm(user)} className="dm-user-row">
-              <Avatar profile={user} size={34} />
-              <span>@{user.username}</span>
-            </button>
-          ))}
-        </aside>
+    <div style={{ paddingTop: '56px', minHeight: '100vh', background: 'var(--black)' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '280px 1fr', minHeight: 'calc(100vh - 56px)' }}>
 
-        <main className="dm-home-main">
-          <div className="dm-home-hero">
-            <div>
-              <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--green)', letterSpacing: '0.14em' }}>PRIVATE DESK</div>
-              <h1 style={{ fontSize: '4.2rem', lineHeight: 0.9, marginTop: '8px' }}>DMs</h1>
-              <p style={{ color: 'var(--dim)', lineHeight: 1.7, maxWidth: '560px', marginTop: '12px' }}>
-                Message traders who follow you back. Each DM keeps chat, calls, screen share, music, notes, and action items in one private workspace.
-              </p>
-            </div>
-          </div>
-
-          {error && <div className="card" style={{ padding: '14px', color: 'var(--gold)', fontFamily: 'Space Mono', fontSize: '10px', marginBottom: '16px' }}>{error}</div>}
-
-          <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h2 style={{ fontSize: '2rem' }}>RECENT DMs</h2>
-              <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)' }}>{threads.length} THREADS</span>
-            </div>
+        {/* left: contacts */}
+        <aside style={{ borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '20px 16px 14px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ fontFamily: 'Space Mono', fontSize: '9px', letterSpacing: '0.2em', color: 'var(--dim)', marginBottom: '14px' }}>NEW MESSAGE</div>
             {loading ? (
-              <div className="dm-empty">LOADING DMS...</div>
-            ) : threads.length === 0 ? (
-              <div className="dm-empty">START WITH SOMEONE IN YOUR MUTUALS LIST.</div>
-            ) : threads.map(thread => (
-              <button key={thread.id} onClick={() => navigate(`/rooms/${thread.id}`)} className="dm-thread-card">
-                <Avatar profile={thread.other} />
-                <div style={{ minWidth: 0, textAlign: 'left' }}>
-                  <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.5rem', lineHeight: 1 }}>@{thread.other?.username || 'trader'}</div>
-                  <div style={{ color: 'var(--dim)', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '4px' }}>
-                    {thread.lastMessage ? `${thread.lastMessage.profiles?.username || 'user'}: ${thread.lastMessage.body}` : 'No messages yet. Open the desk.'}
-                  </div>
-                </div>
+              <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)' }}>LOADING...</div>
+            ) : mutuals.length === 0 ? (
+              <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--muted)', lineHeight: 1.8 }}>FOLLOW EACH OTHER TO UNLOCK DMs.</div>
+            ) : mutuals.map(user => (
+              <button key={user.id} onClick={() => openDm(user)} style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '8px 10px', background: 'none', border: '1px solid transparent',
+                cursor: 'pointer', marginBottom: '2px', transition: 'all 0.15s',
+              }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}
+              >
+                <Avatar profile={user} size={32} />
+                <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.04em' }}>@{user.username}</span>
               </button>
             ))}
-          </section>
-        </main>
-
-        <aside className="dm-home-sidebar">
-          <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', letterSpacing: '0.14em', marginBottom: '12px' }}>
-            QUICK START
           </div>
-          <div className="dm-muted" style={{ lineHeight: 1.7 }}>
-            Pick a mutual follower, send a message, then jump into camera or screen share inside the DM.
-          </div>
-          {selectedId && <div className="dm-muted" style={{ marginTop: '18px', color: 'var(--green)' }}>OPENING DESK...</div>}
+          {selectedId && (
+            <div style={{ padding: '12px 16px', fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--green)', letterSpacing: '0.1em' }}>
+              OPENING DESK...
+            </div>
+          )}
         </aside>
+
+        {/* right: threads */}
+        <main style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* header */}
+          <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontFamily: 'Space Mono', fontSize: '9px', letterSpacing: '0.2em', color: 'var(--dim)', marginBottom: '4px' }}>PRIVATE DESK</div>
+              <h1 style={{ fontFamily: 'Bebas Neue', fontSize: '2.4rem', letterSpacing: '0.06em', lineHeight: 1 }}>MESSAGES</h1>
+            </div>
+            <span style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.1em' }}>
+              {threads.length} THREAD{threads.length !== 1 ? 'S' : ''}
+            </span>
+          </div>
+
+          {error && (
+            <div style={{ margin: '16px 24px', padding: '12px 14px', border: '1px solid var(--gold)', fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--gold)' }}>
+              {error}
+            </div>
+          )}
+
+          {/* thread list */}
+          <div style={{ flex: 1, padding: '8px 0' }}>
+            {loading ? (
+              <div style={{ padding: '60px', textAlign: 'center', fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)' }}>LOADING...</div>
+            ) : threads.length === 0 ? (
+              <div style={{ padding: '60px', textAlign: 'center' }}>
+                <div style={{ fontFamily: 'Bebas Neue', fontSize: '2rem', color: 'var(--border)', marginBottom: '8px' }}>NO DMs YET</div>
+                <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.1em' }}>SELECT A MUTUAL FROM THE LEFT TO START</div>
+              </div>
+            ) : threads.map(thread => (
+              <button
+                key={thread.id}
+                onClick={() => navigate(`/rooms/${thread.id}`)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
+                  padding: '14px 24px', background: 'none', border: 'none',
+                  borderBottom: '1px solid var(--border)', cursor: 'pointer',
+                  transition: 'background 0.12s', textAlign: 'left',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--dark)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+              >
+                <Avatar profile={thread.other} size={44} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                    <span style={{ fontFamily: 'Bebas Neue', fontSize: '1.3rem', letterSpacing: '0.05em', lineHeight: 1 }}>
+                      @{thread.other?.username || 'trader'}
+                    </span>
+                    <span style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--muted)', letterSpacing: '0.06em', flexShrink: 0 }}>
+                      {fmtTime(thread.lastMessage?.created_at || thread.updated_at)}
+                    </span>
+                  </div>
+                  <div style={{ fontFamily: 'DM Sans', fontSize: '13px', color: 'var(--dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {thread.lastMessage
+                      ? `${thread.lastMessage.profiles?.username === thread.other?.username ? '' : 'You: '}${thread.lastMessage.body}`
+                      : 'No messages yet — open the desk.'
+                    }
+                  </div>
+                </div>
+                <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', flexShrink: 0 }}>→</span>
+              </button>
+            ))}
+          </div>
+        </main>
       </div>
     </div>
   )

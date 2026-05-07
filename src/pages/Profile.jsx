@@ -1,6 +1,6 @@
-/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
+﻿/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import EntryCard from '../components/EntryCard'
 import BadgeStrip from '../components/BadgeStrip'
@@ -31,8 +31,6 @@ export default function Profile({ session }) {
   const [tab, setTab] = useState('trades') // trades | strategies | resources
   const [badges, setBadges] = useState({ badgeKeys: [], currentStreak: 0 })
   const [loading, setLoading] = useState(true)
-  const [profileForm, setProfileForm] = useState({ avatar_url: '', bio: '' })
-  const [savingProfile, setSavingProfile] = useState(false)
 
   // resource form
   const [showAddResource, setShowAddResource] = useState(false)
@@ -53,7 +51,6 @@ export default function Profile({ session }) {
 
     if (!prof) { setLoading(false); return }
     setProfile(prof)
-    setProfileForm({ avatar_url: prof.avatar_url || '', bio: prof.bio || '' })
     setIsOwn(prof.id === session.user.id)
 
     // check following
@@ -128,21 +125,6 @@ export default function Profile({ session }) {
     }
   }
 
-  const saveProfile = async (event) => {
-    event.preventDefault()
-    setSavingProfile(true)
-    const { data } = await supabase
-      .from('profiles')
-      .update({
-        avatar_url: profileForm.avatar_url.trim(),
-        bio: profileForm.bio.trim(),
-      })
-      .eq('id', session.user.id)
-      .select('*')
-      .single()
-    if (data) setProfile(data)
-    setSavingProfile(false)
-  }
 
   const openDm = async () => {
     if (!profile?.id) return
@@ -193,7 +175,7 @@ export default function Profile({ session }) {
     setResources(prev => prev.filter(r => r.id !== id))
   }
 
-  if (loading) return <div style={{ paddingTop: '100px', textAlign: 'center', fontFamily: 'Space Mono', fontSize: '11px', color: '#444440' }}>LOADING...</div>
+  if (loading) return <div style={{ paddingTop: '100px', textAlign: 'center', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)' }}>LOADING...</div>
   if (!profile) return <div style={{ paddingTop: '100px', textAlign: 'center', fontFamily: 'Space Mono', fontSize: '11px', color: '#e63946' }}>USER NOT FOUND</div>
 
   return (
@@ -210,28 +192,38 @@ export default function Profile({ session }) {
               <h1 style={{ fontFamily: 'Bebas Neue', fontSize: '3.5rem', letterSpacing: '0.05em', lineHeight: 1 }}>
                 @{profile.username}
               </h1>
-              <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#444440', letterSpacing: '0.1em', marginTop: '4px' }}>
+              <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginTop: '4px' }}>
                 {followerCount} FOLLOWERS · {entries.length} PUBLIC TRADES
               </div>
             </div>
           </div>
           <div>
-            {!isOwn && (
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                {isFollowing && isFollower && (
-                  <button onClick={openDm} className="btn btn-green" style={{ padding: '10px 20px', fontSize: '11px' }}>
-                    MESSAGE
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {isOwn && (
+                <Link to="/settings" className="btn" style={{ padding: '10px 18px', fontSize: '10px', letterSpacing: '0.1em' }}>
+                  EDIT PROFILE
+                </Link>
+              )}
+              {!isOwn && (
+                <>
+                  {isFollowing && isFollower && (
+                    <button onClick={openDm} className="btn btn-green" style={{ padding: '10px 20px', fontSize: '11px' }}>
+                      MESSAGE
+                    </button>
+                  )}
+                  <button onClick={handleFollow} className={`btn ${isFollowing ? '' : 'btn-red'}`} style={{ padding: '10px 20px', fontSize: '11px' }}>
+                    {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
                   </button>
-                )}
-                <button onClick={handleFollow} className={`btn ${isFollowing ? '' : 'btn-red'}`} style={{ padding: '10px 20px', fontSize: '11px' }}>
-                  {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
-                </button>
-              </div>
-            )}
+                </>
+              )}
+            </div>
           </div>
+        </div>
 
+        {/* full-width profile details below hero row */}
+        <div style={{ marginBottom: '22px', padding: '0 26px 26px', border: '1px solid var(--border)', borderTop: 'none', background: 'linear-gradient(135deg, rgba(42,42,42,0.94), rgba(20,22,20,0.94))' }}>
           {profile.bio && (
-            <p style={{ fontSize: '14px', color: '#888880', lineHeight: 1.7 }}>{profile.bio}</p>
+            <p style={{ fontSize: '14px', color: 'var(--dim)', lineHeight: 1.7, paddingTop: '16px', margin: 0 }}>{profile.bio}</p>
           )}
           <div style={{ marginTop: '18px' }}>
             <BadgeStrip badgeKeys={badges.badgeKeys} currentStreak={badges.currentStreak} compact />
@@ -240,19 +232,7 @@ export default function Profile({ session }) {
           {profileStats && <MotivationVault profile={profile} stats={profileStats} isOwn={isOwn} />}
         </div>
 
-        {isOwn && (
-          <form onSubmit={saveProfile} className="card profile-edit-card">
-            <div>
-              <label style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.1em' }}>PROFILE PICTURE URL</label>
-              <input value={profileForm.avatar_url} onChange={event => setProfileForm(prev => ({ ...prev, avatar_url: event.target.value }))} placeholder="https://..." />
-            </div>
-            <div>
-              <label style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.1em' }}>BIO</label>
-              <input value={profileForm.bio} onChange={event => setProfileForm(prev => ({ ...prev, bio: event.target.value }))} placeholder="what kind of trader are you?" />
-            </div>
-            <button className="btn btn-green" style={{ padding: '11px 14px', fontSize: '10px' }}>{savingProfile ? 'SAVING...' : 'SAVE PROFILE'}</button>
-          </form>
-        )}
+
 
         {/* tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid #242424', marginBottom: '24px' }}>
@@ -296,19 +276,19 @@ export default function Profile({ session }) {
             {showAddResource && (
               <form onSubmit={addResource} className="card" style={{ padding: '20px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <label style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#888880', display: 'block', marginBottom: '6px' }}>TITLE</label>
+                  <label style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', display: 'block', marginBottom: '6px' }}>TITLE</label>
                   <input value={newResource.title} onChange={e => setNewResource(p => ({ ...p, title: e.target.value }))}
                     placeholder="ICT 2022 Mentorship" required
                     style={{ width: '100%', background: '#111', border: '1px solid #242424', padding: '10px 12px', color: '#e8e8e0', fontSize: '13px', outline: 'none' }} />
                 </div>
                 <div>
-                  <label style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#888880', display: 'block', marginBottom: '6px' }}>URL</label>
+                  <label style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', display: 'block', marginBottom: '6px' }}>URL</label>
                   <input value={newResource.url} onChange={e => setNewResource(p => ({ ...p, url: e.target.value }))}
                     placeholder="https://youtube.com/..." required type="url"
                     style={{ width: '100%', background: '#111', border: '1px solid #242424', padding: '10px 12px', color: '#e8e8e0', fontSize: '13px', outline: 'none' }} />
                 </div>
                 <div>
-                  <label style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#888880', display: 'block', marginBottom: '6px' }}>CATEGORY</label>
+                  <label style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', display: 'block', marginBottom: '6px' }}>CATEGORY</label>
                   <select value={newResource.category} onChange={e => setNewResource(p => ({ ...p, category: e.target.value }))}
                     style={{ width: '100%', background: '#111', border: '1px solid #242424', padding: '10px 12px', color: '#e8e8e0', fontSize: '13px', outline: 'none' }}>
                     {CATEGORIES.map(c => <option key={c} value={c}>{c.toUpperCase()}</option>)}
@@ -319,7 +299,7 @@ export default function Profile({ session }) {
             )}
 
             {resources.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px', fontFamily: 'Space Mono', fontSize: '11px', color: '#444440' }}>
+              <div style={{ textAlign: 'center', padding: '40px', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)' }}>
                 {isOwn ? 'ADD THE RESOURCES THAT SHAPED YOUR TRADING' : 'NO RESOURCES SHARED YET'}
               </div>
             ) : (
@@ -337,7 +317,7 @@ export default function Profile({ session }) {
                     </div>
                     {isOwn && (
                       <button onClick={() => deleteResource(r.id)} style={{
-                        background: 'none', border: 'none', color: '#444440', cursor: 'pointer',
+                        background: 'none', border: 'none', color: 'var(--dim)', cursor: 'pointer',
                         fontFamily: 'Space Mono', fontSize: '10px', padding: '4px 8px',
                       }}>✕</button>
                     )}
@@ -351,3 +331,8 @@ export default function Profile({ session }) {
     </div>
   )
 }
+
+
+
+
+

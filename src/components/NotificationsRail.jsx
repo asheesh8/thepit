@@ -159,10 +159,11 @@ export default function NotificationsRail({ session }) {
       </div>
 
       {items.length === 0 ? (
-        <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', lineHeight: 1.5 }}>
+        <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', lineHeight: 1.5, marginBottom: '20px' }}>
           QUIET RIGHT NOW.
         </div>
       ) : items.map(item => <Notice key={item.id} item={item} />)}
+
     </aside>
   )
 }
