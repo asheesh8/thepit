@@ -1134,6 +1134,32 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   stroke-linejoin: round;
 }
 
+.entry-trash-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border);
+  background: var(--black);
+  color: var(--dim);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.entry-trash-btn:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.entry-trash-btn svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 @media (max-width: 1180px) {
   .discord-room-shell {
     grid-template-columns: 1fr;

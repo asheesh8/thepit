@@ -67,6 +67,16 @@ export default function Journal({ session }) {
     if (data) setEntries(prev => prev.map(row => row.id === data.id ? data : row))
   }
 
+  const deleteEntry = async (entry) => {
+    if (!window.confirm('Delete this entire journal entry? This removes the trade card, chart, comments, and reactions.')) return
+    const { error } = await supabase
+      .from('entries')
+      .delete()
+      .eq('id', entry.id)
+      .eq('user_id', session.user.id)
+    if (!error) loadEntries()
+  }
+
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px 24px' }}>
@@ -117,6 +127,7 @@ export default function Journal({ session }) {
               session={session}
               showActions={true}
               onDeleteReflection={deleteReflection}
+              onDeleteEntry={deleteEntry}
             />
           ))
         )}

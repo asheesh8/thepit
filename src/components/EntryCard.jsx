@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { getTradeContext } from '../lib/discipline'
 import CalloutThreadList from './CalloutThreadList'
 
-export default function EntryCard({ entry, session, showActions = true, onDeleteReflection = null }) {
+export default function EntryCard({ entry, session, showActions = true, onDeleteReflection = null, onDeleteEntry = null }) {
   const [comments, setComments] = useState([])
   const [showComments, setShowComments] = useState(false)
   const [commentText, setCommentText] = useState('')
@@ -113,7 +113,7 @@ Give your honest assessment:`
   return (
     <div className="card fade-in" style={{ padding: '24px', marginBottom: '16px' }}>
       {/* header row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <Link to={`/profile/${entry.profiles?.username}`} style={{ fontFamily: 'Space Mono', fontSize: '12px', color: '#888880', letterSpacing: '0.05em' }}>
             @{entry.profiles?.username || 'unknown'}
@@ -124,7 +124,7 @@ Give your honest assessment:`
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {entry.direction && (
             <span className="tag" style={{ color: entry.direction === 'long' ? '#2ec4b6' : '#e63946', fontSize: '9px' }}>
               {entry.direction.toUpperCase()}
@@ -137,6 +137,23 @@ Give your honest assessment:`
             </Link>
           )}
           <span className="tag" style={{ color: '#888880', fontSize: '9px' }}>{entry.symbol}</span>
+          {onDeleteEntry && entry.user_id === session.user.id && (
+            <button
+              type="button"
+              onClick={() => onDeleteEntry(entry)}
+              className="entry-trash-btn"
+              aria-label="Delete journal entry"
+              title="Delete journal entry"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6h18" />
+                <path d="M8 6V4h8v2" />
+                <path d="M6 6l1 15h10l1-15" />
+                <path d="M10 10v7" />
+                <path d="M14 10v7" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
