@@ -13,6 +13,7 @@ export default function EntryCard({ entry, session, showActions = true }) {
   const [userReaction, setUserReaction] = useState(entry.user_reaction || null)
   const [pitBossLoading, setPitBossLoading] = useState(false)
   const [pitBossResponse, setPitBossResponse] = useState(null)
+  const [isPublic, setIsPublic] = useState(!!entry.is_public)
 
   const pnl = entry.pnl || 0
   const context = getTradeContext(entry.trade_context)
@@ -93,6 +94,18 @@ Give your honest assessment:`
       setPitBossResponse('Pit Boss is offline right now.')
     }
     setPitBossLoading(false)
+  }
+
+  const togglePublic = async () => {
+    const next = !isPublic
+    const { data } = await supabase
+      .from('entries')
+      .update({ is_public: next })
+      .eq('id', entry.id)
+      .eq('user_id', session.user.id)
+      .select('is_public')
+      .single()
+    if (data) setIsPublic(data.is_public)
   }
 
   return (
@@ -208,6 +221,11 @@ Give your honest assessment:`
           {entry.reflection && (
             <button onClick={getPitBossRoast} disabled={pitBossLoading} className="btn btn-red" style={{ padding: '6px 12px', fontSize: '10px' }}>
               {pitBossLoading ? '...' : '⚡ PIT BOSS'}
+            </button>
+          )}
+          {entry.user_id === session.user.id && (
+            <button onClick={togglePublic} className={`btn ${isPublic ? 'btn-green' : ''}`} style={{ padding: '6px 12px', fontSize: '10px' }}>
+              {isPublic ? 'ON FLOOR' : 'POST TO FLOOR'}
             </button>
           )}
         </div>

@@ -6,6 +6,7 @@ const emptyForm = {
   sample_size: '',
   lesson: '',
   next_follow_through: '',
+  is_public: false,
 }
 
 const inputStyle = {
@@ -72,6 +73,26 @@ export default function BacktestReflectionComposer({ strategyId, onCreate }) {
         <label style={labelStyle}>NEXT FOLLOW-THROUGH</label>
         <textarea value={form.next_follow_through} onChange={event => set('next_follow_through', event.target.value)} rows={2} placeholder="One rule or observation to carry into the next batch." style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
       </div>
+      <button
+        type="button"
+        onClick={() => set('is_public', !form.is_public)}
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: '12px',
+          alignItems: 'center',
+          padding: '12px',
+          border: '1px solid var(--border)',
+          background: form.is_public ? 'rgba(230,57,70,0.1)' : 'transparent',
+          color: form.is_public ? 'var(--red)' : 'var(--dim)',
+          fontFamily: 'Space Mono',
+          fontSize: '10px',
+          letterSpacing: '0.08em',
+        }}
+      >
+        <span>{form.is_public ? 'POST REFLECTION TO FLOOR' : 'KEEP REFLECTION PRIVATE'}</span>
+        <span>{form.is_public ? 'PUBLIC' : 'PRIVATE'}</span>
+      </button>
       {error && <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)' }}>{error}</div>}
       <button type="submit" disabled={saving} className="btn btn-red" style={{ justifyContent: 'center', fontSize: '11px' }}>
         {saving ? 'SAVING...' : 'ADD REFLECTION'}

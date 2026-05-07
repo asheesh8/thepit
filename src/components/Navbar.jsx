@@ -38,6 +38,7 @@ export default function Navbar({ session }) {
     { path: '/backtesting', label: 'BACKTEST' },
     { path: '/review', label: 'REVIEW' },
     { path: '/connections', label: 'CONNECTIONS' },
+    { path: '/settings', label: 'SETTINGS' },
   ]
   const moreActive = moreLinks.some(link => isActive(link.path))
 

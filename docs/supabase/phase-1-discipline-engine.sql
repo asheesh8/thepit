@@ -39,6 +39,7 @@ create table if not exists public.backtest_reflections (
   lesson text default '',
   next_follow_through text default '',
   completed_follow_through boolean not null default false,
+  is_public boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -56,7 +57,21 @@ create index if not exists entries_strategy_id_idx on public.entries(strategy_id
 create index if not exists entries_trade_context_idx on public.entries(trade_context);
 create index if not exists backtest_reflections_user_id_idx on public.backtest_reflections(user_id);
 create index if not exists backtest_reflections_strategy_id_idx on public.backtest_reflections(strategy_id);
+create index if not exists backtest_reflections_is_public_idx on public.backtest_reflections(is_public);
 create index if not exists user_badges_user_id_idx on public.user_badges(user_id);
+
+do $phase_1_profile_constraints$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'backtest_reflections_user_id_profiles_fkey'
+  ) then
+    alter table public.backtest_reflections
+      add constraint backtest_reflections_user_id_profiles_fkey
+      foreign key (user_id) references public.profiles(id) on delete cascade;
+  end if;
+end
+$phase_1_profile_constraints$;
 
 alter table public.strategies enable row level security;
 alter table public.backtest_reflections enable row level security;
@@ -77,6 +92,11 @@ drop policy if exists "Users can read own backtest reflections" on public.backte
 create policy "Users can read own backtest reflections"
   on public.backtest_reflections for select
   using (auth.uid() = user_id);
+
+drop policy if exists "Users can read public backtest reflections" on public.backtest_reflections;
+create policy "Users can read public backtest reflections"
+  on public.backtest_reflections for select
+  using (is_public = true);
 
 drop policy if exists "Users can write own backtest reflections" on public.backtest_reflections;
 create policy "Users can write own backtest reflections"

@@ -985,6 +985,111 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   min-height: 140px !important;
 }
 
+.backtest-entry-desk {
+  padding: 18px;
+  margin-bottom: 22px;
+  display: grid;
+  gap: 12px;
+}
+
+.backtest-entry-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 0.8fr 0.7fr 0.7fr 0.7fr;
+  gap: 10px;
+}
+
+.backtest-entry-desk input,
+.backtest-entry-desk select,
+.backtest-entry-desk textarea,
+.settings-panel input,
+.settings-panel textarea {
+  width: 100%;
+  min-width: 0;
+  background: var(--black);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  outline: none;
+}
+
+.backtest-entry-desk textarea,
+.settings-panel textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.settings-shell {
+  width: min(100%, 1040px);
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.settings-header h1 {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.settings-header p,
+.settings-muted,
+.settings-panel label {
+  font-family: 'Space Mono', monospace;
+  color: var(--dim);
+  letter-spacing: 0.08em;
+}
+
+.settings-header p,
+.settings-muted {
+  margin-top: 6px;
+  font-size: 10px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.settings-panel {
+  border: 1px solid var(--border);
+  background: rgba(34, 34, 34, 0.78);
+  padding: 18px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.settings-panel-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.05em;
+}
+
+.settings-panel label {
+  font-size: 9px;
+  margin-top: 6px;
+}
+
+.settings-category-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.settings-save {
+  grid-column: 1 / -1;
+  justify-content: center;
+  padding: 14px;
+}
+
 @media (max-width: 1180px) {
   .discord-room-shell {
     grid-template-columns: 1fr;
@@ -1018,6 +1123,10 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   }
   .room-header-actions {
     justify-content: flex-start;
+  }
+  .backtest-entry-grid,
+  .settings-grid {
+    grid-template-columns: 1fr;
   }
 }
 

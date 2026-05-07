@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import TradeContextPicker from '../components/TradeContextPicker'
 import StrategySelect from '../components/StrategySelect'
-import { DEFAULT_TRADE_CONTEXT } from '../lib/discipline'
+import { DEFAULT_TRADE_CONTEXT, TRADE_CONTEXTS } from '../lib/discipline'
 
 const MINDSET_LABELS = {
   1: 'Revenge trading', 2: 'Emotional wreck', 3: 'Distracted',
@@ -26,11 +26,20 @@ export default function NewEntry({ session }) {
   const [chartPreview, setChartPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [categoryLabels, setCategoryLabels] = useState({})
+  const journalContexts = TRADE_CONTEXTS
+    .filter(context => context.key !== 'backtest')
+    .map(context => ({
+      ...context,
+      shortLabel: categoryLabels[context.key]?.toUpperCase().slice(0, 12) || context.shortLabel,
+    }))
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }))
 
   useEffect(() => {
     loadStrategies()
+    const stored = localStorage.getItem(`pit-category-labels:${session.user.id}`)
+    if (stored) setCategoryLabels(JSON.parse(stored))
   }, [])
 
   const loadStrategies = async () => {
@@ -162,7 +171,10 @@ export default function NewEntry({ session }) {
           {/* context + strategy */}
           <div>
             <label style={labelStyle}>TRADE CONTEXT</label>
-            <TradeContextPicker value={form.trade_context} onChange={value => set('trade_context', value)} />
+            <TradeContextPicker value={form.trade_context} onChange={value => set('trade_context', value)} contexts={journalContexts} />
+            <div style={{ marginTop: '10px', fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.08em' }}>
+              BACKTESTS LIVE IN THE BACKTESTING DESK NOW.
+            </div>
           </div>
 
           <div>

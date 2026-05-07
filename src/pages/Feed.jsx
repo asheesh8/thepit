@@ -5,6 +5,7 @@ import EntryCard from '../components/EntryCard'
 import PostCard from '../components/PostCard'
 import PostComposer from '../components/PostComposer'
 import NotificationsRail from '../components/NotificationsRail'
+import BacktestReflectionCard from '../components/BacktestReflectionCard'
 import { Link } from 'react-router-dom'
 
 export default function Feed({ session }) {
@@ -35,6 +36,11 @@ export default function Feed({ session }) {
       const { data: follows } = await supabase
         .from('follows').select('following_id').eq('follower_id', session.user.id)
       followingIds = follows?.map(f => f.following_id) || []
+      if (followingIds.length === 0) {
+        setItems([])
+        setLoading(false)
+        return
+      }
       if (followingIds.length > 0) entryQuery = entryQuery.in('user_id', followingIds)
     }
 
@@ -50,9 +56,21 @@ export default function Feed({ session }) {
     }
 
     // don't show posts on winning/losing filters
-    const [{ data: entries }, { data: posts }] = await Promise.all([
+    let reflectionQuery = supabase
+      .from('backtest_reflections')
+      .select('*, profiles!backtest_reflections_user_id_profiles_fkey(username), strategies(name)')
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
+      .limit(30)
+
+    if (filter === 'following' && followingIds.length > 0) {
+      reflectionQuery = reflectionQuery.in('user_id', followingIds)
+    }
+
+    const [{ data: entries }, { data: posts }, { data: reflections }] = await Promise.all([
       entryQuery,
       filter === 'winning' || filter === 'losing' ? { data: [] } : postQuery,
+      filter === 'winning' || filter === 'losing' ? { data: [] } : reflectionQuery,
     ])
 
     // process entry reactions
@@ -73,8 +91,13 @@ export default function Feed({ session }) {
       user_reaction: p.post_reactions?.find(r => r.user_id === session.user.id)?.type || null,
     }))
 
+    const processedReflections = (reflections || []).map(reflection => ({
+      ...reflection,
+      _type: 'backtest_reflection',
+    }))
+
     // merge and sort by date
-    const merged = [...processedEntries, ...processedPosts].sort(
+    const merged = [...processedEntries, ...processedPosts, ...processedReflections].sort(
       (a, b) => new Date(b.created_at) - new Date(a.created_at)
     )
 
@@ -164,7 +187,9 @@ export default function Feed({ session }) {
           items.map(item =>
             item._type === 'post'
               ? <PostCard key={`post-${item.id}`} post={item} session={session} />
-              : <EntryCard key={`entry-${item.id}`} entry={item} session={session} />
+              : item._type === 'backtest_reflection'
+                ? <BacktestReflectionCard key={`reflection-${item.id}`} reflection={item} session={session} showAuthor />
+                : <EntryCard key={`entry-${item.id}`} entry={item} session={session} />
           )
         )}
         </main>

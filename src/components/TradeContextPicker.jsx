@@ -1,9 +1,9 @@
 import { TRADE_CONTEXTS } from '../lib/discipline'
 
-export default function TradeContextPicker({ value, onChange }) {
+export default function TradeContextPicker({ value, onChange, contexts = TRADE_CONTEXTS }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-      {TRADE_CONTEXTS.map(context => (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${contexts.length}, 1fr)`, gap: '8px' }}>
+      {contexts.map(context => (
         <button
           type="button"
           key={context.key}
