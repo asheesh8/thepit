@@ -304,6 +304,267 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   outline: none;
 }
 
+.motivation-vault {
+  margin-top: 20px;
+  min-height: 260px;
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 78% 24%, rgba(244, 162, 97, 0.18), transparent 28%),
+    linear-gradient(135deg, rgba(16, 18, 18, 0.96), rgba(35, 32, 26, 0.88));
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(320px, 1.08fr);
+  gap: 24px;
+  overflow: hidden;
+  position: relative;
+}
+
+.motivation-copy {
+  padding: 22px;
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  z-index: 2;
+}
+
+.motivation-kicker,
+.motivation-stats,
+.motivation-pfp-coin span {
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.1em;
+}
+
+.motivation-kicker {
+  color: var(--green);
+  font-size: 9px;
+}
+
+.motivation-copy h2 {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.motivation-copy p {
+  max-width: 340px;
+  color: var(--dim);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.motivation-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--gold);
+  font-size: 9px;
+}
+
+.motivation-stats span {
+  border: 1px solid rgba(244, 162, 97, 0.28);
+  background: rgba(244, 162, 97, 0.08);
+  padding: 6px 8px;
+}
+
+.motivation-link {
+  width: fit-content;
+  margin-top: 4px;
+  padding: 8px 12px;
+  font-size: 9px;
+}
+
+.motivation-stage {
+  position: relative;
+  min-height: 260px;
+  perspective: 900px;
+  transform-style: preserve-3d;
+}
+
+.motivation-pfp-coin {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  z-index: 4;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  transform: rotateY(-12deg) rotateX(8deg);
+}
+
+.motivation-pfp {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.42), inset 0 0 18px rgba(244, 162, 97, 0.18);
+  display: grid;
+  place-items: center;
+  color: var(--red);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+}
+
+.motivation-pfp-coin span {
+  color: var(--dim);
+  font-size: 7px;
+}
+
+.car-3d {
+  position: absolute;
+  left: 32px;
+  right: 30px;
+  bottom: 26px;
+  height: 146px;
+  transform: rotateX(58deg) rotateZ(-6deg) translateZ(8px);
+  transform-style: preserve-3d;
+}
+
+.car-shadow {
+  position: absolute;
+  left: 12%;
+  right: 6%;
+  bottom: 4px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.52);
+  filter: blur(14px);
+  transform: translateZ(-22px);
+}
+
+.car-body {
+  position: absolute;
+  left: 8%;
+  right: 4%;
+  bottom: 34px;
+  height: 58px;
+  border-radius: 18px 28px 16px 16px;
+  background: linear-gradient(135deg, #e63946, #6d1018 70%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 24px 44px rgba(0, 0, 0, 0.36), inset -22px -18px 34px rgba(0, 0, 0, 0.28);
+}
+
+.car-cabin {
+  position: absolute;
+  left: 34%;
+  bottom: 82px;
+  width: 34%;
+  height: 44px;
+  border-radius: 28px 22px 10px 8px;
+  background: linear-gradient(135deg, #2ec4b6, #113a38);
+  transform: skewX(-12deg);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.car-glass {
+  position: absolute;
+  left: 40%;
+  bottom: 91px;
+  width: 20%;
+  height: 25px;
+  border-radius: 15px 12px 4px 4px;
+  background: rgba(232, 232, 224, 0.8);
+  transform: skewX(-12deg);
+}
+
+.car-light {
+  position: absolute;
+  bottom: 62px;
+  width: 22px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--gold);
+  box-shadow: 0 0 18px rgba(244, 162, 97, 0.72);
+}
+
+.car-light.left { left: 10%; }
+.car-light.right { right: 5%; background: var(--green); }
+
+.car-wheel {
+  position: absolute;
+  bottom: 18px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #e8e8e0 0 18%, #101010 19% 64%, #363636 65%);
+  border: 2px solid #050505;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.car-wheel span {
+  position: absolute;
+  inset: 13px;
+  border: 1px solid rgba(232, 232, 224, 0.55);
+  border-radius: 50%;
+}
+
+.car-wheel.front { right: 14%; }
+.car-wheel.rear { left: 18%; }
+
+.piggy-bank-3d {
+  position: absolute;
+  right: 38px;
+  bottom: 104px;
+  width: 92px;
+  height: 64px;
+  border-radius: 46px 52px 40px 42px;
+  background: linear-gradient(135deg, #f4a261, #8a4b22);
+  box-shadow: 0 22px 36px rgba(0, 0, 0, 0.38), inset -15px -12px 22px rgba(0, 0, 0, 0.22);
+  transform: rotateX(18deg) rotateY(-18deg) translateZ(36px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.piggy-slot {
+  position: absolute;
+  left: 34px;
+  top: 11px;
+  width: 30px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.piggy-ear {
+  position: absolute;
+  left: 18px;
+  top: -9px;
+  width: 22px;
+  height: 22px;
+  background: #d98543;
+  border-radius: 8px 12px 3px 12px;
+  transform: rotate(24deg);
+}
+
+.piggy-eye {
+  position: absolute;
+  right: 23px;
+  top: 24px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--black);
+}
+
+.piggy-nose {
+  position: absolute;
+  right: -10px;
+  top: 28px;
+  width: 20px;
+  height: 16px;
+  border-radius: 999px;
+  background: #f2b16f;
+  border: 1px solid rgba(0, 0, 0, 0.24);
+}
+
+.piggy-foot {
+  position: absolute;
+  bottom: -9px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: #7c3f1c;
+}
+
+.piggy-foot.one { left: 18px; }
+.piggy-foot.two { right: 20px; }
+
 .music-deck-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
@@ -1299,6 +1560,24 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   .profile-edit-card {
     grid-template-columns: 1fr;
     display: grid;
+  }
+
+  .motivation-vault {
+    grid-template-columns: 1fr;
+  }
+
+  .motivation-stage {
+    min-height: 220px;
+  }
+
+  .car-3d {
+    left: 8px;
+    right: 8px;
+    transform: rotateX(56deg) rotateZ(-5deg) scale(0.92);
+  }
+
+  .piggy-bank-3d {
+    right: 22px;
   }
 
   .floor-workbench {

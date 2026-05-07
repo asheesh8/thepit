@@ -8,6 +8,7 @@ import { deriveBadgeKeys } from '../lib/discipline'
 import { calculateProfileStats } from '../lib/community'
 import ProfileStatsStrip from '../components/ProfileStatsStrip'
 import PublicStrategyPanel from '../components/PublicStrategyPanel'
+import MotivationVault from '../components/MotivationVault'
 
 const CATEGORIES = ['mentorship', 'psychology', 'strategy', 'tools', 'other']
 const CATEGORY_COLORS = {
@@ -236,6 +237,7 @@ export default function Profile({ session }) {
             <BadgeStrip badgeKeys={badges.badgeKeys} currentStreak={badges.currentStreak} compact />
           </div>
           {profileStats && <ProfileStatsStrip stats={profileStats} />}
+          {profileStats && <MotivationVault profile={profile} stats={profileStats} isOwn={isOwn} />}
         </div>
 
         {isOwn && (
