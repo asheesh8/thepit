@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function RoomChat({ roomId, session, messages, onRefresh, embedded = false }) {
+export default function RoomChat({ roomId, session, messages, onRefresh, embedded = false, title = 'MESSAGES', fullHeight = false }) {
   const [body, setBody] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -10,15 +10,16 @@ export default function RoomChat({ roomId, session, messages, onRefresh, embedde
     if (!body.trim()) return
     setSaving(true)
     await supabase.from('live_room_messages').insert({ room_id: roomId, user_id: session.user.id, body: body.trim() })
+    await supabase.from('live_rooms').update({ updated_at: new Date().toISOString() }).eq('id', roomId)
     setBody('')
     setSaving(false)
     onRefresh?.({ kind: 'chat' })
   }
 
   return (
-    <section className={embedded ? '' : 'card'} style={{ padding: embedded ? 0 : '14px' }}>
-      <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>MESSAGES</h3>
-      <div className="dm-message-list">
+    <section className={`room-chat ${fullHeight ? 'room-chat-full' : ''} ${embedded ? '' : 'card'}`} style={{ padding: embedded ? 0 : '14px' }}>
+      {title && <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>{title}</h3>}
+      <div className={`dm-message-list ${fullHeight ? 'full' : ''}`}>
         {messages.length === 0 ? (
           <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)' }}>NO MESSAGES YET.</div>
         ) : messages.map(message => (

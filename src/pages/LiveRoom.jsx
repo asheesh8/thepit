@@ -23,6 +23,7 @@ export default function LiveRoom({ session }) {
   const [roomUnlocked, setRoomUnlocked] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [dmThreads, setDmThreads] = useState([])
 
   const [pendingSignals, setPendingSignals] = useState([])
   const { participants, connected, sendSignal, broadcastRefresh } = useRoomRealtime({
@@ -47,6 +48,7 @@ export default function LiveRoom({ session }) {
 
   useEffect(() => {
     loadRoom()
+    loadDmThreads()
   }, [id])
 
   useEffect(() => {
@@ -109,6 +111,21 @@ export default function LiveRoom({ session }) {
     setLoading(false)
   }
 
+  const loadDmThreads = async () => {
+    const { data } = await supabase
+      .from('live_rooms')
+      .select('id, title, host_id, dm_peer_id, updated_at, profiles!live_rooms_host_id_profiles_fkey(id, username, avatar_url), dm_peer:profiles!live_rooms_dm_peer_id_profiles_fkey(id, username, avatar_url)')
+      .eq('room_type', 'dm')
+      .or(`host_id.eq.${session.user.id},dm_peer_id.eq.${session.user.id}`)
+      .order('updated_at', { ascending: false })
+      .limit(20)
+
+    setDmThreads((data || []).map(thread => ({
+      ...thread,
+      other: thread.host_id === session.user.id ? thread.dm_peer : thread.profiles,
+    })))
+  }
+
   const copyInvite = async () => {
     await navigator.clipboard.writeText(window.location.href)
   }
@@ -155,6 +172,82 @@ export default function LiveRoom({ session }) {
           {passwordError && <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', marginBottom: '12px' }}>{passwordError}</div>}
           <button type="submit" className="btn btn-red" style={{ width: '100%', justifyContent: 'center' }}>JOIN ROOM</button>
         </form>
+      </div>
+    )
+  }
+
+  if (isDm) {
+    return (
+      <div className="dm-thread-shell">
+        <aside className="dm-thread-sidebar">
+          <Link to="/rooms" className="dm-back-link">BACK TO DMS</Link>
+          <div className="dm-sidebar-title">DIRECTS</div>
+          <div className="dm-thread-list">
+            {dmThreads.length === 0 ? (
+              <div className="dm-muted">NO DMS YET.</div>
+            ) : dmThreads.map(thread => (
+              <Link key={thread.id} to={`/rooms/${thread.id}`} className={`dm-thread-link ${thread.id === room.id ? 'active' : ''}`}>
+                <div className="dm-thread-avatar" style={{ background: thread.other?.avatar_url ? `url(${thread.other.avatar_url}) center/cover` : 'var(--black)' }}>
+                  {!thread.other?.avatar_url && thread.other?.username?.slice(0, 1).toUpperCase()}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div className="dm-thread-name">@{thread.other?.username || 'trader'}</div>
+                  <div className="dm-thread-sub">MUTUAL FOLLOW</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </aside>
+
+        <main className="dm-chat-panel">
+          <header className="dm-chat-header">
+            <div className="dm-chat-identity">
+              <div className="dm-chat-avatar" style={{ background: dmPeer?.avatar_url ? `url(${dmPeer.avatar_url}) center/cover` : 'var(--black)' }}>
+                {!dmPeer?.avatar_url && dmPeer?.username?.slice(0, 1).toUpperCase()}
+              </div>
+              <div>
+                <h1>@{dmPeer?.username || 'trader'}</h1>
+                <div className="dm-chat-status">
+                  <span>{connected ? 'REALTIME' : 'CONNECTING'}</span>
+                  <span>{participants.length} PRESENT</span>
+                  <span>MUTUAL FOLLOW</span>
+                </div>
+              </div>
+            </div>
+            <div className="dm-chat-actions">
+              <button className="btn btn-green" onClick={() => rtc.joinMedia()} style={{ padding: '9px 12px', fontSize: '9px' }}>CALL</button>
+              <button className="btn" onClick={() => (rtc.mediaState.joined ? rtc.shareScreen() : rtc.joinMedia())} style={{ padding: '9px 12px', fontSize: '9px' }}>SCREEN</button>
+            </div>
+          </header>
+          <div className="dm-chat-body">
+            <RoomChat
+              embedded
+              fullHeight
+              title={null}
+              roomId={room.id}
+              session={session}
+              messages={messages}
+              onRefresh={payload => { broadcastRefresh(payload); loadRoom(); loadDmThreads() }}
+            />
+          </div>
+        </main>
+
+        <aside className="dm-tools-panel">
+          <section className="dm-tool-card dm-call-card">
+            <div className="dm-tool-eyebrow">LIVE CALL</div>
+            <LiveStage localStream={rtc.localStream} remoteStreams={rtc.remoteStreams} mediaState={rtc.mediaState} rtc={rtc} />
+          </section>
+          <section className="dm-tool-card">
+            <div className="dm-tool-eyebrow">MUSIC</div>
+            <MusicDeck embedded room={room} onSaved={payload => { setRoom(payload.room); broadcastRefresh(payload) }} />
+          </section>
+          <section className="dm-tool-card">
+            <RoomNotes embedded room={room} canEdit onSaved={payload => { setRoom(payload.room); broadcastRefresh(payload) }} />
+          </section>
+          <section className="dm-tool-card">
+            <RoomActionItems embedded roomId={room.id} session={session} items={actions} onRefresh={payload => { broadcastRefresh(payload); loadRoom() }} />
+          </section>
+        </aside>
       </div>
     )
   }
