@@ -2,7 +2,7 @@
   "name": "The Pit",
   "short_name": "The Pit",
   "description": "Trading journal, backtesting desk, DMs, and public floor.",
-  "start_url": "/feed",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
