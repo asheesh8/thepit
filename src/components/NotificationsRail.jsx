@@ -16,22 +16,47 @@ function actorName(profile) {
   return profile?.username ? `@${profile.username}` : '@someone'
 }
 
-function Notice({ item }) {
+function Notice({ item, onDismiss }) {
   return (
-    <Link to={item.href} className="notice-row">
-      <div className="notice-avatar">{item.avatar}</div>
-      <div style={{ minWidth: 0 }}>
-        <div className="notice-copy">
-          <span style={{ color: 'var(--text)' }}>{item.actor}</span> {item.text}
+    <div style={{ display: 'flex', alignItems: 'flex-start', padding: '12px 0', borderTop: '1px solid var(--border)' }}>
+      <Link to={item.href} style={{ display: 'flex', gap: '10px', flex: 1, minWidth: 0 }}>
+        <div className="notice-avatar">{item.avatar}</div>
+        <div style={{ minWidth: 0 }}>
+          <div className="notice-copy">
+            <span style={{ color: 'var(--text)' }}>{item.actor}</span> {item.text}
+          </div>
+          <div className="notice-meta">{item.meta} · {timeAgo(item.created_at)}</div>
         </div>
-        <div className="notice-meta">{item.meta} · {timeAgo(item.created_at)}</div>
-      </div>
-    </Link>
+      </Link>
+      <button
+        onClick={() => onDismiss(item.id)}
+        style={{
+          flexShrink: 0, alignSelf: 'flex-start',
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--muted)', fontSize: '16px', lineHeight: 1,
+          padding: '0 0 0 6px', opacity: 0.7,
+        }}
+        title="Dismiss"
+      >×</button>
+    </div>
   )
 }
 
 export default function NotificationsRail({ session }) {
   const [items, setItems] = useState([])
+  const [dismissed, setDismissed] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('pit_dismissed_notices') || '[]')) }
+    catch { return new Set() }
+  })
+
+  const dismiss = (id) => {
+    setDismissed(prev => {
+      const next = new Set(prev)
+      next.add(id)
+      try { localStorage.setItem('pit_dismissed_notices', JSON.stringify([...next])) } catch {}
+      return next
+    })
+  }
 
   useEffect(() => {
     loadNotifications()
@@ -151,18 +176,20 @@ export default function NotificationsRail({ session }) {
     setItems(notices.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 12))
   }
 
+  const visible = items.filter(item => !dismissed.has(item.id))
+
   return (
     <aside className="notifications-rail">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', letterSpacing: '0.14em' }}>NOTIFICATIONS</div>
-        <span style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)' }}>{items.length}</span>
+        <span style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)' }}>{visible.length}</span>
       </div>
 
-      {items.length === 0 ? (
+      {visible.length === 0 ? (
         <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', lineHeight: 1.5, marginBottom: '20px' }}>
           QUIET RIGHT NOW.
         </div>
-      ) : items.map(item => <Notice key={item.id} item={item} />)}
+      ) : visible.map(item => <Notice key={item.id} item={item} onDismiss={dismiss} />)}
 
     </aside>
   )

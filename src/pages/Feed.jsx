@@ -131,7 +131,10 @@ export default function Feed({ session }) {
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
       <div className="floor-shell">
-        <NotificationsRail session={session} />
+        <div className="floor-left-rail">
+          <NotificationsRail session={session} />
+          <PinnedRulesPanel session={session} context="feed" />
+        </div>
         <main className="floor-feed">
 
         <div className="page-title-row" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -204,7 +207,6 @@ export default function Feed({ session }) {
 
         {/* right rail */}
         <aside className="floor-right-rail" style={{ position: 'sticky', top: '76px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <PinnedRulesPanel session={session} context="feed" />
           <TradingGlobe />
           <ForexNewsPanel />
         </aside>

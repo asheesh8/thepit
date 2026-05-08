@@ -739,6 +739,12 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   align-items: start;
 }
 
+.floor-left-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .floor-feed {
   min-width: 0;
 }
@@ -1875,6 +1881,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     grid-template-columns: minmax(0, 1fr) 260px;
   }
   .notifications-rail { display: none; }
+  .floor-left-rail { display: none; }
 }
 
 @media (max-width: 860px) {

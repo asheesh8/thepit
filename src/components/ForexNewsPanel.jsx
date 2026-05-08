@@ -19,6 +19,8 @@ async function fetchNews() {
   try {
     const res = await fetch('/api/ff-calendar')
     if (!res.ok) return []
+    const ct = res.headers.get('content-type') || ''
+    if (!ct.includes('json')) return []
     const data = await res.json()
     return (Array.isArray(data) ? data : [])
       .filter(e => {
