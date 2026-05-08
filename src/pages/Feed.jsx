@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom'
 import MarketSessionWidget from '../components/MarketSessionWidget'
 import ForexNewsPanel from '../components/ForexNewsPanel'
 import TradingGlobe from '../components/TradingGlobe'
+import PinnedRules from '../components/PinnedRules'
 
 export default function Feed({ session }) {
   const [items, setItems] = useState([])
@@ -130,7 +131,10 @@ export default function Feed({ session }) {
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
       <div className="floor-shell">
-        <NotificationsRail session={session} />
+        <div className="floor-left-rail">
+          <NotificationsRail session={session} />
+          <PinnedRules />
+        </div>
         <main className="floor-feed">
 
         <div className="page-title-row" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
