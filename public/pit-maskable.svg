@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="The Pit">
+  <rect width="512" height="512" fill="#0b0d0c"/>
+  <circle cx="256" cy="256" r="244" fill="#141615"/>
+  <circle cx="256" cy="256" r="218" fill="none" stroke="#2a2a2a" stroke-width="6"/>
+  <path d="M156 102h200v70h-62v250h-76V172h-62v-70Z" fill="#f2f0e8"/>
+  <path d="M374 86 166 426h-70L304 86h70Z" fill="#e63946"/>
+  <path d="M130 426h252" stroke="#2ec4b6" stroke-width="18" stroke-linecap="round"/>
+  <path d="M384 426h40" stroke="#f4a261" stroke-width="18" stroke-linecap="round"/>
+</svg>

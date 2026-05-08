@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="The Pit">
+  <defs>
+    <linearGradient id="bg" x1="84" y1="72" x2="424" y2="456" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#242424"/>
+      <stop offset="1" stop-color="#080909"/>
+    </linearGradient>
+    <linearGradient id="slash" x1="146" y1="96" x2="368" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff4654"/>
+      <stop offset="1" stop-color="#b41323"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="44" y="44" width="424" height="424" rx="92" fill="none" stroke="#353535" stroke-width="3"/>
+  <path d="M168 95h176v58h-57v264h-62V153h-57V95Z" fill="#f2f0e8" filter="url(#shadow)"/>
+  <path d="M352 92 165 420h-58L294 92h58Z" fill="url(#slash)" opacity="0.96"/>
+  <path d="M136 420h240" stroke="#2ec4b6" stroke-width="14" stroke-linecap="round"/>
+  <path d="M376 420h34" stroke="#f4a261" stroke-width="14" stroke-linecap="round"/>
+</svg>

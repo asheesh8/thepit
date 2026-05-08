@@ -1,0 +1,45 @@
+{
+  "name": "The Pit",
+  "short_name": "The Pit",
+  "description": "Trading journal, backtesting desk, DMs, and public floor.",
+  "start_url": "/feed",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#0b0d0c",
+  "theme_color": "#111211",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "productivity", "social"],
+  "icons": [
+    {
+      "src": "/pit-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/pit-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
