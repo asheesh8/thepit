@@ -32,6 +32,10 @@ export const BADGES = [
   { key: 'rule_follower', label: 'Rule Follower', rule: '5 strategy-linked trades', tone: 'green' },
   { key: 'first_strategy', label: 'First Strategy Built', rule: 'Create 1 strategy', tone: 'gold' },
   { key: 'first_funded_reflection', label: 'First Funded Reflection', rule: 'Log a funded trade with reflection', tone: 'green' },
+  { key: 'reflection_50', label: '50 Reflections', rule: 'Write 50 total reflections', tone: 'red' },
+  { key: 'reflection_100', label: '100 Reflections', rule: 'Write 100 total reflections', tone: 'green' },
+  { key: 'reflection_500', label: '500 Reflections', rule: 'Write 500 total reflections', tone: 'gold' },
+  { key: 'reflection_1000', label: '1000 Reflections', rule: 'Write 1000 total reflections', tone: 'red' },
 ]
 
 export const badgeByKey = Object.fromEntries(BADGES.map(badge => [badge.key, badge]))
@@ -74,6 +78,10 @@ export function deriveBadgeKeys({ entries = [], strategies = [], reflections = [
   const backtestEntries = entries.filter(entry => entry.trade_context === 'backtest')
   const strategyLinkedTrades = entries.filter(entry => entry.strategy_id)
   const fundedReflection = entries.some(entry => entry.trade_context === 'funded' && entry.reflection?.trim())
+  const tradeReflectionCount = entries.filter(entry =>
+    entry.reflection?.trim() || entry.what_id_do_differently?.trim()
+  ).length
+  const totalReflectionCount = tradeReflectionCount + reflections.length
 
   const earned = new Set()
   if (currentStreak >= 3) earned.add('pit_streak_3')
@@ -83,6 +91,10 @@ export function deriveBadgeKeys({ entries = [], strategies = [], reflections = [
   if (strategyLinkedTrades.length >= 5) earned.add('rule_follower')
   if (strategies.length >= 1) earned.add('first_strategy')
   if (fundedReflection) earned.add('first_funded_reflection')
+  if (totalReflectionCount >= 50) earned.add('reflection_50')
+  if (totalReflectionCount >= 100) earned.add('reflection_100')
+  if (totalReflectionCount >= 500) earned.add('reflection_500')
+  if (totalReflectionCount >= 1000) earned.add('reflection_1000')
 
   return { badgeKeys: [...earned], currentStreak }
 }

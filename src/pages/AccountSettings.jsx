@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabase'
 import { TRADE_CONTEXTS } from '../lib/discipline'
 
 const MARKETS = ['equities', 'futures', 'forex', 'crypto', 'options']
-const LEVELS = ['beginner', 'intermediate', 'advanced', 'professional']
 const defaultLabels = Object.fromEntries(TRADE_CONTEXTS.map(c => [c.key, c.label]))
 
 export default function AccountSettings({ session }) {
@@ -14,7 +13,6 @@ export default function AccountSettings({ session }) {
   const [avatarPreview, setAvatarPreview] = useState('')
   const [bio, setBio] = useState('')
   const [markets, setMarkets] = useState([])
-  const [level, setLevel] = useState('')
   const [goalText, setGoalText] = useState('')
   const [categoryLabels, setCategoryLabels] = useState(() => {
     const stored = localStorage.getItem(`pit-category-labels:${session.user.id}`)
@@ -29,7 +27,7 @@ export default function AccountSettings({ session }) {
   useEffect(() => {
     supabase
       .from('profiles')
-      .select('username, avatar_url, bio, trading_categories, experience_level, goal_text')
+      .select('username, avatar_url, bio, trading_categories, goal_text')
       .eq('id', session.user.id)
       .single()
       .then(({ data }) => {
@@ -39,7 +37,6 @@ export default function AccountSettings({ session }) {
         setAvatarPreview(data.avatar_url || '')
         setBio(data.bio || '')
         setMarkets(data.trading_categories || [])
-        setLevel(data.experience_level || '')
         setGoalText(data.goal_text || '')
       })
   }, [session.user.id])
@@ -89,7 +86,6 @@ export default function AccountSettings({ session }) {
       avatar_url: avatarUrl || null,
       bio: bio.trim(),
       trading_categories: markets,
-      experience_level: level,
       goal_text: goalText.trim(),
     }).eq('id', session.user.id)
     localStorage.setItem(`pit-category-labels:${session.user.id}`, JSON.stringify(categoryLabels))
@@ -246,37 +242,6 @@ export default function AccountSettings({ session }) {
                     }}
                   >
                     {m.toUpperCase()}
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-
-          {/* ── EXPERIENCE PANEL ── */}
-          <section className="settings-panel">
-            <div className="settings-panel-title">EXPERIENCE LEVEL</div>
-            <div className="settings-chip-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', paddingTop: '4px' }}>
-              {LEVELS.map(l => {
-                const active = level === l
-                return (
-                  <button
-                    key={l} type="button" onClick={() => setLevel(l)}
-                    style={{
-                      padding: '14px 8px', textAlign: 'center', position: 'relative',
-                      background: active ? 'var(--dark)' : 'transparent',
-                      border: `1px solid ${active ? 'var(--text)' : 'var(--border)'}`,
-                      color: active ? 'var(--text)' : 'var(--dim)',
-                      fontFamily: 'Space Mono', fontSize: '9px', letterSpacing: '0.08em',
-                      cursor: 'pointer', transition: 'all 0.15s',
-                    }}
-                  >
-                    {active && (
-                      <span style={{
-                        position: 'absolute', top: 0, left: 0, right: 0, height: '2px',
-                        background: 'var(--red)',
-                      }} />
-                    )}
-                    {l.toUpperCase()}
                   </button>
                 )
               })}
