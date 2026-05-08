@@ -27,10 +27,12 @@ export default function Navbar({ session }) {
   }
 
   const isActive = (path) => location.pathname === path
+  const profilePath = profile?.username ? `/profile/${profile.username}` : '/settings'
   const primaryLinks = [
     { path: '/feed', label: 'FLOOR' },
     { path: '/rooms', label: 'DMs' },
     { path: '/new', label: '+ LOG TRADE' },
+    { path: profilePath, label: 'PROFILE', mobileOnly: true },
   ]
   const moreLinks = [
     { path: '/journal', label: 'JOURNAL' },
@@ -49,8 +51,8 @@ export default function Navbar({ session }) {
       </Link>
 
       <div className="app-nav-links">
-        {primaryLinks.map(({ path, label }) => (
-          <Link key={path} to={path} className={`app-nav-link ${isActive(path) ? 'active' : ''}`}>
+        {primaryLinks.map(({ path, label, mobileOnly }) => (
+          <Link key={`${path}-${label}`} to={path} className={`app-nav-link ${mobileOnly ? 'app-nav-mobile-profile' : ''} ${isActive(path) ? 'active' : ''}`}>
             {label}
           </Link>
         ))}

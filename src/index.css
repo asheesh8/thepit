@@ -170,6 +170,10 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   border-bottom-color: var(--red);
 }
 
+.app-nav-mobile-profile {
+  display: none;
+}
+
 .app-nav-more-wrap {
   position: relative;
 }
@@ -1779,6 +1783,10 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     padding: 7px 10px;
     font-size: 9px;
     letter-spacing: 0.08em;
+  }
+
+  .app-nav-mobile-profile {
+    display: inline-flex;
   }
 
   .app-nav-menu {

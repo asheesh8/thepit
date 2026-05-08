@@ -50,11 +50,11 @@ export default function AccountSettings({ session }) {
     setAvatarPreview(URL.createObjectURL(file))
     setUploading(true)
     setError('')
-    const ext = file.name.split('.').pop()
-    const path = `${session.user.id}/avatar.${ext}`
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const path = `${session.user.id}/avatar-${Date.now()}.${ext}`
     const { error: uploadErr } = await supabase.storage
       .from('avatars')
-      .upload(path, file, { upsert: true, contentType: file.type })
+      .upload(path, file, { contentType: file.type })
     if (uploadErr) {
       setError(uploadErr.message)
       setAvatarPreview(avatarUrl)
@@ -63,6 +63,16 @@ export default function AccountSettings({ session }) {
     }
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
     const busted = `${publicUrl}?t=${Date.now()}`
+    const { error: profileErr } = await supabase
+      .from('profiles')
+      .update({ avatar_url: busted })
+      .eq('id', session.user.id)
+    if (profileErr) {
+      setError(`Photo uploaded, but profile did not save: ${profileErr.message}`)
+      setAvatarPreview(avatarUrl)
+      setUploading(false)
+      return
+    }
     setAvatarUrl(busted)
     setAvatarPreview(busted)
     setUploading(false)
@@ -320,4 +330,3 @@ function CameraIcon() {
     </svg>
   )
 }
-
