@@ -16,7 +16,7 @@ export default function Search({ session }) {
     setSearched(true)
     const { data } = await supabase
       .from('profiles')
-      .select('id, username, bio, avatar_url, trading_categories, experience_level')
+      .select('id, username, bio, avatar_url, trading_categories')
       .ilike('username', `%${query.trim()}%`)
       .neq('id', session.user.id)
       .limit(20)

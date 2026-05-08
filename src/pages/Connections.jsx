@@ -91,7 +91,7 @@ export default function Connections({ session }) {
         </p>
 
         {/* tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid #242424', marginBottom: '24px' }}>
+        <div className="mobile-tabs" style={{ display: 'flex', borderBottom: '1px solid #242424', marginBottom: '24px' }}>
           {[['followers', `FOLLOWERS (${followers.length})`], ['following', `FOLLOWING (${following.length})`], ['suggestions', 'SUGGESTED']].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)} style={{
               padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer',

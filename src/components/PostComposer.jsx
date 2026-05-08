@@ -53,7 +53,7 @@ export default function PostComposer({ session, onPost }) {
   }
 
   return (
-    <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
+    <div className="card post-composer" style={{ padding: '20px', marginBottom: '24px' }}>
       <form onSubmit={handleSubmit}>
         <textarea
           value={body}
@@ -86,7 +86,7 @@ export default function PostComposer({ session, onPost }) {
         )}
 
         {expanded && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
+          <div className="post-composer-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
             <label style={{ cursor: 'pointer' }}>
               <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', padding: '6px 10px', border: '1px solid var(--border)' }}>
                 📎 MEDIA

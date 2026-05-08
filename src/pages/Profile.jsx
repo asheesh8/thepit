@@ -235,7 +235,7 @@ export default function Profile({ session }) {
 
 
         {/* tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid #242424', marginBottom: '24px' }}>
+        <div className="mobile-tabs" style={{ display: 'flex', borderBottom: '1px solid #242424', marginBottom: '24px' }}>
           {[['trades', 'TRADES'], ['strategies', 'STRATEGIES'], ['resources', 'RESOURCE LIBRARY']].map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)} style={{
               padding: '10px 20px', background: 'none', border: 'none', cursor: 'pointer',
@@ -252,7 +252,7 @@ export default function Profile({ session }) {
         {/* trades tab */}
         {tab === 'trades' && (
           entries.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px' }}>
+            <div className="mobile-empty-state" style={{ textAlign: 'center', padding: '60px' }}>
               <div style={{ fontFamily: 'Bebas Neue', fontSize: '2rem', color: '#2a2a2a' }}>NO PUBLIC TRADES</div>
             </div>
           ) : entries.map(entry => (
@@ -331,7 +331,6 @@ export default function Profile({ session }) {
     </div>
   )
 }
-
 
 
 

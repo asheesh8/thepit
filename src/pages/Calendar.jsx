@@ -58,7 +58,7 @@ export default function Calendar({ session }) {
 
         <div className="calendar-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '18px' }}>
           <h2 style={{ fontSize: '2.1rem' }}>{monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h2>
-          <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
+          <div className="mobile-tabs" style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
             {[
               ['trades', 'TRADE CALENDAR'],
               ['reflections', 'REFLECTION CALENDAR'],

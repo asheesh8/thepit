@@ -71,7 +71,7 @@ export default function Landing() {
             color: '#b8b6ad', maxWidth: '560px', lineHeight: 1.7, marginBottom: '34px', letterSpacing: '0.02em' }}>
             A trading floor for your journal, strategies, backtests, live review rooms, callouts, music, and public trading identity.
           </p>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div className="landing-actions" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <Link to="/auth" className="btn btn-red" style={{ padding: '14px 30px', fontSize: '12px' }}>
               ENTER THE PIT
             </Link>
@@ -96,7 +96,7 @@ export default function Landing() {
         </div>
 
         {/* bottom stats strip */}
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0,
+        <div className="landing-stats-strip" style={{ position: 'fixed', bottom: 0, left: 0, right: 0,
           borderTop: '1px solid #242424', background: 'rgba(10,10,10,0.9)',
           display: 'flex', justifyContent: 'center', gap: '48px', padding: '16px 24px' }}>
           {[

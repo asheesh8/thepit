@@ -19,8 +19,8 @@ export default function CalloutComposer({ onSubmit }) {
   }
 
   return (
-    <form onSubmit={submit} style={{ borderTop: '1px solid var(--border)', paddingTop: '14px', marginTop: '14px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '170px 1fr auto', gap: '8px', alignItems: 'start' }}>
+    <form onSubmit={submit} className="callout-composer" style={{ borderTop: '1px solid var(--border)', paddingTop: '14px', marginTop: '14px' }}>
+      <div className="callout-composer-grid" style={{ display: 'grid', gridTemplateColumns: '170px 1fr auto', gap: '8px', alignItems: 'start' }}>
         <select value={reason} onChange={event => setReason(event.target.value)} style={{
           background: 'var(--black)', border: '1px solid var(--border)', color: 'var(--text)', padding: '9px', fontSize: '12px',
         }}>

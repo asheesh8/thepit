@@ -73,7 +73,7 @@ export default function Review({ session }) {
           </p>
         </div>
 
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <div className="mobile-tabs" style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '24px', flexWrap: 'wrap' }}>
           {tabs.map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)} style={{
               padding: '10px 16px',

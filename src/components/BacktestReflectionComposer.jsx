@@ -50,12 +50,12 @@ export default function BacktestReflectionComposer({ strategyId, onCreate }) {
   }
 
   return (
-    <form onSubmit={submit} className="card" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '14px' }}>
+    <form onSubmit={submit} className="card backtest-reflection-composer" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '14px' }}>
       <div>
         <label style={labelStyle}>REFLECTION TITLE</label>
         <input value={form.title} onChange={event => set('title', event.target.value)} required placeholder="Batch 1: London continuation test" style={inputStyle} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px' }}>
+      <div className="backtest-reflection-grid" style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '12px' }}>
         <div>
           <label style={labelStyle}>SAMPLE SIZE</label>
           <input type="number" min="0" value={form.sample_size} onChange={event => set('sample_size', event.target.value)} placeholder="20" style={inputStyle} />

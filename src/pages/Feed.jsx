@@ -133,7 +133,7 @@ export default function Feed({ session }) {
         <NotificationsRail session={session} />
         <main className="floor-feed">
 
-        <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div className="page-title-row" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
             <h1 style={{ fontSize: '3rem', letterSpacing: '0.05em', lineHeight: 1, marginBottom: '4px' }}>THE FLOOR</h1>
             <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', opacity: 0.6 }}>
@@ -155,7 +155,7 @@ export default function Feed({ session }) {
         </div>
 
         {/* filter tabs */}
-        <div style={{ display: 'flex', marginBottom: '24px', borderBottom: '1px solid var(--border)' }}>
+        <div className="mobile-tabs" style={{ display: 'flex', marginBottom: '24px', borderBottom: '1px solid var(--border)' }}>
           {filters.map(f => (
             <button key={f.key} onClick={() => setFilter(f.key)} style={{
               padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer',
@@ -176,11 +176,11 @@ export default function Feed({ session }) {
 
         {/* feed items */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)', letterSpacing: '0.1em' }}>
+          <div className="mobile-empty-state" style={{ textAlign: 'center', padding: '60px', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)', letterSpacing: '0.1em' }}>
             LOADING THE FLOOR...
           </div>
         ) : items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px' }}>
+          <div className="mobile-empty-state" style={{ textAlign: 'center', padding: '60px' }}>
             <div style={{ fontFamily: 'Bebas Neue', fontSize: '2rem', color: 'var(--border)', marginBottom: '12px' }}>EMPTY</div>
             <p style={{ fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)' }}>
               {filter === 'following' ? 'FOLLOW SOME TRADERS TO SEE THEIR POSTS' : 'NO ACTIVITY YET. BE THE FIRST.'}
@@ -207,4 +207,3 @@ export default function Feed({ session }) {
     </div>
   )
 }
-

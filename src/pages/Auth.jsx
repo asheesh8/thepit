@@ -64,7 +64,7 @@ export default function Auth() {
       <div className="auth-card-wrap">
         <div className="card auth-card">
           {/* tabs */}
-          <div style={{ display: 'flex', marginBottom: '32px', borderBottom: '1px solid var(--border)' }}>
+          <div className="mobile-tabs" style={{ display: 'flex', marginBottom: '32px', borderBottom: '1px solid var(--border)' }}>
             {['login', 'signup'].map(m => (
               <button key={m} onClick={() => { setMode(m); setError('') }} style={{
                 flex: 1, padding: '10px', background: 'none', border: 'none',
