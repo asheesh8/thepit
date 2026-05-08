@@ -1485,6 +1485,230 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   padding: 14px;
 }
 
+.daily-checkin-screen {
+  min-height: 100svh;
+  padding: 28px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(230, 57, 70, 0.16), transparent 34%),
+    radial-gradient(circle at 82% 78%, rgba(46, 196, 182, 0.1), transparent 30%),
+    var(--black);
+}
+
+.daily-checkin-card {
+  width: min(100%, 560px);
+  padding: 28px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(34, 34, 34, 0.96), rgba(14, 16, 15, 0.96));
+  display: grid;
+  gap: 16px;
+}
+
+.daily-checkin-brand,
+.daily-checkin-label,
+.daily-checkin-muted,
+.daily-checkin-options button,
+.daily-checkin-bools button,
+.daily-checkin-error {
+  font-family: 'Space Mono', monospace;
+}
+
+.daily-checkin-brand {
+  color: var(--red);
+  letter-spacing: 0.2em;
+  font-size: 11px;
+}
+
+.daily-checkin-card h1 {
+  font-size: 3.3rem;
+  line-height: 1;
+}
+
+.daily-checkin-muted {
+  color: var(--dim);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  line-height: 1.7;
+}
+
+.daily-checkin-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--dim);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.daily-checkin-options,
+.daily-checkin-bools {
+  display: grid;
+  gap: 8px;
+}
+
+.daily-checkin-options {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.daily-checkin-options button,
+.daily-checkin-bools button {
+  min-height: 42px;
+  border: 1px solid var(--border);
+  background: var(--black);
+  color: var(--dim);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.daily-checkin-options button.active,
+.daily-checkin-bools button.active {
+  color: var(--green);
+  border-color: var(--green);
+  background: rgba(46, 196, 182, 0.08);
+}
+
+.daily-checkin-bools button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.daily-checkin-card input,
+.daily-checkin-card textarea,
+.settings-panel select {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: var(--black);
+  color: var(--text);
+  outline: none;
+}
+
+.daily-checkin-card textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.daily-checkin-error {
+  padding: 10px 12px;
+  color: var(--red);
+  border: 1px solid var(--red);
+  font-size: 10px;
+}
+
+.daily-checkin-submit {
+  justify-content: center;
+  padding: 14px;
+}
+
+.pinned-rules-panel {
+  border: 1px solid var(--border);
+  background: rgba(34, 34, 34, 0.82);
+  padding: 14px;
+}
+
+.pinned-rules-strip {
+  margin-bottom: 18px;
+}
+
+.pinned-rules-mobile-slot {
+  display: none;
+}
+
+.pinned-rules-kicker {
+  margin-bottom: 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--red);
+  letter-spacing: 0.16em;
+}
+
+.pinned-rules-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pinned-rule {
+  padding: 10px;
+  border-left: 2px solid var(--red);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.pinned-rule span,
+.pinned-rules-empty,
+.settings-rule-row span {
+  font-family: 'Space Mono', monospace;
+  color: var(--dim);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pinned-rule p {
+  margin-top: 5px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.pinned-rules-empty {
+  display: block;
+  line-height: 1.6;
+}
+
+.settings-rule-builder {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px auto;
+  gap: 8px;
+}
+
+.settings-rule-builder select,
+.settings-rule-builder input {
+  min-width: 0;
+}
+
+.settings-rule-list {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-rule-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: var(--black);
+}
+
+.settings-rule-row.active {
+  border-color: rgba(46, 196, 182, 0.42);
+}
+
+.settings-rule-row p {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.settings-rule-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.settings-rule-actions .btn {
+  padding: 7px 10px;
+  font-size: 8px;
+}
+
 .journal-reflection-block {
   position: relative;
   padding-right: 34px;
@@ -1772,6 +1996,40 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   textarea,
   select {
     font-size: 16px !important;
+  }
+
+  .daily-checkin-screen {
+    padding: 14px;
+    align-items: start;
+  }
+
+  .daily-checkin-card {
+    padding: 18px;
+  }
+
+  .daily-checkin-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .daily-checkin-bools button {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pinned-rules-mobile-slot {
+    display: block;
+  }
+
+  .floor-right-rail .pinned-rules-panel {
+    display: none;
+  }
+
+  .pinned-rules-panel {
+    padding: 12px;
+  }
+
+  .pinned-rules-strip .pinned-rules-list {
+    gap: 8px;
   }
 
   .landing-screen {
@@ -2253,6 +2511,23 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 
   .settings-category-row {
     grid-template-columns: 1fr !important;
+  }
+
+  .settings-rule-builder,
+  .settings-rule-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .settings-rule-builder .btn {
+    width: 100%;
+  }
+
+  .settings-rule-actions {
+    justify-content: stretch;
+  }
+
+  .settings-rule-actions .btn {
+    flex: 1;
   }
 
   .profile-hero,

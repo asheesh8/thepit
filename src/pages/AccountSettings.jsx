@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { TRADE_CONTEXTS } from '../lib/discipline'
+import { PINNED_RULE_CONTEXTS, contextLabel } from '../lib/pinnedRules'
 
 const MARKETS = ['equities', 'futures', 'forex', 'crypto', 'options']
 const defaultLabels = Object.fromEntries(TRADE_CONTEXTS.map(c => [c.key, c.label]))
@@ -14,6 +15,8 @@ export default function AccountSettings({ session }) {
   const [bio, setBio] = useState('')
   const [markets, setMarkets] = useState([])
   const [goalText, setGoalText] = useState('')
+  const [rules, setRules] = useState([])
+  const [ruleDraft, setRuleDraft] = useState({ body: '', context: 'global' })
   const [categoryLabels, setCategoryLabels] = useState(() => {
     const stored = localStorage.getItem(`pit-category-labels:${session.user.id}`)
     return stored ? { ...defaultLabels, ...JSON.parse(stored) } : defaultLabels
@@ -39,6 +42,13 @@ export default function AccountSettings({ session }) {
         setMarkets(data.trading_categories || [])
         setGoalText(data.goal_text || '')
       })
+    supabase
+      .from('pinned_rules')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+      .then(({ data }) => setRules(data || []))
   }, [session.user.id])
 
   const handleFileChange = async (e) => {
@@ -77,6 +87,57 @@ export default function AccountSettings({ session }) {
 
   const toggleMarket = (m) =>
     setMarkets(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
+
+  const addRule = async () => {
+    const body = ruleDraft.body.trim()
+    if (!body) return
+    setError('')
+    const { data, error: insertError } = await supabase
+      .from('pinned_rules')
+      .insert({
+        user_id: session.user.id,
+        body,
+        context: ruleDraft.context,
+        is_pinned: true,
+        sort_order: rules.length,
+      })
+      .select('*')
+      .single()
+    if (insertError) {
+      setError(insertError.message)
+      return
+    }
+    if (data) setRules(prev => [...prev, data])
+    setRuleDraft({ body: '', context: 'global' })
+  }
+
+  const toggleRulePinned = async (rule) => {
+    const { data, error: updateError } = await supabase
+      .from('pinned_rules')
+      .update({ is_pinned: !rule.is_pinned })
+      .eq('id', rule.id)
+      .eq('user_id', session.user.id)
+      .select('*')
+      .single()
+    if (updateError) {
+      setError(updateError.message)
+      return
+    }
+    if (data) setRules(prev => prev.map(row => row.id === data.id ? data : row))
+  }
+
+  const deleteRule = async (rule) => {
+    const { error: deleteError } = await supabase
+      .from('pinned_rules')
+      .delete()
+      .eq('id', rule.id)
+      .eq('user_id', session.user.id)
+    if (deleteError) {
+      setError(deleteError.message)
+      return
+    }
+    setRules(prev => prev.filter(row => row.id !== rule.id))
+  }
 
   const handleSave = async (e) => {
     e.preventDefault()
@@ -215,6 +276,49 @@ export default function AccountSettings({ session }) {
               }}>
                 {goalText.length}/120
               </span>
+            </div>
+          </section>
+
+          <section className="settings-panel">
+            <div className="settings-panel-title">PINNED RULES</div>
+            <p className="settings-muted" style={{ marginTop: 0 }}>
+              These stay visible where you need pressure, not motivation.
+            </p>
+            <div className="settings-rule-builder">
+              <input
+                value={ruleDraft.body}
+                onChange={e => setRuleDraft(prev => ({ ...prev, body: e.target.value }))}
+                placeholder="don't force trash setups"
+              />
+              <select
+                value={ruleDraft.context}
+                onChange={e => setRuleDraft(prev => ({ ...prev, context: e.target.value }))}
+              >
+                {PINNED_RULE_CONTEXTS.map(context => (
+                  <option key={context.key} value={context.key}>{context.label}</option>
+                ))}
+              </select>
+              <button type="button" onClick={addRule} className="btn btn-green">ADD RULE</button>
+            </div>
+            <div className="settings-rule-list">
+              {rules.length === 0 ? (
+                <div className="settings-muted">NO RULES PINNED YET.</div>
+              ) : rules.map(rule => (
+                <div key={rule.id} className={`settings-rule-row ${rule.is_pinned ? 'active' : ''}`}>
+                  <div>
+                    <span>{contextLabel(rule.context)}</span>
+                    <p>{rule.body}</p>
+                  </div>
+                  <div className="settings-rule-actions">
+                    <button type="button" onClick={() => toggleRulePinned(rule)} className="btn">
+                      {rule.is_pinned ? 'PINNED' : 'HIDDEN'}
+                    </button>
+                    <button type="button" onClick={() => deleteRule(rule)} className="btn btn-red">
+                      DELETE
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 

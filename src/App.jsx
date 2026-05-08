@@ -18,6 +18,7 @@ import Rooms from './pages/Rooms'
 import LiveRoom from './pages/LiveRoom'
 import AccountSettings from './pages/AccountSettings'
 import Navbar from './components/Navbar'
+import DailyCheckInGate from './components/DailyCheckInGate'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -42,25 +43,35 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      {session && <Navbar session={session} />}
-      <Routes>
-        <Route path="/" element={session ? <Navigate to="/feed" /> : <Landing />} />
-        <Route path="/auth" element={session ? <Navigate to="/feed" /> : <Auth />} />
-        <Route path="/feed" element={session ? <Feed session={session} /> : <Navigate to="/" />} />
-        <Route path="/journal" element={session ? <Journal session={session} /> : <Navigate to="/" />} />
-        <Route path="/new" element={session ? <NewEntry session={session} /> : <Navigate to="/" />} />
-        <Route path="/search" element={session ? <Search session={session} /> : <Navigate to="/" />} />
-        <Route path="/connections" element={session ? <Connections session={session} /> : <Navigate to="/" />} />
-        <Route path="/strategies" element={session ? <Strategies session={session} /> : <Navigate to="/" />} />
-        <Route path="/strategies/:id" element={session ? <StrategyDetail session={session} /> : <Navigate to="/" />} />
-        <Route path="/backtesting" element={session ? <Backtesting session={session} /> : <Navigate to="/" />} />
-        <Route path="/calendar" element={session ? <Calendar session={session} /> : <Navigate to="/" />} />
-        <Route path="/review" element={session ? <Review session={session} /> : <Navigate to="/" />} />
-        <Route path="/rooms" element={session ? <Rooms session={session} /> : <Navigate to="/" />} />
-        <Route path="/rooms/:id" element={session ? <LiveRoom session={session} /> : <Navigate to="/" />} />
-        <Route path="/settings" element={session ? <AccountSettings session={session} /> : <Navigate to="/" />} />
-        <Route path="/profile/:username" element={session ? <Profile session={session} /> : <Navigate to="/" />} />
-      </Routes>
+      {session ? (
+        <DailyCheckInGate session={session}>
+          <Navbar session={session} />
+          <Routes>
+            <Route path="/" element={<Navigate to="/feed" />} />
+            <Route path="/auth" element={<Navigate to="/feed" />} />
+            <Route path="/feed" element={<Feed session={session} />} />
+            <Route path="/journal" element={<Journal session={session} />} />
+            <Route path="/new" element={<NewEntry session={session} />} />
+            <Route path="/search" element={<Search session={session} />} />
+            <Route path="/connections" element={<Connections session={session} />} />
+            <Route path="/strategies" element={<Strategies session={session} />} />
+            <Route path="/strategies/:id" element={<StrategyDetail session={session} />} />
+            <Route path="/backtesting" element={<Backtesting session={session} />} />
+            <Route path="/calendar" element={<Calendar session={session} />} />
+            <Route path="/review" element={<Review session={session} />} />
+            <Route path="/rooms" element={<Rooms session={session} />} />
+            <Route path="/rooms/:id" element={<LiveRoom session={session} />} />
+            <Route path="/settings" element={<AccountSettings session={session} />} />
+            <Route path="/profile/:username" element={<Profile session={session} />} />
+          </Routes>
+        </DailyCheckInGate>
+      ) : (
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      )}
     </BrowserRouter>
   )
 }

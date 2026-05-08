@@ -5,6 +5,7 @@ import EntryCard from '../components/EntryCard'
 import { Link } from 'react-router-dom'
 import BadgeStrip from '../components/BadgeStrip'
 import { deriveBadgeKeys, persistEarnedBadges } from '../lib/discipline'
+import PinnedRulesPanel from '../components/PinnedRulesPanel'
 
 export default function Journal({ session }) {
   const [entries, setEntries] = useState([])
@@ -110,6 +111,8 @@ export default function Journal({ session }) {
         )}
 
         <BadgeStrip badgeKeys={badges.badgeKeys} currentStreak={badges.currentStreak} />
+
+        <PinnedRulesPanel session={session} context="journal" variant="strip" />
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '60px', fontFamily: 'Space Mono', fontSize: '11px', color: '#444440' }}>LOADING...</div>

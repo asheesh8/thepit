@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom'
 import MarketSessionWidget from '../components/MarketSessionWidget'
 import ForexNewsPanel from '../components/ForexNewsPanel'
 import TradingGlobe from '../components/TradingGlobe'
+import PinnedRulesPanel from '../components/PinnedRulesPanel'
 
 export default function Feed({ session }) {
   const [items, setItems] = useState([])
@@ -154,6 +155,10 @@ export default function Feed({ session }) {
           ))}
         </div>
 
+        <div className="pinned-rules-mobile-slot">
+          <PinnedRulesPanel session={session} context="feed" variant="strip" />
+        </div>
+
         {/* filter tabs */}
         <div className="mobile-tabs" style={{ display: 'flex', marginBottom: '24px', borderBottom: '1px solid var(--border)' }}>
           {filters.map(f => (
@@ -199,6 +204,7 @@ export default function Feed({ session }) {
 
         {/* right rail */}
         <aside className="floor-right-rail" style={{ position: 'sticky', top: '76px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <PinnedRulesPanel session={session} context="feed" />
           <TradingGlobe />
           <ForexNewsPanel />
         </aside>

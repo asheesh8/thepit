@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import BacktestReflectionCard from '../components/BacktestReflectionCard'
 import BacktestReflectionComposer from '../components/BacktestReflectionComposer'
+import PinnedRulesPanel from '../components/PinnedRulesPanel'
 
 const emptyBacktestEntry = {
   strategy_id: '',
@@ -130,6 +131,8 @@ export default function Backtesting({ session }) {
           </div>
           <a href="#backtest-entry" className="btn btn-red" style={{ padding: '10px 18px', fontSize: '11px' }}>+ BACKTEST ENTRY</a>
         </div>
+
+        <PinnedRulesPanel session={session} context="backtesting" variant="strip" />
 
         {error && <div className="card" style={{ padding: '14px', marginBottom: '18px', color: 'var(--gold)', fontFamily: 'Space Mono', fontSize: '10px' }}>{error}</div>}
 

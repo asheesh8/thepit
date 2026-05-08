@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import TradeContextPicker from '../components/TradeContextPicker'
 import StrategySelect from '../components/StrategySelect'
+import PinnedRulesPanel from '../components/PinnedRulesPanel'
 import { DEFAULT_TRADE_CONTEXT, TRADE_CONTEXTS } from '../lib/discipline'
 
 const MINDSET_LABELS = {
@@ -127,6 +128,8 @@ export default function NewEntry({ session }) {
         <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#444440', letterSpacing: '0.1em', marginBottom: '32px' }}>
           BE HONEST. NOBODY'S WATCHING. YOU ARE.
         </p>
+
+        <PinnedRulesPanel session={session} context="log_trade" variant="strip" />
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 

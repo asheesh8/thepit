@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import EntryCard from '../components/EntryCard'
 import StrategyCard from '../components/StrategyCard'
+import PinnedRulesPanel from '../components/PinnedRulesPanel'
 
 export default function Review({ session }) {
   const [tab, setTab] = useState('needs')
@@ -72,6 +73,8 @@ export default function Review({ session }) {
             FIND TRADES TO SHARPEN. FIND STRATEGIES TO STUDY.
           </p>
         </div>
+
+        <PinnedRulesPanel session={session} context="review" variant="strip" />
 
         <div className="mobile-tabs" style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '24px', flexWrap: 'wrap' }}>
           {tabs.map(([key, label]) => (
