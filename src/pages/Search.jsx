@@ -26,14 +26,14 @@ export default function Search({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 24px' }}>
+      <div className="page-shell search-shell" style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 24px' }}>
 
         <h1 style={{ fontSize: '3rem', letterSpacing: '0.05em', lineHeight: 1, marginBottom: '4px' }}>FIND TRADERS</h1>
         <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginBottom: '32px' }}>
           SEARCH BY USERNAME
         </p>
 
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
+        <form className="search-form" onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}

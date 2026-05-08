@@ -112,7 +112,7 @@ Give your honest assessment:`
   }
 
   return (
-    <div className="card fade-in" style={{ padding: '24px', marginBottom: '16px' }}>
+    <div className="card fade-in entry-card" style={{ padding: '24px', marginBottom: '16px' }}>
       {/* header row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -163,7 +163,7 @@ Give your honest assessment:`
       </div>
 
       {/* p&l row */}
-      <div style={{ display: 'flex', gap: '24px', marginBottom: '16px', alignItems: 'baseline' }}>
+      <div className="entry-metrics-row" style={{ display: 'flex', gap: '24px', marginBottom: '16px', alignItems: 'baseline' }}>
         <div>
           <div className={`pnl-${pnl > 0 ? 'positive' : pnl < 0 ? 'negative' : 'neutral'}`}
             style={{ fontFamily: 'Bebas Neue', fontSize: '2rem', letterSpacing: '0.05em', lineHeight: 1 }}>
@@ -238,7 +238,7 @@ Give your honest assessment:`
       )}
 
       {showActions && (
-        <div style={{ display: 'flex', gap: '8px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
+        <div className="entry-action-bar" style={{ display: 'flex', gap: '8px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
           <button onClick={() => handleReaction('props')} className="btn" style={{
             padding: '6px 12px', fontSize: '10px',
             color: userReaction === 'props' ? 'var(--green)' : 'var(--dim)',
@@ -285,7 +285,7 @@ Give your honest assessment:`
               </div>
             </div>
           ))}
-          <form onSubmit={submitComment} style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+          <form onSubmit={submitComment} className="comment-form" style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
             <input
               value={commentText}
               onChange={e => setCommentText(e.target.value)}

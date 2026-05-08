@@ -42,8 +42,8 @@ export default function Calendar({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '980px', margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px', marginBottom: '26px' }}>
+      <div className="page-shell calendar-shell" style={{ maxWidth: '980px', margin: '0 auto', padding: '32px 24px' }}>
+        <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px', marginBottom: '26px' }}>
           <div>
             <h1 style={{ fontSize: '3rem', lineHeight: 1, marginBottom: '4px' }}>CALENDAR</h1>
             <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em' }}>
@@ -56,7 +56,7 @@ export default function Calendar({ session }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '18px' }}>
+        <div className="calendar-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '18px' }}>
           <h2 style={{ fontSize: '2.1rem' }}>{monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h2>
           <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
             {[

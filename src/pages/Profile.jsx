@@ -180,7 +180,7 @@ export default function Profile({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1040px', margin: '0 auto', padding: '32px 24px' }}>
+      <div className="page-shell profile-shell" style={{ maxWidth: '1040px', margin: '0 auto', padding: '32px 24px' }}>
 
         {/* profile header */}
         <div className="profile-hero">
@@ -331,7 +331,6 @@ export default function Profile({ session }) {
     </div>
   )
 }
-
 
 
 

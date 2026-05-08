@@ -79,9 +79,9 @@ export default function Journal({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '32px 24px' }}>
+      <div className="page-shell journal-shell" style={{ maxWidth: '680px', margin: '0 auto', padding: '32px 24px' }}>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
+        <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
           <div>
             <h1 style={{ fontSize: '3rem', letterSpacing: '0.05em', lineHeight: 1, marginBottom: '4px' }}>MY JOURNAL</h1>
             <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#444440', letterSpacing: '0.1em' }}>
@@ -93,7 +93,7 @@ export default function Journal({ session }) {
 
         {/* stats strip */}
         {stats && stats.total > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1px', background: '#242424', marginBottom: '32px' }}>
+          <div className="journal-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1px', background: '#242424', marginBottom: '32px' }}>
             {[
               { val: stats.total, label: 'TRADES' },
               { val: `${stats.winRate}%`, label: 'WIN RATE' },

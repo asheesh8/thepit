@@ -56,8 +56,8 @@ export default function Strategies({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px', marginBottom: '28px' }}>
+      <div className="page-shell strategies-shell" style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 24px' }}>
+        <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px', marginBottom: '28px' }}>
           <div>
             <h1 style={{ fontSize: '3rem', lineHeight: 1, marginBottom: '4px' }}>STRATEGIES</h1>
             <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em' }}>

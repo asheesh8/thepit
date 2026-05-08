@@ -254,7 +254,7 @@ export default function LiveRoom({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '18px' }}>
+      <div className="live-room-shell" style={{ maxWidth: '1440px', margin: '0 auto', padding: '18px' }}>
         <div className="room-header">
           <div>
             <Link to="/rooms" style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em' }}>BACK TO DMS</Link>

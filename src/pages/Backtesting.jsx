@@ -120,8 +120,8 @@ export default function Backtesting({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', alignItems: 'flex-end', marginBottom: '30px' }}>
+      <div className="page-shell backtesting-shell" style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px' }}>
+        <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', alignItems: 'flex-end', marginBottom: '30px' }}>
           <div>
             <h1 style={{ fontSize: '3rem', lineHeight: 1, marginBottom: '4px' }}>BACKTESTING</h1>
             <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em' }}>

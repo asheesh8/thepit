@@ -6,7 +6,7 @@ export default function CalendarMonth({ monthDate, mode, tradeSummary = {}, refl
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: 'var(--border)', border: '1px solid var(--border)' }}>
+      <div className="calendar-month-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: 'var(--border)', border: '1px solid var(--border)' }}>
         {weekdays.map(day => (
           <div key={day} style={{ background: 'var(--dark)', padding: '9px', fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.1em', textAlign: 'center' }}>
             {day}
@@ -23,6 +23,7 @@ export default function CalendarMonth({ monthDate, mode, tradeSummary = {}, refl
 
           return (
             <div
+              className="calendar-day-cell"
               key={day.key}
               style={{
                 minHeight: '92px',

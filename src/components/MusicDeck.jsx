@@ -174,6 +174,7 @@ export default function MusicDeck({ room, onSaved, embedded = false }) {
               </div>
             ) : isEmbeddedProvider ? (
               <iframe
+                className="music-embed-frame"
                 title={current.title}
                 src={currentEmbedUrl}
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
@@ -224,7 +225,7 @@ export default function MusicDeck({ room, onSaved, embedded = false }) {
             {queue.length === 0 ? (
               <div style={{ border: '1px solid var(--border)', padding: '16px', fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)' }}>QUEUE EMPTY.</div>
             ) : queue.map((track, index) => (
-              <div key={`${track.url}-${index}`} style={{ display: 'grid', gridTemplateColumns: '58px minmax(0, 1fr)', gap: '10px', border: index === currentIndex ? '1px solid var(--red)' : '1px solid var(--border)', padding: '8px', marginBottom: '8px', background: index === currentIndex ? 'rgba(230,57,70,0.08)' : 'transparent' }}>
+              <div className="music-queue-item" key={`${track.url}-${index}`} style={{ display: 'grid', gridTemplateColumns: '58px minmax(0, 1fr)', gap: '10px', border: index === currentIndex ? '1px solid var(--red)' : '1px solid var(--border)', padding: '8px', marginBottom: '8px', background: index === currentIndex ? 'rgba(230,57,70,0.08)' : 'transparent' }}>
                 <div style={{ height: '52px', background: 'var(--dark)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Bebas Neue', color: 'var(--dim)' }}>
                   {inferTrackType(track.url).slice(0, 3).toUpperCase()}
                 </div>

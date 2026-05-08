@@ -83,7 +83,7 @@ export default function Connections({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 24px' }}>
+      <div className="page-shell connections-shell" style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 24px' }}>
 
         <h1 style={{ fontSize: '3rem', letterSpacing: '0.05em', marginBottom: '4px' }}>CONNECTIONS</h1>
         <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#444440', letterSpacing: '0.1em', marginBottom: '32px' }}>

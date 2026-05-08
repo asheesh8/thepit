@@ -121,7 +121,7 @@ export default function NewEntry({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 24px' }}>
+      <div className="page-shell new-entry-shell" style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 24px' }}>
 
         <h1 style={{ fontSize: '3rem', letterSpacing: '0.05em', marginBottom: '4px' }}>LOG A TRADE</h1>
         <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: '#444440', letterSpacing: '0.1em', marginBottom: '32px' }}>
@@ -131,7 +131,7 @@ export default function NewEntry({ session }) {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
           {/* symbol + direction */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className="entry-form-grid two" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
               <label style={labelStyle}>SYMBOL</label>
               <input value={form.symbol} onChange={e => set('symbol', e.target.value)}
@@ -157,7 +157,7 @@ export default function NewEntry({ session }) {
           </div>
 
           {/* prices */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+          <div className="entry-form-grid three" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
             {[['entry_price', 'ENTRY PRICE'], ['exit_price', 'EXIT PRICE'], ['pnl', 'P&L ($)']].map(([key, label]) => (
               <div key={key}>
                 <label style={labelStyle}>{label}</label>

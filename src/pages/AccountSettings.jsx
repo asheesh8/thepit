@@ -110,7 +110,7 @@ export default function AccountSettings({ session }) {
           <section className="settings-panel">
             <div className="settings-panel-title">IDENTITY</div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '28px', alignItems: 'start', paddingTop: '4px' }}>
+            <div className="settings-identity-grid" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '28px', alignItems: 'start', paddingTop: '4px' }}>
 
               {/* avatar upload */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
@@ -220,7 +220,7 @@ export default function AccountSettings({ session }) {
                 SELECT ALL THAT APPLY
               </span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', paddingTop: '4px' }}>
+            <div className="settings-chip-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', paddingTop: '4px' }}>
               {MARKETS.map(m => {
                 const active = markets.includes(m)
                 return (
@@ -245,7 +245,7 @@ export default function AccountSettings({ session }) {
           {/* ── EXPERIENCE PANEL ── */}
           <section className="settings-panel">
             <div className="settings-panel-title">EXPERIENCE LEVEL</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', paddingTop: '4px' }}>
+            <div className="settings-chip-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', paddingTop: '4px' }}>
               {LEVELS.map(l => {
                 const active = level === l
                 return (
@@ -320,5 +320,4 @@ function CameraIcon() {
     </svg>
   )
 }
-
 

@@ -61,12 +61,12 @@ export default function RoomCreateForm({ session, onCreate }) {
   }
 
   return (
-    <form onSubmit={submit} className="card" style={{ padding: '20px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <form onSubmit={submit} className="card room-create-form" style={{ padding: '20px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div>
         <label style={labelStyle}>ROOM TITLE</label>
         <input value={form.title} onChange={event => set('title', event.target.value)} required placeholder="NQ London review desk" style={inputStyle} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '12px' }}>
+      <div className="room-create-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '12px' }}>
         <div>
           <label style={labelStyle}>ROOM TYPE</label>
           <select value={form.room_type} onChange={event => set('room_type', event.target.value)} style={inputStyle}>
@@ -78,7 +78,7 @@ export default function RoomCreateForm({ session, onCreate }) {
           <input value={form.room_password} onChange={event => set('room_password', event.target.value)} placeholder="leave open or set code" style={inputStyle} />
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div className="room-create-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div>
           <label style={labelStyle}>LINK TRADE</label>
           <select value={form.linked_entry_id} onChange={event => set('linked_entry_id', event.target.value)} style={inputStyle}>

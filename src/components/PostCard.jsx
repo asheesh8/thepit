@@ -77,7 +77,7 @@ export default function PostCard({ post, session }) {
         </div>
       )}
 
-      <div className="card fade-in" style={{ padding: '24px', marginBottom: '16px' }}>
+      <div className="card fade-in post-card" style={{ padding: '24px', marginBottom: '16px' }}>
         {/* header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -123,7 +123,7 @@ export default function PostCard({ post, session }) {
         )}
 
         {/* action bar */}
-        <div style={{ display: 'flex', gap: '8px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+        <div className="post-action-bar" style={{ display: 'flex', gap: '8px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
           <button onClick={() => handleReaction('props')} className="btn" style={{
             padding: '6px 12px', fontSize: '10px',
             color: userReaction === 'props' ? 'var(--green)' : 'var(--dim)',
@@ -155,7 +155,7 @@ export default function PostCard({ post, session }) {
                 </div>
               </div>
             ))}
-            <form onSubmit={submitComment} style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <form onSubmit={submitComment} className="comment-form" style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
               <input
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
