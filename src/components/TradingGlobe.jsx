@@ -64,7 +64,6 @@ const SESSIONS = [
 export default function TradingGlobe() {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
-  const svgRef = useRef(null)
   const [geoData, setGeoData] = useState(null)
   const [dims, setDims] = useState({ w: 800, h: 360 })
   const [pulse, setPulse] = useState(0)

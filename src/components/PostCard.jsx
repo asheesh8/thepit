@@ -103,7 +103,7 @@ export default function PostCard({ post, session }) {
           </p>
         )}
 
-        {/* media â€” click to enlarge */}
+        {/* media - click to enlarge */}
         {post.media_url && (
           <div style={{ marginTop: '12px', position: 'relative', cursor: 'zoom-in' }} onClick={() => setLightbox(true)}>
             {isVideo ? (
@@ -117,7 +117,7 @@ export default function PostCard({ post, session }) {
               background: 'rgba(0,0,0,0.6)', padding: '4px 8px',
               fontFamily: 'Space Mono', fontSize: '9px', color: '#fff', letterSpacing: '0.08em',
             }}>
-              {isVideo ? 'â–¶ PLAY' : 'â¤¢ EXPAND'}
+              {isVideo ? 'PLAY' : 'EXPAND'}
             </div>
           </div>
         )}
@@ -129,17 +129,17 @@ export default function PostCard({ post, session }) {
             color: userReaction === 'props' ? 'var(--green)' : 'var(--dim)',
             borderColor: userReaction === 'props' ? 'var(--green)' : 'var(--border)',
           }}>
-            ðŸ¤ PROPS {reactions.props > 0 && reactions.props}
+            PROPS {reactions.props > 0 && reactions.props}
           </button>
           <button onClick={() => handleReaction('callout')} className="btn" style={{
             padding: '6px 12px', fontSize: '10px',
             color: userReaction === 'callout' ? 'var(--gold)' : 'var(--dim)',
             borderColor: userReaction === 'callout' ? 'var(--gold)' : 'var(--border)',
           }}>
-            ðŸ‘ CALLOUT {reactions.callout > 0 && reactions.callout}
+            CALLOUT {reactions.callout > 0 && reactions.callout}
           </button>
           <button onClick={loadComments} className="btn" style={{ padding: '6px 12px', fontSize: '10px', color: 'var(--dim)', borderColor: 'var(--border)' }}>
-            ðŸ’¬ {showComments ? 'HIDE' : 'COMMENTS'}
+            {showComments ? 'HIDE COMMENTS' : 'COMMENTS'}
           </button>
         </div>
 
