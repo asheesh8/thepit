@@ -316,17 +316,10 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 .mini-chart {
   height: 210px;
   margin: 34px 0 24px;
-  padding: 22px;
   border: 1px solid rgba(46, 196, 182, 0.45);
-  background: #090d0c;
-  display: flex;
-  align-items: end;
-  gap: 12px;
-}
-
-.mini-chart span {
-  width: 16px;
-  border-radius: 4px 4px 0 0;
+  background: #04090a;
+  position: relative;
+  overflow: hidden;
 }
 
 .landing-feature-grid {
@@ -2089,12 +2082,6 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   .mini-chart {
     height: 100px;
     margin: 18px 0 14px;
-    padding: 12px;
-    gap: 7px;
-  }
-
-  .mini-chart span {
-    width: 10px;
   }
 
   .auth-brand-panel {

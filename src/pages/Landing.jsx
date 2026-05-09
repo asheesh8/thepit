@@ -3,6 +3,153 @@ import { useEffect, useRef } from 'react'
 
 export default function Landing() {
   const canvasRef = useRef(null)
+  const chartRef = useRef(null)
+
+  // Live candlestick chart
+  useEffect(() => {
+    const canvas = chartRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+
+    const setup = () => {
+      const rect = canvas.parentElement.getBoundingClientRect()
+      canvas.width = rect.width
+      canvas.height = rect.height
+    }
+    setup()
+
+    const CANDLE_W = 7
+    const GAP = 5
+    const STEP = CANDLE_W + GAP
+    const PAD = 10
+
+    let W = canvas.width
+    let H = canvas.height
+    let MAX = Math.ceil(W / STEP) + 2
+
+    let price = 4380
+    let momentum = 0
+
+    const makeCandle = () => {
+      momentum = momentum * 0.78 + (Math.random() - 0.47) * 6
+      const open = price
+      const close = open + momentum + (Math.random() - 0.5) * 8
+      const high = Math.max(open, close) + Math.random() * 6
+      const low = Math.min(open, close) - Math.random() * 6
+      price = close
+      return { open, close, high, low }
+    }
+
+    let candles = Array.from({ length: MAX }, makeCandle)
+    let scrollX = 0
+    const SPEED = 0.5
+    let raf
+
+    const draw = () => {
+      W = canvas.width
+      H = canvas.height
+
+      ctx.clearRect(0, 0, W, H)
+
+      // subtle grid lines
+      ctx.strokeStyle = 'rgba(46,196,182,0.06)'
+      ctx.lineWidth = 1
+      for (let row = 1; row < 4; row++) {
+        const y = Math.round((H / 4) * row) + 0.5
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(W, y)
+        ctx.stroke()
+      }
+
+      const highs = candles.map(c => c.high)
+      const lows = candles.map(c => c.low)
+      const maxP = Math.max(...highs)
+      const minP = Math.min(...lows)
+      const range = maxP - minP || 1
+      const toY = p => PAD + ((maxP - p) / range) * (H - PAD * 2)
+
+      ctx.save()
+      ctx.translate(-scrollX, 0)
+
+      // draw price line connecting closes
+      ctx.beginPath()
+      ctx.strokeStyle = 'rgba(46,196,182,0.18)'
+      ctx.lineWidth = 1
+      candles.forEach((c, i) => {
+        const x = i * STEP + STEP / 2
+        if (i === 0) ctx.moveTo(x, toY(c.close))
+        else ctx.lineTo(x, toY(c.close))
+      })
+      ctx.stroke()
+
+      candles.forEach((c, i) => {
+        const x = i * STEP + STEP / 2
+        const bull = c.close >= c.open
+        const color = bull ? '#2ec4b6' : '#e63946'
+
+        // wick
+        ctx.strokeStyle = bull ? 'rgba(46,196,182,0.7)' : 'rgba(230,57,70,0.7)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(x, toY(c.high))
+        ctx.lineTo(x, toY(c.low))
+        ctx.stroke()
+
+        // body
+        const bTop = toY(Math.max(c.open, c.close))
+        const bBot = toY(Math.min(c.open, c.close))
+        const bH = Math.max(bBot - bTop, 1.5)
+        ctx.fillStyle = color
+        ctx.fillRect(x - CANDLE_W / 2, bTop, CANDLE_W, bH)
+
+        // inner highlight on bullish candles
+        if (bull && bH > 4) {
+          ctx.fillStyle = 'rgba(255,255,255,0.12)'
+          ctx.fillRect(x - CANDLE_W / 2 + 1, bTop + 1, CANDLE_W - 2, Math.min(bH - 2, 4))
+        }
+      })
+
+      ctx.restore()
+
+      // right-side fade mask
+      const fade = ctx.createLinearGradient(W - 28, 0, W, 0)
+      fade.addColorStop(0, 'transparent')
+      fade.addColorStop(1, '#04090a')
+      ctx.fillStyle = fade
+      ctx.fillRect(W - 28, 0, 28, H)
+
+      // left-side fade
+      const fadeL = ctx.createLinearGradient(0, 0, 20, 0)
+      fadeL.addColorStop(0, '#04090a')
+      fadeL.addColorStop(1, 'transparent')
+      ctx.fillStyle = fadeL
+      ctx.fillRect(0, 0, 20, H)
+
+      // current price label
+      const lastClose = candles[candles.length - 1].close
+      const lastY = toY(lastClose) - scrollX / STEP  // approx
+      const labelY = Math.max(PAD + 10, Math.min(H - PAD - 4, toY(lastClose)))
+      ctx.fillStyle = 'rgba(46,196,182,0.9)'
+      ctx.font = '8px "Space Mono", monospace'
+      ctx.textAlign = 'right'
+      ctx.fillText(lastClose.toFixed(0), W - 6, labelY + 3)
+    }
+
+    const animate = () => {
+      scrollX += SPEED
+      if (scrollX >= STEP) {
+        scrollX -= STEP
+        candles.push(makeCandle())
+        candles.shift()
+      }
+      draw()
+      raf = requestAnimationFrame(animate)
+    }
+    animate()
+
+    return () => cancelAnimationFrame(raf)
+  }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -139,7 +286,7 @@ export default function Landing() {
             <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--green)', letterSpacing: '0.16em' }}>LIVE ROOM</div>
             <h2 style={{ fontSize: '2.6rem', lineHeight: 1, marginTop: '12px' }}>VOICE. CAMERA. SCREEN.</h2>
             <div className="mini-chart">
-              {Array.from({ length: 12 }).map((_, i) => <span key={i} style={{ height: `${28 + (i % 5) * 14}px`, background: i % 3 === 0 ? 'var(--red)' : 'var(--green)' }} />)}
+              <canvas ref={chartRef} style={{ display: 'block', width: '100%', height: '100%' }} />
             </div>
             <div className="landing-feature-grid">
               {['JOURNAL', 'BACKTEST', 'PFP PROFILE', 'ROOMS'].map(item => <div key={item}>{item}</div>)}
