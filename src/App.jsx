@@ -19,6 +19,7 @@ import LiveRoom from './pages/LiveRoom'
 import AccountSettings from './pages/AccountSettings'
 import Navbar from './components/Navbar'
 import DailyCheckInGate from './components/DailyCheckInGate'
+import GuestFeed from './pages/GuestFeed'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -68,6 +69,7 @@ export default function App() {
       ) : (
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/feed" element={<GuestFeed />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
