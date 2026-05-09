@@ -46,7 +46,7 @@ export default function Auth() {
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
   }, [])
 
-  // full-viewport galaxy (blends additively over starfield via mix-blend-mode:screen)
+  // full-viewport galaxy — additive blending over starfield
   useEffect(() => {
     const canvas = galaxyRef.current
     if (!canvas) return
@@ -59,38 +59,45 @@ export default function Auth() {
     resize()
     window.addEventListener('resize', resize)
 
-    // galaxy center: left-center of screen
-    const getCX = () => window.innerWidth * 0.33
-    const getCY = () => window.innerHeight * 0.46
+    const getCX = () => window.innerWidth * 0.32
+    const getCY = () => window.innerHeight * 0.44
 
     const ARMS = 3
-    const MAX_R = 260
 
-    const makeParticles = () => Array.from({ length: 550 }, (_, i) => {
+    // exponential radius distribution — dense core, arms bleeding far out
+    const makeParticles = () => Array.from({ length: 700 }, (_, i) => {
       const arm = i % ARMS
-      const t = Math.pow(Math.random(), 0.55)
-      const r = 12 + t * MAX_R
+      // Most particles near center, long tail extending outward
+      const u = Math.random()
+      const r = 8 + (-Math.log(1 - u * 0.93)) * 80
+      const clampedR = Math.min(r, 500)
+
       const armAngle = (arm / ARMS) * Math.PI * 2
-      const spiralAngle = armAngle + (r / MAX_R) * 3.2 + (Math.random() - 0.5) * 0.55
-      const speed = (0.014 / Math.sqrt(r / 14)) * (0.75 + Math.random() * 0.5)
-      const innerRatio = 1 - r / MAX_R
-      const colors = [
-        [235 - innerRatio * 20, 55 + innerRatio * 55, 65 + innerRatio * 20],
-        [140 + innerRatio * 30, 35 + innerRatio * 30, 215 - innerRatio * 20],
-        [25 + innerRatio * 20, 155 + innerRatio * 65, 175 + innerRatio * 30],
+      // Looser spiral so arms spread, not coil tight
+      const spiralAngle = armAngle + (clampedR / 300) * 2.4 + (Math.random() - 0.5) * (0.5 + clampedR * 0.0018)
+      const speed = (0.011 / Math.sqrt(clampedR / 12)) * (0.6 + Math.random() * 0.8)
+
+      const innerRatio = Math.max(0, 1 - clampedR / 260)
+      // outer particles fade out naturally
+      const baseOpacity = Math.max(0.04, (0.15 + Math.random() * 0.7) * (0.08 + innerRatio * 0.92))
+
+      const armColors = [
+        [235, 55, 70],
+        [135, 38, 215],
+        [22, 158, 172],
       ]
       return {
-        r, angle: spiralAngle,
-        speed: speed * (Math.random() < 0.04 ? -0.3 : 1),
-        size: Math.max(0.3, innerRatio * 2.2 + 0.3 + Math.random() * 0.9),
-        opacity: 0.25 + Math.random() * 0.65,
-        color: colors[arm],
+        r: clampedR, angle: spiralAngle,
+        speed: speed * (Math.random() < 0.03 ? -0.25 : 1),
+        size: Math.max(0.25, innerRatio * 2.4 + 0.25 + Math.random() * 0.8),
+        opacity: baseOpacity,
+        color: armColors[arm],
         twinkle: Math.random() * Math.PI * 2,
-        twinkleSpeed: 0.018 + Math.random() * 0.038,
+        twinkleSpeed: 0.014 + Math.random() * 0.03,
       }
     })
 
-    let particles = makeParticles()
+    const particles = makeParticles()
     let t = 0, raf
 
     const draw = () => {
@@ -99,29 +106,31 @@ export default function Auth() {
       const CX = getCX()
       const CY = getCY()
 
-      // fade existing canvas pixels (trail effect on transparent canvas)
-      ctx.globalCompositeOperation = 'destination-out'
-      ctx.fillStyle = 'rgba(0,0,0,0.048)'
-      ctx.fillRect(0, 0, W, H)
-      ctx.globalCompositeOperation = 'source-over'
+      // clearRect each frame — additive blending handled by lighter compositing
+      ctx.clearRect(0, 0, W, H)
+      // Use additive blending on canvas: overlapping particles brighten each other
+      ctx.globalCompositeOperation = 'lighter'
 
-      const rot = t * 0.0018
+      const rot = t * 0.0014
 
-      // rotating nebula blob clouds
+      // large drifting nebula clouds — much bigger and more spread out than before
       ;[
-        { ox: 0,    oy: 0,   r: 120, color: [200, 45, 70],  a: 0.07 },
-        { ox: 75,  oy: -55,  r: 95,  color: [100, 28, 215], a: 0.065 },
-        { ox: -65, oy: 60,   r: 100, color: [25, 155, 175], a: 0.05 },
-        { ox: 130, oy: 20,   r: 75,  color: [230, 75, 45],  a: 0.045 },
-        { ox: -115,oy: -35,  r: 85,  color: [80, 35, 195],  a: 0.045 },
-        { ox: 40,  oy: 140,  r: 90,  color: [160, 40, 80],  a: 0.038 },
-        { ox: -50, oy: -130, r: 80,  color: [35, 120, 200], a: 0.035 },
+        { ox: 0,    oy: 0,    r: 200, color: [160, 35, 60],  a: 0.055 },
+        { ox: 160,  oy: -90,  r: 160, color: [85,  22, 190], a: 0.05 },
+        { ox: -130, oy: 110,  r: 170, color: [18, 130, 155], a: 0.04 },
+        { ox: 280,  oy: 40,   r: 140, color: [200, 55, 35],  a: 0.035 },
+        { ox: -240, oy: -70,  r: 150, color: [65,  28, 170], a: 0.038 },
+        { ox: 80,   oy: 250,  r: 160, color: [130, 30, 70],  a: 0.03 },
+        { ox: -90,  oy: -240, r: 145, color: [28, 100, 180], a: 0.03 },
+        // wide bleed toward right half of screen
+        { ox: 420,  oy: -60,  r: 220, color: [80, 20, 140],  a: 0.025 },
+        { ox: 360,  oy: 200,  r: 200, color: [160, 40, 50],  a: 0.022 },
       ].forEach(({ ox, oy, r, color, a }) => {
         const bx = CX + ox * Math.cos(rot) - oy * Math.sin(rot)
         const by = CY + ox * Math.sin(rot) + oy * Math.cos(rot)
         const g = ctx.createRadialGradient(bx, by, 0, bx, by, r)
         g.addColorStop(0, `rgba(${color[0]},${color[1]},${color[2]},${a})`)
-        g.addColorStop(0.5, `rgba(${color[0]},${color[1]},${color[2]},${a * 0.4})`)
+        g.addColorStop(0.4, `rgba(${color[0]},${color[1]},${color[2]},${a * 0.3})`)
         g.addColorStop(1, 'transparent')
         ctx.fillStyle = g
         ctx.beginPath()
@@ -129,14 +138,14 @@ export default function Auth() {
         ctx.fill()
       })
 
-      // warm galactic core
+      // warm bright core
       ;[
-        { r: 38, color: 'rgba(255,200,130,0.38)' },
-        { r: 22, color: 'rgba(255,240,180,0.55)' },
-        { r: 10, color: 'rgba(255,255,220,0.7)' },
-      ].forEach(({ r, color }) => {
+        { r: 55, a: 0.18, rgb: '255,190,110' },
+        { r: 28, a: 0.35, rgb: '255,230,160' },
+        { r: 12, a: 0.55, rgb: '255,255,210' },
+      ].forEach(({ r, a, rgb }) => {
         const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, r)
-        g.addColorStop(0, color)
+        g.addColorStop(0, `rgba(${rgb},${a})`)
         g.addColorStop(1, 'transparent')
         ctx.fillStyle = g
         ctx.beginPath()
@@ -144,32 +153,33 @@ export default function Auth() {
         ctx.fill()
       })
 
-      // particles
+      // particles — lighter compositing makes dense regions bright naturally
       particles.forEach(p => {
         p.angle += p.speed
         p.twinkle += p.twinkleSpeed
         const x = CX + Math.cos(p.angle) * p.r
         const y = CY + Math.sin(p.angle) * p.r
-        const tw = 0.72 + 0.28 * Math.sin(p.twinkle)
+        const tw = 0.75 + 0.25 * Math.sin(p.twinkle)
         const [r2, g2, b2] = p.color
         const op = p.opacity * tw
 
-        // glow halo on larger particles
-        if (p.size > 0.9) {
-          const halo = ctx.createRadialGradient(x, y, 0, x, y, p.size * 4)
-          halo.addColorStop(0, `rgba(${r2},${g2},${b2},${op * 0.45})`)
-          halo.addColorStop(1, 'transparent')
-          ctx.fillStyle = halo
-          ctx.beginPath()
-          ctx.arc(x, y, p.size * 4, 0, Math.PI * 2)
-          ctx.fill()
-        }
+        // soft glow halo — larger halo on bigger particles
+        const haloR = p.size * (p.r < 80 ? 6 : 4)
+        const halo = ctx.createRadialGradient(x, y, 0, x, y, haloR)
+        halo.addColorStop(0, `rgba(${r2},${g2},${b2},${op * 0.5})`)
+        halo.addColorStop(1, 'transparent')
+        ctx.fillStyle = halo
+        ctx.beginPath()
+        ctx.arc(x, y, haloR, 0, Math.PI * 2)
+        ctx.fill()
 
         ctx.beginPath()
         ctx.arc(x, y, p.size, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(${r2},${g2},${b2},${op})`
         ctx.fill()
       })
+
+      ctx.globalCompositeOperation = 'source-over'
 
       t++
       raf = requestAnimationFrame(draw)
@@ -219,6 +229,15 @@ export default function Auth() {
           <Link to="/" style={{ fontFamily: 'Bebas Neue', fontSize: '1.5rem', letterSpacing: '0.15em', color: 'var(--red)', display: 'inline-block' }}>
             ← THE PIT
           </Link>
+
+          <svg viewBox="0 0 64 64" width="90" height="90" style={{ filter: 'drop-shadow(0 0 18px rgba(230,57,70,0.55))', display: 'block' }}>
+            <rect x="0" y="0" width="64" height="64" fill="#e63946"/>
+            <polygon points="7,5 57,6 59,58 5,59" fill="#b82030"/>
+            <polygon points="13,12 51,13 52,51 12,52" fill="#8c1828"/>
+            <polygon points="19,18 45,19 46,45 18,46" fill="#620f1c"/>
+            <polygon points="24,24 40,25 41,40 23,41" fill="#3e0813"/>
+            <polygon points="28,28 36,29 36,36 27,37" fill="#010208"/>
+          </svg>
 
           <div style={{ marginTop: '8px' }}>
             <h1 style={{ fontSize: 'clamp(2.8rem, 5vw, 4.2rem)', lineHeight: 0.92, marginBottom: '16px',
