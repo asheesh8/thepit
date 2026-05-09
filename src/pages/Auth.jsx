@@ -12,177 +12,122 @@ export default function Auth() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const canvasRef = useRef(null)
-  const galaxyRef = useRef(null)
+  const logoRef = useRef(null)
 
-  // starfield background
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
+
     const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
     resize()
-    const stars = Array.from({ length: 180 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: 0.2 + Math.random() * 1.0,
-      phase: Math.random() * Math.PI * 2,
-      speed: 0.004 + Math.random() * 0.01,
-      base: 0.15 + Math.random() * 0.45,
-    }))
-    let t = 0, raf
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      stars.forEach(s => {
-        const a = s.base * (0.6 + 0.4 * Math.sin(s.phase + t * s.speed))
-        ctx.beginPath()
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(210,218,240,${a})`
-        ctx.fill()
-      })
-      t++
-      raf = requestAnimationFrame(draw)
-    }
-    draw()
-    window.addEventListener('resize', resize)
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
-  }, [])
-
-  // full-viewport galaxy — additive blending over starfield
-  useEffect(() => {
-    const canvas = galaxyRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-
-    const resize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    resize()
     window.addEventListener('resize', resize)
 
-    const getCX = () => window.innerWidth * 0.32
-    const getCY = () => window.innerHeight * 0.44
-
-    const ARMS = 3
-
-    // exponential radius distribution — dense core, arms bleeding far out
-    const makeParticles = () => Array.from({ length: 700 }, (_, i) => {
-      const arm = i % ARMS
-      // Most particles near center, long tail extending outward
-      const u = Math.random()
-      const r = 8 + (-Math.log(1 - u * 0.93)) * 80
-      const clampedR = Math.min(r, 500)
-
-      const armAngle = (arm / ARMS) * Math.PI * 2
-      // Looser spiral so arms spread, not coil tight
-      const spiralAngle = armAngle + (clampedR / 300) * 2.4 + (Math.random() - 0.5) * (0.5 + clampedR * 0.0018)
-      const speed = (0.011 / Math.sqrt(clampedR / 12)) * (0.6 + Math.random() * 0.8)
-
-      const innerRatio = Math.max(0, 1 - clampedR / 260)
-      // outer particles fade out naturally
-      const baseOpacity = Math.max(0.04, (0.15 + Math.random() * 0.7) * (0.08 + innerRatio * 0.92))
-
-      const armColors = [
-        [235, 55, 70],
-        [135, 38, 215],
-        [22, 158, 172],
-      ]
-      return {
-        r: clampedR, angle: spiralAngle,
-        speed: speed * (Math.random() < 0.03 ? -0.25 : 1),
-        size: Math.max(0.25, innerRatio * 2.4 + 0.25 + Math.random() * 0.8),
-        opacity: baseOpacity,
-        color: armColors[arm],
-        twinkle: Math.random() * Math.PI * 2,
-        twinkleSpeed: 0.014 + Math.random() * 0.03,
+    // origin = center of the pit logo
+    const getOrigin = () => {
+      if (logoRef.current) {
+        const r = logoRef.current.getBoundingClientRect()
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
       }
+      return { x: window.innerWidth * 0.28, y: window.innerHeight * 0.44 }
+    }
+
+    const COLORS = [
+      [230, 57, 70],   // red
+      [180, 32, 50],   // deep red
+      [140, 24, 80],   // dark magenta
+      [100, 20, 180],  // purple
+      [255, 180, 100], // warm gold
+      [255, 230, 180], // near white
+    ]
+
+    const spawn = (ox, oy) => {
+      const angle = Math.random() * Math.PI * 2
+      const speed = 0.3 + Math.pow(Math.random(), 2) * 2.8
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)]
+      return {
+        x: ox + (Math.random() - 0.5) * 8,
+        y: oy + (Math.random() - 0.5) * 8,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 0,
+        maxLife: 120 + Math.random() * 200,
+        size: 0.4 + Math.random() * 1.4,
+        color,
+        haloScale: 4 + Math.random() * 8,
+      }
+    }
+
+    const { x: ox, y: oy } = getOrigin()
+    const particles = Array.from({ length: 500 }, () => {
+      const p = spawn(ox, oy)
+      // stagger initial life so they don't all burst at once
+      p.life = Math.random() * p.maxLife
+      p.x = ox + Math.cos(Math.random() * Math.PI * 2) * Math.random() * 300
+      p.y = oy + Math.sin(Math.random() * Math.PI * 2) * Math.random() * 200
+      return p
     })
 
-    const particles = makeParticles()
-    let t = 0, raf
-
+    let raf
     const draw = () => {
       const W = canvas.width
       const H = canvas.height
-      const CX = getCX()
-      const CY = getCY()
+      const { x: cx, y: cy } = getOrigin()
 
-      // clearRect each frame — additive blending handled by lighter compositing
-      ctx.clearRect(0, 0, W, H)
-      // Use additive blending on canvas: overlapping particles brighten each other
+      // trail fade — low alpha fill instead of clearRect creates glowing streaks
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.fillStyle = 'rgba(3,4,12,0.18)'
+      ctx.fillRect(0, 0, W, H)
+
       ctx.globalCompositeOperation = 'lighter'
 
-      const rot = t * 0.0014
-
-      // large drifting nebula clouds — much bigger and more spread out than before
+      // warm glow at logo origin
       ;[
-        { ox: 0,    oy: 0,    r: 200, color: [160, 35, 60],  a: 0.055 },
-        { ox: 160,  oy: -90,  r: 160, color: [85,  22, 190], a: 0.05 },
-        { ox: -130, oy: 110,  r: 170, color: [18, 130, 155], a: 0.04 },
-        { ox: 280,  oy: 40,   r: 140, color: [200, 55, 35],  a: 0.035 },
-        { ox: -240, oy: -70,  r: 150, color: [65,  28, 170], a: 0.038 },
-        { ox: 80,   oy: 250,  r: 160, color: [130, 30, 70],  a: 0.03 },
-        { ox: -90,  oy: -240, r: 145, color: [28, 100, 180], a: 0.03 },
-        // wide bleed toward right half of screen
-        { ox: 420,  oy: -60,  r: 220, color: [80, 20, 140],  a: 0.025 },
-        { ox: 360,  oy: 200,  r: 200, color: [160, 40, 50],  a: 0.022 },
-      ].forEach(({ ox, oy, r, color, a }) => {
-        const bx = CX + ox * Math.cos(rot) - oy * Math.sin(rot)
-        const by = CY + ox * Math.sin(rot) + oy * Math.cos(rot)
-        const g = ctx.createRadialGradient(bx, by, 0, bx, by, r)
-        g.addColorStop(0, `rgba(${color[0]},${color[1]},${color[2]},${a})`)
-        g.addColorStop(0.4, `rgba(${color[0]},${color[1]},${color[2]},${a * 0.3})`)
-        g.addColorStop(1, 'transparent')
-        ctx.fillStyle = g
-        ctx.beginPath()
-        ctx.arc(bx, by, r, 0, Math.PI * 2)
-        ctx.fill()
-      })
-
-      // warm bright core
-      ;[
-        { r: 55, a: 0.18, rgb: '255,190,110' },
-        { r: 28, a: 0.35, rgb: '255,230,160' },
-        { r: 12, a: 0.55, rgb: '255,255,210' },
+        { r: 80, a: 0.06, rgb: '230,57,70' },
+        { r: 40, a: 0.12, rgb: '255,140,80' },
+        { r: 18, a: 0.22, rgb: '255,210,140' },
       ].forEach(({ r, a, rgb }) => {
-        const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, r)
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
         g.addColorStop(0, `rgba(${rgb},${a})`)
         g.addColorStop(1, 'transparent')
         ctx.fillStyle = g
-        ctx.beginPath()
-        ctx.arc(CX, CY, r, 0, Math.PI * 2)
-        ctx.fill()
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill()
       })
 
-      // particles — lighter compositing makes dense regions bright naturally
       particles.forEach(p => {
-        p.angle += p.speed
-        p.twinkle += p.twinkleSpeed
-        const x = CX + Math.cos(p.angle) * p.r
-        const y = CY + Math.sin(p.angle) * p.r
-        const tw = 0.75 + 0.25 * Math.sin(p.twinkle)
-        const [r2, g2, b2] = p.color
-        const op = p.opacity * tw
+        p.life++
+        if (p.life >= p.maxLife || p.x < -60 || p.x > W + 60 || p.y < -60 || p.y > H + 60) {
+          Object.assign(p, spawn(cx, cy))
+          return
+        }
 
-        // soft glow halo — larger halo on bigger particles
-        const haloR = p.size * (p.r < 80 ? 6 : 4)
-        const halo = ctx.createRadialGradient(x, y, 0, x, y, haloR)
-        halo.addColorStop(0, `rgba(${r2},${g2},${b2},${op * 0.5})`)
+        // drag: slow down over time, slight upward drift for nebula feel
+        p.vx *= 0.992
+        p.vy *= 0.992
+        p.vy -= 0.004
+        p.x += p.vx
+        p.y += p.vy
+
+        const lifeRatio = p.life / p.maxLife
+        // fade in then out
+        const alpha = Math.sin(lifeRatio * Math.PI) * (0.5 + Math.random() * 0.5)
+        const [r, g, b] = p.color
+
+        // glow halo
+        const hr = p.size * p.haloScale
+        const halo = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, hr)
+        halo.addColorStop(0, `rgba(${r},${g},${b},${alpha * 0.4})`)
         halo.addColorStop(1, 'transparent')
         ctx.fillStyle = halo
-        ctx.beginPath()
-        ctx.arc(x, y, haloR, 0, Math.PI * 2)
-        ctx.fill()
+        ctx.beginPath(); ctx.arc(p.x, p.y, hr, 0, Math.PI * 2); ctx.fill()
 
-        ctx.beginPath()
-        ctx.arc(x, y, p.size, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(${r2},${g2},${b2},${op})`
+        // core point
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`
         ctx.fill()
       })
 
       ctx.globalCompositeOperation = 'source-over'
-
-      t++
       raf = requestAnimationFrame(draw)
     }
     draw()
@@ -243,12 +188,11 @@ export default function Auth() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'radial-gradient(ellipse at 20% 30%, rgba(230,57,70,0.14) 0%, transparent 40%), radial-gradient(ellipse at 80% 70%, rgba(46,196,182,0.08) 0%, transparent 40%), #03040c',
+      background: '#03040c',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px', position: 'relative', overflow: 'hidden',
     }}>
       <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }} />
-      <canvas ref={galaxyRef} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 2, mixBlendMode: 'screen' }} />
 
       <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '920px',
         display: 'grid', gridTemplateColumns: '1fr 400px', gap: '64px', alignItems: 'center' }}>
@@ -259,7 +203,7 @@ export default function Auth() {
             ← THE PIT
           </Link>
 
-          <svg viewBox="0 0 64 64" width="90" height="90" style={{ filter: 'drop-shadow(0 0 18px rgba(230,57,70,0.55))', display: 'block' }}>
+          <svg ref={logoRef} viewBox="0 0 64 64" width="90" height="90" style={{ filter: 'drop-shadow(0 0 22px rgba(230,57,70,0.7))', display: 'block' }}>
             <rect x="0" y="0" width="64" height="64" fill="#e63946"/>
             <polygon points="7,5 57,6 59,58 5,59" fill="#b82030"/>
             <polygon points="13,12 51,13 52,51 12,52" fill="#8c1828"/>
