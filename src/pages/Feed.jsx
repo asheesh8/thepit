@@ -11,6 +11,7 @@ import MarketSessionWidget from '../components/MarketSessionWidget'
 import ForexNewsPanel from '../components/ForexNewsPanel'
 import TradingGlobe from '../components/TradingGlobe'
 import PinnedRulesPanel from '../components/PinnedRulesPanel'
+import ActivityCalendarWidget from '../components/ActivityCalendarWidget'
 
 export default function Feed({ session }) {
   const [items, setItems] = useState([])
@@ -133,6 +134,7 @@ export default function Feed({ session }) {
       <div className="floor-shell">
         <div className="floor-left-rail">
           <NotificationsRail session={session} />
+          <ActivityCalendarWidget session={session} />
           <PinnedRulesPanel session={session} context="feed" />
         </div>
         <main className="floor-feed">
