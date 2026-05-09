@@ -199,15 +199,15 @@ export default function Auth() {
       minHeight: '100vh',
       background: '#03040c',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '24px', position: 'relative', overflow: 'hidden',
+      padding: 'clamp(14px, 4vw, 40px)', position: 'relative', overflow: 'hidden',
     }}>
       <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }} />
 
-      <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '920px',
+      <div className="auth-layout" style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '920px',
         display: 'grid', gridTemplateColumns: '1fr 400px', gap: '64px', alignItems: 'center' }}>
 
         {/* left side — brand */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+        <div className="auth-brand-col" style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           <Link to="/" style={{ fontFamily: 'Bebas Neue', fontSize: '1.5rem', letterSpacing: '0.15em', color: 'var(--red)', display: 'inline-block' }}>
             ← THE PIT
           </Link>
@@ -237,7 +237,7 @@ export default function Auth() {
         </div>
 
         {/* right side — form */}
-        <div style={{
+        <div className="auth-form-card" style={{
           background: 'rgba(8,10,22,0.85)',
           border: '1px solid rgba(255,255,255,0.07)',
           backdropFilter: 'blur(20px)',

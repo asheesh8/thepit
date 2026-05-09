@@ -141,7 +141,7 @@ export default function Vault({ session }) {
 
   return (
     <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px' }}>
+      <div className="page-shell" style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px' }}>
 
         {/* header */}
         <div style={{ marginBottom: '28px' }}>
@@ -150,7 +150,7 @@ export default function Vault({ session }) {
         </div>
 
         {/* net summary bar */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '28px' }}>
+        <div className="vault-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '28px' }}>
           {[
             { label: 'NET P&L', value: netPnl, color: netPnl >= 0 ? 'var(--green)' : 'var(--red)', signed: true },
             { label: 'TOTAL PAYOUTS', value: totalPayouts, color: 'var(--green)', signed: false },
@@ -191,7 +191,7 @@ export default function Vault({ session }) {
                   {editingAccount ? 'EDIT ACCOUNT' : 'NEW PROP ACCOUNT'}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div className="vault-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   <div>
                     <label style={lbl}>FIRM</label>
                     <input value={acctForm.firm_name} onChange={e => setAcctForm(p => ({ ...p, firm_name: e.target.value }))} placeholder="FTMO, Apex, etc." required style={inp} />
@@ -308,7 +308,7 @@ export default function Vault({ session }) {
               <form onSubmit={submitPayout} className="card" style={{ padding: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginBottom: '4px' }}>NEW ENTRY</div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div className="vault-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   <div>
                     <label style={lbl}>TYPE</label>
                     <select value={payoutForm.type} onChange={e => setPayoutForm(p => ({ ...p, type: e.target.value }))} style={inp}>
