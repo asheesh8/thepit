@@ -17,6 +17,7 @@ import Review from './pages/Review'
 import Rooms from './pages/Rooms'
 import LiveRoom from './pages/LiveRoom'
 import AccountSettings from './pages/AccountSettings'
+import Vault from './pages/Vault'
 import Navbar from './components/Navbar'
 import DailyCheckInGate from './components/DailyCheckInGate'
 import GuestFeed from './pages/GuestFeed'
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="/rooms" element={<Rooms session={session} />} />
             <Route path="/rooms/:id" element={<LiveRoom session={session} />} />
             <Route path="/settings" element={<AccountSettings session={session} />} />
+            <Route path="/vault" element={<Vault session={session} />} />
             <Route path="/profile/:username" element={<Profile session={session} />} />
           </Routes>
         </DailyCheckInGate>
