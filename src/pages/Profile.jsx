@@ -308,7 +308,7 @@ export default function Profile({ session }) {
                   <div key={r.id} className="card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <a href={r.url} target="_blank" rel="noopener noreferrer"
-                        style={{ fontFamily: 'DM Sans', fontSize: '14px', color: '#e8e8e0', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
+                        style={{ fontFamily: 'DM Sans', fontSize: '14px', color: 'var(--text)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
                         {r.title} ↗
                       </a>
                       <span className="tag" style={{ color: CATEGORY_COLORS[r.category], fontSize: '9px' }}>

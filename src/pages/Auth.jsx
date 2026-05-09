@@ -95,23 +95,18 @@ export default function Auth() {
             ← THE PIT
           </Link>
 
-          {/* star orb */}
-          <div style={{
-            width: '220px', height: '220px', borderRadius: '50%',
-            border: '1px solid rgba(80,50,160,0.4)',
-            background: 'radial-gradient(circle at 35% 35%, rgba(80,50,160,0.25), rgba(3,4,12,0.95))',
-            boxShadow: '0 0 60px rgba(80,50,160,0.2), 0 0 120px rgba(230,57,70,0.08), inset 0 0 40px rgba(80,50,160,0.1)',
-            display: 'grid', placeItems: 'center', position: 'relative',
-          }}>
-            {/* orbit ring */}
-            <div style={{
-              position: 'absolute', inset: '16px', borderRadius: '50%',
-              border: '1px solid rgba(230,57,70,0.2)',
-            }} />
-            <div style={{
-              fontFamily: 'Bebas Neue', fontSize: '3rem', color: 'var(--red)',
-              letterSpacing: '0.1em', textShadow: '0 0 30px rgba(230,57,70,0.5)',
-            }}>PIT</div>
+          {/* pit mark */}
+          <div style={{ position: 'relative', width: '220px', height: '220px' }}>
+            <svg viewBox="0 0 64 64" width="220" height="220" style={{
+              filter: 'drop-shadow(0 0 40px rgba(230,57,70,0.35)) drop-shadow(0 0 80px rgba(80,50,160,0.15))',
+            }}>
+              <rect x="0" y="0" width="64" height="64" fill="#e63946"/>
+              <polygon points="7,5 57,6 59,58 5,59" fill="#b82030"/>
+              <polygon points="13,12 51,13 52,51 12,52" fill="#8c1828"/>
+              <polygon points="19,18 45,19 46,45 18,46" fill="#620f1c"/>
+              <polygon points="24,24 40,25 41,40 23,41" fill="#3e0813"/>
+              <polygon points="28,28 36,29 36,36 27,37" fill="#010208"/>
+            </svg>
           </div>
 
           <div>

@@ -17,17 +17,17 @@
 
 /* ── LIGHT MODE ── */
 [data-theme="light"] {
-  --black: #efece5;
-  --dark: #e4e0d8;
-  --card: #f9f7f3;
-  --border: #c8c3b8;
-  --muted: #a8a39a;
-  --text: #161410;
-  --dim: #65605a;
+  --black: #e4ddd0;
+  --dark: #d8d0c2;
+  --card: #ede8de;
+  --border: #b4aa9c;
+  --muted: #9e9488;
+  --text: #14120c;
+  --dim: #58524a;
   --red: #cc2d39;
   --green: #148e82;
   --gold: #c27426;
-  --white: #f9f7f3;
+  --white: #ede8de;
 }
 
 * {
@@ -76,8 +76,11 @@ body {
 }
 [data-theme="light"] .card,
 [data-theme="light"] .pit-card {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  border-color: #b4aa9c;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 4px 14px rgba(0,0,0,0.05);
 }
+[data-theme="light"] a { color: var(--text); }
+[data-theme="light"] .mobile-tabs { border-bottom-color: #b4aa9c !important; }
 [data-theme="light"] input,
 [data-theme="light"] textarea,
 [data-theme="light"] select {
