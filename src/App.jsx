@@ -21,6 +21,7 @@ import Vault from './pages/Vault'
 import Navbar from './components/Navbar'
 import DailyCheckInGate from './components/DailyCheckInGate'
 import GuestFeed from './pages/GuestFeed'
+import NewFeaturesModal from './components/NewFeaturesModal'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -48,6 +49,7 @@ export default function App() {
       {session ? (
         <DailyCheckInGate session={session}>
           <Navbar session={session} />
+          <NewFeaturesModal />
           <Routes>
             <Route path="/" element={<Navigate to="/feed" />} />
             <Route path="/auth" element={<Navigate to="/feed" />} />
