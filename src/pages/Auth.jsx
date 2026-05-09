@@ -97,10 +97,18 @@ export default function Auth() {
 
       particles.forEach(p => {
         p.life++
-        if (p.life >= p.maxLife || p.x < -120 || p.x > W + 120 || p.y < -120 || p.y > H + 120) {
+
+        if (p.life >= p.maxLife) {
+          // natural death → back to logo
           Object.assign(p, spawn(cx, cy))
           return
         }
+
+        // edge wrap — respawn on opposite side with same velocity, reset life for smooth fade-in
+        if (p.x < -100) { p.x = W + 80; p.life = 0 }
+        else if (p.x > W + 100) { p.x = -80; p.life = 0 }
+        if (p.y < -100) { p.y = H + 80; p.life = 0 }
+        else if (p.y > H + 100) { p.y = -80; p.life = 0 }
 
         // very gentle drag — particles travel far and float slowly
         p.vx *= 0.997
