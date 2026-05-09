@@ -17,17 +17,17 @@
 
 /* ── LIGHT MODE ── */
 [data-theme="light"] {
-  --black: #f4f2ee;
-  --dark: #ece9e3;
-  --card: #ffffff;
-  --border: #d8d4cc;
-  --muted: #c8c4bc;
-  --text: #1a1a16;
-  --dim: #6a6860;
-  --red: #c0392b;
-  --green: #1a9e92;
-  --gold: #d4833a;
-  --white: #1a1a16;
+  --black: #efece5;
+  --dark: #e4e0d8;
+  --card: #f9f7f3;
+  --border: #c8c3b8;
+  --muted: #a8a39a;
+  --text: #161410;
+  --dim: #65605a;
+  --red: #cc2d39;
+  --green: #148e82;
+  --gold: #c27426;
+  --white: #f9f7f3;
 }
 
 * {
@@ -60,6 +60,49 @@ body {
   z-index: 9999;
   opacity: 0.025;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* ── LIGHT MODE component overrides ── */
+[data-theme="light"] .app-nav {
+  background: rgba(239,236,229,0.96);
+  border-bottom-color: #c0bab0;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+}
+[data-theme="light"] .app-nav-brand { color: #cc2d39; }
+[data-theme="light"] .app-nav-menu {
+  background: #f4f1ea;
+  border-color: #c8c3b8;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+[data-theme="light"] .card,
+[data-theme="light"] .pit-card {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+}
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background: #f9f7f3;
+  border-color: #c8c3b8;
+  color: #161410;
+}
+[data-theme="light"] input:focus,
+[data-theme="light"] textarea:focus {
+  border-color: #cc2d39;
+  box-shadow: 0 0 0 2px rgba(204,45,57,0.1);
+}
+[data-theme="light"] .btn {
+  background: transparent;
+  border-color: #c8c3b8;
+  color: #65605a;
+}
+[data-theme="light"] .btn:hover {
+  border-color: #161410;
+  background: #161410;
+  color: #f9f7f3;
+}
+[data-theme="light"] .page-shell,
+[data-theme="light"] .page-shell-wide {
+  background: transparent;
 }
 
 h1, h2, h3 {

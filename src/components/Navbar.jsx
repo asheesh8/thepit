@@ -46,7 +46,15 @@ export default function Navbar({ session }) {
 
   return (
     <nav className="app-nav">
-      <Link to="/feed" className="app-nav-brand">
+      <Link to="/feed" className="app-nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+        <svg width="22" height="22" viewBox="0 0 64 64" fill="none" style={{ flexShrink: 0 }}>
+          <rect x="0" y="0" width="64" height="64" fill="#e63946"/>
+          <polygon points="7,5 57,6 59,58 5,59" fill="#b82030"/>
+          <polygon points="13,12 51,13 52,51 12,52" fill="#8c1828"/>
+          <polygon points="19,18 45,19 46,45 18,46" fill="#620f1c"/>
+          <polygon points="24,24 40,25 41,40 23,41" fill="#3e0813"/>
+          <polygon points="28,28 36,29 36,36 27,37" fill="#010208"/>
+        </svg>
         THE PIT
       </Link>
 
