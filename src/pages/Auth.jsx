@@ -46,83 +46,120 @@ export default function Auth() {
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
   }, [])
 
-  // galaxy ooze around pit mark
+  // full-viewport galaxy (blends additively over starfield via mix-blend-mode:screen)
   useEffect(() => {
     const canvas = galaxyRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
-    const S = 560
-    canvas.width = S
-    canvas.height = S
-    const CX = S / 2
-    const CY = S / 2
 
-    // particles in 3 spiral arms
-    const particles = Array.from({ length: 320 }, (_, i) => {
-      const arm = i % 3
-      const baseAngle = (arm / 3) * Math.PI * 2
-      const radius = 95 + Math.random() * 185
-      const spiralOffset = (radius - 95) * 0.018
+    const resize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    // galaxy center: left-center of screen
+    const getCX = () => window.innerWidth * 0.33
+    const getCY = () => window.innerHeight * 0.46
+
+    const ARMS = 3
+    const MAX_R = 260
+
+    const makeParticles = () => Array.from({ length: 550 }, (_, i) => {
+      const arm = i % ARMS
+      const t = Math.pow(Math.random(), 0.55)
+      const r = 12 + t * MAX_R
+      const armAngle = (arm / ARMS) * Math.PI * 2
+      const spiralAngle = armAngle + (r / MAX_R) * 3.2 + (Math.random() - 0.5) * 0.55
+      const speed = (0.014 / Math.sqrt(r / 14)) * (0.75 + Math.random() * 0.5)
+      const innerRatio = 1 - r / MAX_R
+      const colors = [
+        [235 - innerRatio * 20, 55 + innerRatio * 55, 65 + innerRatio * 20],
+        [140 + innerRatio * 30, 35 + innerRatio * 30, 215 - innerRatio * 20],
+        [25 + innerRatio * 20, 155 + innerRatio * 65, 175 + innerRatio * 30],
+      ]
       return {
-        arm,
-        angle: baseAngle + spiralOffset + Math.random() * 0.6,
-        radius,
-        speed: (0.0006 + Math.random() * 0.001) * (Math.random() < 0.5 ? 1 : -0.3),
-        size: 0.4 + Math.random() * 1.8,
-        opacity: 0.2 + Math.random() * 0.7,
-        color: Math.random() < 0.45
-          ? [230, 60, 90]
-          : Math.random() < 0.55
-            ? [160, 60, 210]
-            : [46, 190, 182],
-        drift: (Math.random() - 0.5) * 0.0004,
+        r, angle: spiralAngle,
+        speed: speed * (Math.random() < 0.04 ? -0.3 : 1),
+        size: Math.max(0.3, innerRatio * 2.2 + 0.3 + Math.random() * 0.9),
+        opacity: 0.25 + Math.random() * 0.65,
+        color: colors[arm],
+        twinkle: Math.random() * Math.PI * 2,
+        twinkleSpeed: 0.018 + Math.random() * 0.038,
       }
     })
 
+    let particles = makeParticles()
     let t = 0, raf
 
     const draw = () => {
-      ctx.clearRect(0, 0, S, S)
+      const W = canvas.width
+      const H = canvas.height
+      const CX = getCX()
+      const CY = getCY()
 
-      // outer ambient glow layers (slow rotation)
-      const rot = t * 0.0025
+      // fade existing canvas pixels (trail effect on transparent canvas)
+      ctx.globalCompositeOperation = 'destination-out'
+      ctx.fillStyle = 'rgba(0,0,0,0.048)'
+      ctx.fillRect(0, 0, W, H)
+      ctx.globalCompositeOperation = 'source-over'
+
+      const rot = t * 0.0018
+
+      // rotating nebula blob clouds
       ;[
-        { r: 240, clr: [80, 30, 160], a: 0.09 },
-        { r: 180, clr: [230, 50, 80], a: 0.08 },
-        { r: 130, clr: [46, 150, 182], a: 0.055 },
-      ].forEach(({ r, clr, a }) => {
-        for (let arm = 0; arm < 3; arm++) {
-          const ang = rot + (arm / 3) * Math.PI * 2
-          const bx = CX + Math.cos(ang) * r * 0.55
-          const by = CY + Math.sin(ang) * r * 0.55
-          const g = ctx.createRadialGradient(bx, by, 0, bx, by, r)
-          g.addColorStop(0, `rgba(${clr[0]},${clr[1]},${clr[2]},${a})`)
-          g.addColorStop(1, 'transparent')
-          ctx.fillStyle = g
-          ctx.beginPath()
-          ctx.arc(bx, by, r, 0, Math.PI * 2)
-          ctx.fill()
-        }
+        { ox: 0,    oy: 0,   r: 120, color: [200, 45, 70],  a: 0.07 },
+        { ox: 75,  oy: -55,  r: 95,  color: [100, 28, 215], a: 0.065 },
+        { ox: -65, oy: 60,   r: 100, color: [25, 155, 175], a: 0.05 },
+        { ox: 130, oy: 20,   r: 75,  color: [230, 75, 45],  a: 0.045 },
+        { ox: -115,oy: -35,  r: 85,  color: [80, 35, 195],  a: 0.045 },
+        { ox: 40,  oy: 140,  r: 90,  color: [160, 40, 80],  a: 0.038 },
+        { ox: -50, oy: -130, r: 80,  color: [35, 120, 200], a: 0.035 },
+      ].forEach(({ ox, oy, r, color, a }) => {
+        const bx = CX + ox * Math.cos(rot) - oy * Math.sin(rot)
+        const by = CY + ox * Math.sin(rot) + oy * Math.cos(rot)
+        const g = ctx.createRadialGradient(bx, by, 0, bx, by, r)
+        g.addColorStop(0, `rgba(${color[0]},${color[1]},${color[2]},${a})`)
+        g.addColorStop(0.5, `rgba(${color[0]},${color[1]},${color[2]},${a * 0.4})`)
+        g.addColorStop(1, 'transparent')
+        ctx.fillStyle = g
+        ctx.beginPath()
+        ctx.arc(bx, by, r, 0, Math.PI * 2)
+        ctx.fill()
       })
 
-      // draw particles
+      // warm galactic core
+      ;[
+        { r: 38, color: 'rgba(255,200,130,0.38)' },
+        { r: 22, color: 'rgba(255,240,180,0.55)' },
+        { r: 10, color: 'rgba(255,255,220,0.7)' },
+      ].forEach(({ r, color }) => {
+        const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, r)
+        g.addColorStop(0, color)
+        g.addColorStop(1, 'transparent')
+        ctx.fillStyle = g
+        ctx.beginPath()
+        ctx.arc(CX, CY, r, 0, Math.PI * 2)
+        ctx.fill()
+      })
+
+      // particles
       particles.forEach(p => {
         p.angle += p.speed
-        p.radius += p.drift
-        if (p.radius < 90) p.radius = 90
-        if (p.radius > 280) p.radius = 95
+        p.twinkle += p.twinkleSpeed
+        const x = CX + Math.cos(p.angle) * p.r
+        const y = CY + Math.sin(p.angle) * p.r
+        const tw = 0.72 + 0.28 * Math.sin(p.twinkle)
+        const [r2, g2, b2] = p.color
+        const op = p.opacity * tw
 
-        const x = CX + Math.cos(p.angle) * p.radius
-        const y = CY + Math.sin(p.angle) * p.radius
-        const fade = Math.max(0, Math.min(1, (p.radius - 90) / 40))
-        const [r, g, b] = p.color
-
-        // glow halo
-        if (p.size > 1) {
-          const glow = ctx.createRadialGradient(x, y, 0, x, y, p.size * 4)
-          glow.addColorStop(0, `rgba(${r},${g},${b},${p.opacity * fade * 0.4})`)
-          glow.addColorStop(1, 'transparent')
-          ctx.fillStyle = glow
+        // glow halo on larger particles
+        if (p.size > 0.9) {
+          const halo = ctx.createRadialGradient(x, y, 0, x, y, p.size * 4)
+          halo.addColorStop(0, `rgba(${r2},${g2},${b2},${op * 0.45})`)
+          halo.addColorStop(1, 'transparent')
+          ctx.fillStyle = halo
           ctx.beginPath()
           ctx.arc(x, y, p.size * 4, 0, Math.PI * 2)
           ctx.fill()
@@ -130,30 +167,15 @@ export default function Auth() {
 
         ctx.beginPath()
         ctx.arc(x, y, p.size, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(${r},${g},${b},${p.opacity * fade})`
+        ctx.fillStyle = `rgba(${r2},${g2},${b2},${op})`
         ctx.fill()
       })
-
-      // center dark fade so pit mark stays crisp
-      const fade = ctx.createRadialGradient(CX, CY, 0, CX, CY, 105)
-      fade.addColorStop(0, 'rgba(3,4,12,1)')
-      fade.addColorStop(0.6, 'rgba(3,4,12,0.7)')
-      fade.addColorStop(1, 'rgba(3,4,12,0)')
-      ctx.fillStyle = fade
-      ctx.fillRect(0, 0, S, S)
-
-      // outer edge vignette
-      const vignette = ctx.createRadialGradient(CX, CY, S * 0.38, CX, CY, S * 0.5)
-      vignette.addColorStop(0, 'transparent')
-      vignette.addColorStop(1, 'rgba(3,4,12,0.75)')
-      ctx.fillStyle = vignette
-      ctx.fillRect(0, 0, S, S)
 
       t++
       raf = requestAnimationFrame(draw)
     }
     draw()
-    return () => cancelAnimationFrame(raf)
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
   }, [])
 
   const handleSubmit = async (e) => {
@@ -187,14 +209,7 @@ export default function Auth() {
       padding: '24px', position: 'relative', overflow: 'hidden',
     }}>
       <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }} />
-
-      {/* nebula blobs */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1 }}>
-        <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '600px', height: '600px',
-          background: 'radial-gradient(circle, rgba(80,50,160,0.1) 0%, transparent 65%)', borderRadius: '50%' }} />
-        <div style={{ position: 'absolute', bottom: '-15%', right: '-5%', width: '500px', height: '500px',
-          background: 'radial-gradient(circle, rgba(46,196,182,0.06) 0%, transparent 65%)', borderRadius: '50%' }} />
-      </div>
+      <canvas ref={galaxyRef} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 2, mixBlendMode: 'screen' }} />
 
       <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '920px',
         display: 'grid', gridTemplateColumns: '1fr 400px', gap: '64px', alignItems: 'center' }}>
@@ -205,30 +220,7 @@ export default function Auth() {
             ← THE PIT
           </Link>
 
-          {/* galaxy pit mark */}
-          <div style={{ position: 'relative', width: '300px', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {/* galaxy canvas behind */}
-            <canvas ref={galaxyRef} style={{
-              position: 'absolute',
-              top: '50%', left: '50%',
-              transform: 'translate(-50%, -50%)',
-              pointerEvents: 'none',
-              zIndex: 0,
-              width: '560px',
-              height: '560px',
-            }} />
-            {/* pit mark on top */}
-            <svg viewBox="0 0 64 64" width="190" height="190" style={{ position: 'relative', zIndex: 1 }}>
-              <rect x="0" y="0" width="64" height="64" fill="#e63946"/>
-              <polygon points="7,5 57,6 59,58 5,59" fill="#b82030"/>
-              <polygon points="13,12 51,13 52,51 12,52" fill="#8c1828"/>
-              <polygon points="19,18 45,19 46,45 18,46" fill="#620f1c"/>
-              <polygon points="24,24 40,25 41,40 23,41" fill="#3e0813"/>
-              <polygon points="28,28 36,29 36,36 27,37" fill="#010208"/>
-            </svg>
-          </div>
-
-          <div>
+          <div style={{ marginTop: '8px' }}>
             <h1 style={{ fontSize: 'clamp(2.8rem, 5vw, 4.2rem)', lineHeight: 0.92, marginBottom: '16px',
               textShadow: '0 0 80px rgba(80,50,160,0.3)' }}>
               GET YOUR<br />TRADING FLOOR.
