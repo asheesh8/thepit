@@ -11,23 +11,23 @@ export default function Auth() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const canvasRef = useRef(null)
+  const galaxyRef = useRef(null)
 
+  // starfield background
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
     resize()
-
     const stars = Array.from({ length: 180 }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       r: 0.2 + Math.random() * 1.0,
       phase: Math.random() * Math.PI * 2,
       speed: 0.004 + Math.random() * 0.01,
-      base: 0.2 + Math.random() * 0.6,
+      base: 0.15 + Math.random() * 0.45,
     }))
-
     let t = 0, raf
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -44,6 +44,116 @@ export default function Auth() {
     draw()
     window.addEventListener('resize', resize)
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize) }
+  }, [])
+
+  // galaxy ooze around pit mark
+  useEffect(() => {
+    const canvas = galaxyRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    const S = 560
+    canvas.width = S
+    canvas.height = S
+    const CX = S / 2
+    const CY = S / 2
+
+    // particles in 3 spiral arms
+    const particles = Array.from({ length: 320 }, (_, i) => {
+      const arm = i % 3
+      const baseAngle = (arm / 3) * Math.PI * 2
+      const radius = 95 + Math.random() * 185
+      const spiralOffset = (radius - 95) * 0.018
+      return {
+        arm,
+        angle: baseAngle + spiralOffset + Math.random() * 0.6,
+        radius,
+        speed: (0.0006 + Math.random() * 0.001) * (Math.random() < 0.5 ? 1 : -0.3),
+        size: 0.4 + Math.random() * 1.8,
+        opacity: 0.2 + Math.random() * 0.7,
+        color: Math.random() < 0.45
+          ? [230, 60, 90]
+          : Math.random() < 0.55
+            ? [160, 60, 210]
+            : [46, 190, 182],
+        drift: (Math.random() - 0.5) * 0.0004,
+      }
+    })
+
+    let t = 0, raf
+
+    const draw = () => {
+      ctx.clearRect(0, 0, S, S)
+
+      // outer ambient glow layers (slow rotation)
+      const rot = t * 0.0025
+      ;[
+        { r: 240, clr: [80, 30, 160], a: 0.09 },
+        { r: 180, clr: [230, 50, 80], a: 0.08 },
+        { r: 130, clr: [46, 150, 182], a: 0.055 },
+      ].forEach(({ r, clr, a }) => {
+        for (let arm = 0; arm < 3; arm++) {
+          const ang = rot + (arm / 3) * Math.PI * 2
+          const bx = CX + Math.cos(ang) * r * 0.55
+          const by = CY + Math.sin(ang) * r * 0.55
+          const g = ctx.createRadialGradient(bx, by, 0, bx, by, r)
+          g.addColorStop(0, `rgba(${clr[0]},${clr[1]},${clr[2]},${a})`)
+          g.addColorStop(1, 'transparent')
+          ctx.fillStyle = g
+          ctx.beginPath()
+          ctx.arc(bx, by, r, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      })
+
+      // draw particles
+      particles.forEach(p => {
+        p.angle += p.speed
+        p.radius += p.drift
+        if (p.radius < 90) p.radius = 90
+        if (p.radius > 280) p.radius = 95
+
+        const x = CX + Math.cos(p.angle) * p.radius
+        const y = CY + Math.sin(p.angle) * p.radius
+        const fade = Math.max(0, Math.min(1, (p.radius - 90) / 40))
+        const [r, g, b] = p.color
+
+        // glow halo
+        if (p.size > 1) {
+          const glow = ctx.createRadialGradient(x, y, 0, x, y, p.size * 4)
+          glow.addColorStop(0, `rgba(${r},${g},${b},${p.opacity * fade * 0.4})`)
+          glow.addColorStop(1, 'transparent')
+          ctx.fillStyle = glow
+          ctx.beginPath()
+          ctx.arc(x, y, p.size * 4, 0, Math.PI * 2)
+          ctx.fill()
+        }
+
+        ctx.beginPath()
+        ctx.arc(x, y, p.size, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(${r},${g},${b},${p.opacity * fade})`
+        ctx.fill()
+      })
+
+      // center dark fade so pit mark stays crisp
+      const fade = ctx.createRadialGradient(CX, CY, 0, CX, CY, 105)
+      fade.addColorStop(0, 'rgba(3,4,12,1)')
+      fade.addColorStop(0.6, 'rgba(3,4,12,0.7)')
+      fade.addColorStop(1, 'rgba(3,4,12,0)')
+      ctx.fillStyle = fade
+      ctx.fillRect(0, 0, S, S)
+
+      // outer edge vignette
+      const vignette = ctx.createRadialGradient(CX, CY, S * 0.38, CX, CY, S * 0.5)
+      vignette.addColorStop(0, 'transparent')
+      vignette.addColorStop(1, 'rgba(3,4,12,0.75)')
+      ctx.fillStyle = vignette
+      ctx.fillRect(0, 0, S, S)
+
+      t++
+      raf = requestAnimationFrame(draw)
+    }
+    draw()
+    return () => cancelAnimationFrame(raf)
   }, [])
 
   const handleSubmit = async (e) => {
@@ -95,11 +205,20 @@ export default function Auth() {
             ← THE PIT
           </Link>
 
-          {/* pit mark */}
-          <div style={{ position: 'relative', width: '220px', height: '220px' }}>
-            <svg viewBox="0 0 64 64" width="220" height="220" style={{
-              filter: 'drop-shadow(0 0 40px rgba(230,57,70,0.35)) drop-shadow(0 0 80px rgba(80,50,160,0.15))',
-            }}>
+          {/* galaxy pit mark */}
+          <div style={{ position: 'relative', width: '300px', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {/* galaxy canvas behind */}
+            <canvas ref={galaxyRef} style={{
+              position: 'absolute',
+              top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+              zIndex: 0,
+              width: '560px',
+              height: '560px',
+            }} />
+            {/* pit mark on top */}
+            <svg viewBox="0 0 64 64" width="190" height="190" style={{ position: 'relative', zIndex: 1 }}>
               <rect x="0" y="0" width="64" height="64" fill="#e63946"/>
               <polygon points="7,5 57,6 59,58 5,59" fill="#b82030"/>
               <polygon points="13,12 51,13 52,51 12,52" fill="#8c1828"/>
