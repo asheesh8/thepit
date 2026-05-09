@@ -34,6 +34,12 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Safe area bottom padding for all scrollable page content */
+body {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 html {
@@ -154,8 +160,10 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   left: 0;
   right: 0;
   z-index: 100;
-  height: 56px;
-  padding: 0 32px;
+  height: calc(56px + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: max(32px, env(safe-area-inset-left, 0px));
+  padding-right: max(32px, env(safe-area-inset-right, 0px));
   border-bottom: 1px solid var(--border);
   background: rgba(var(--black-rgb, 26,26,26), 0.95);
   background-color: var(--dark);
@@ -2174,8 +2182,9 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   }
 
   .app-nav {
-    height: 58px;
-    padding: 0 10px;
+    height: calc(58px + env(safe-area-inset-top, 0px));
+    padding-left: 10px;
+    padding-right: 10px;
     gap: 8px;
   }
 

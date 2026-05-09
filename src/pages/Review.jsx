@@ -65,7 +65,7 @@ export default function Review({ session }) {
   ]
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="page-shell review-shell" style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 24px' }}>
         <div style={{ marginBottom: '28px' }}>
           <h1 style={{ fontSize: '3rem', lineHeight: 1, marginBottom: '4px' }}>REVIEW</h1>

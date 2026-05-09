@@ -277,7 +277,7 @@ export default function GuestFeed() {
       </div>
 
       {/* join banner */}
-      <div style={{ paddingTop: '56px' }}>
+      <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))' }}>
         <div style={{ background: 'linear-gradient(90deg, rgba(230,57,70,0.08), rgba(46,196,182,0.05))',
           borderBottom: '1px solid var(--border)', padding: '14px 24px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>

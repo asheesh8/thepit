@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
 import Avatar from '../components/Avatar'
@@ -25,7 +25,7 @@ export default function Search({ session }) {
   }
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="page-shell search-shell" style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 24px' }}>
 
         <h1 style={{ fontSize: '3rem', letterSpacing: '0.05em', lineHeight: 1, marginBottom: '4px' }}>FIND TRADERS</h1>
@@ -88,7 +88,7 @@ export default function Search({ session }) {
                     </div>
                   )}
                 </div>
-                <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', letterSpacing: '0.1em', flexShrink: 0 }}>VIEW →</span>
+                <span style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', letterSpacing: '0.1em', flexShrink: 0 }}>VIEW ?</span>
               </div>
             </Link>
           ))}

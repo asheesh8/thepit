@@ -1,4 +1,4 @@
-﻿/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -179,7 +179,7 @@ export default function Profile({ session }) {
   if (!profile) return <div style={{ paddingTop: '100px', textAlign: 'center', fontFamily: 'Space Mono', fontSize: '11px', color: '#e63946' }}>USER NOT FOUND</div>
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="page-shell profile-shell" style={{ maxWidth: '1040px', margin: '0 auto', padding: '32px 24px' }}>
 
         {/* profile header */}
@@ -193,7 +193,7 @@ export default function Profile({ session }) {
                 @{profile.username}
               </h1>
               <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginTop: '4px' }}>
-                {followerCount} FOLLOWERS · {entries.length} PUBLIC TRADES
+                {followerCount} FOLLOWERS � {entries.length} PUBLIC TRADES
               </div>
             </div>
           </div>
@@ -309,7 +309,7 @@ export default function Profile({ session }) {
                     <div>
                       <a href={r.url} target="_blank" rel="noopener noreferrer"
                         style={{ fontFamily: 'DM Sans', fontSize: '14px', color: 'var(--text)', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
-                        {r.title} ↗
+                        {r.title} ?
                       </a>
                       <span className="tag" style={{ color: CATEGORY_COLORS[r.category], fontSize: '9px' }}>
                         {r.category.toUpperCase()}
@@ -319,7 +319,7 @@ export default function Profile({ session }) {
                       <button onClick={() => deleteResource(r.id)} style={{
                         background: 'none', border: 'none', color: 'var(--dim)', cursor: 'pointer',
                         fontFamily: 'Space Mono', fontSize: '10px', padding: '4px 8px',
-                      }}>✕</button>
+                      }}>?</button>
                     )}
                   </div>
                 ))}

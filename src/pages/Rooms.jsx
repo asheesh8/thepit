@@ -136,7 +136,7 @@ export default function Rooms({ session }) {
   }
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh', background: 'var(--black)' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh', background: 'var(--black)' }}>
       <div className="messages-shell" style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '280px 1fr', minHeight: 'calc(100vh - 56px)' }}>
 
         {/* left: contacts */}

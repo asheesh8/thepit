@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { TRADE_CONTEXTS } from '../lib/discipline'
 import { PINNED_RULE_CONTEXTS, contextLabel } from '../lib/pinnedRules'
@@ -157,7 +157,7 @@ export default function AccountSettings({ session }) {
   const initial = username?.[0]?.toUpperCase() || '?'
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="settings-shell">
 
         {/* header */}
@@ -168,12 +168,12 @@ export default function AccountSettings({ session }) {
             </div>
             <h1>PROFILE SETTINGS</h1>
           </div>
-          {saved && <span className="tag" style={{ color: 'var(--green)', borderColor: 'var(--green)' }}>SAVED ✓</span>}
+          {saved && <span className="tag" style={{ color: 'var(--green)', borderColor: 'var(--green)' }}>SAVED ?</span>}
         </header>
 
         <form onSubmit={handleSave} style={{ display: 'grid', gap: '16px' }}>
 
-          {/* ── IDENTITY PANEL ── */}
+          {/* -- IDENTITY PANEL -- */}
           <section className="settings-panel">
             <div className="settings-panel-title">IDENTITY</div>
 
@@ -220,7 +220,7 @@ export default function AccountSettings({ session }) {
                   {uploading ? 'UPLOADING...' : 'UPLOAD PHOTO'}
                 </button>
                 <span style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--muted)', letterSpacing: '0.04em', textAlign: 'center', lineHeight: 1.7 }}>
-                  JPG · PNG · WEBP
+                  JPG � PNG � WEBP
                 </span>
                 <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp"
                   onChange={handleFileChange} style={{ display: 'none' }} />
@@ -255,7 +255,7 @@ export default function AccountSettings({ session }) {
             </div>
           </section>
 
-          {/* ── YOUR WHY PANEL ── */}
+          {/* -- YOUR WHY PANEL -- */}
           <section className="settings-panel">
             <div className="settings-panel-title">YOUR WHY</div>
             <p className="settings-muted" style={{ marginTop: 0 }}>
@@ -322,7 +322,7 @@ export default function AccountSettings({ session }) {
             </div>
           </section>
 
-          {/* ── MARKETS PANEL ── */}
+          {/* -- MARKETS PANEL -- */}
           <section className="settings-panel">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <div className="settings-panel-title">MARKETS YOU TRADE</div>
@@ -352,7 +352,7 @@ export default function AccountSettings({ session }) {
             </div>
           </section>
 
-          {/* ── TRADE LABELS PANEL ── */}
+          {/* -- TRADE LABELS PANEL -- */}
           <section className="settings-panel">
             <div className="settings-panel-title">TRADE LABELS</div>
             <p className="settings-muted" style={{ marginTop: 0 }}>
