@@ -3,8 +3,9 @@ import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
 
 export default function Auth() {
-  const [mode, setMode] = useState('login')
-  const [email, setEmail] = useState('')
+  const [mode, setMode] = useState('login') // login | signup | reset
+  const [identifier, setIdentifier] = useState('') // email or username for login
+  const [email, setEmail] = useState('')           // email for signup + reset
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
@@ -194,6 +195,16 @@ export default function Auth() {
     setError('')
     setMessage('')
 
+    if (mode === 'reset') {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/settings`,
+      })
+      if (error) setError(error.message)
+      else setMessage('Check your email for a password reset link.')
+      setLoading(false)
+      return
+    }
+
     if (mode === 'signup') {
       const { data: existing } = await supabase
         .from('profiles').select('id').eq('username', username.toLowerCase()).single()
@@ -202,14 +213,32 @@ export default function Auth() {
       const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) { setError(error.message); setLoading(false); return }
 
-      await supabase.from('profiles').insert({ id: data.user.id, username: username.toLowerCase() })
+      await supabase.from('profiles').insert({ id: data.user.id, username: username.toLowerCase(), email })
       setMessage('Check your email to confirm your account.')
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError(error.message)
+      setLoading(false)
+      return
     }
+
+    // login — resolve username → email if needed
+    let loginEmail = identifier.trim()
+    if (!loginEmail.includes('@')) {
+      const { data: prof } = await supabase
+        .from('profiles').select('email').eq('username', loginEmail.toLowerCase()).single()
+      if (!prof?.email) {
+        setError('Username not found or this account was created before username login was supported. Try your email address.')
+        setLoading(false)
+        return
+      }
+      loginEmail = prof.email
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password })
+    if (error) setError(error.message)
     setLoading(false)
   }
+
+  const labelStyle = { fontFamily: 'Space Mono', fontSize: '9px', letterSpacing: '0.12em', color: 'var(--dim)', display: 'block', marginBottom: '8px' }
+  const inputStyle = { width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: '13px 14px', color: 'var(--text)', fontSize: '14px', outline: 'none', transition: 'border-color 0.15s', boxSizing: 'border-box' }
 
   return (
     <div style={{
@@ -263,79 +292,87 @@ export default function Auth() {
           boxShadow: '0 40px 100px rgba(0,0,0,0.5)',
         }}>
           {/* tabs */}
-          <div style={{ display: 'flex', marginBottom: '32px', borderBottom: '1px solid var(--border)' }}>
-            {['login', 'signup'].map(m => (
-              <button key={m} onClick={() => { setMode(m); setError('') }} style={{
-                flex: 1, padding: '10px', background: 'none', border: 'none',
-                fontFamily: 'Space Mono', fontSize: '11px', letterSpacing: '0.1em',
-                color: mode === m ? 'var(--text)' : 'var(--dim)',
-                borderBottom: mode === m ? '1px solid var(--red)' : '1px solid transparent',
-                marginBottom: '-1px', cursor: 'pointer',
-              }}>
-                {m === 'login' ? 'SIGN IN' : 'JOIN'}
-              </button>
-            ))}
-          </div>
+          {mode !== 'reset' && (
+            <div style={{ display: 'flex', marginBottom: '32px', borderBottom: '1px solid var(--border)' }}>
+              {['login', 'signup'].map(m => (
+                <button key={m} onClick={() => { setMode(m); setError(''); setMessage('') }} style={{
+                  flex: 1, padding: '10px', background: 'none', border: 'none',
+                  fontFamily: 'Space Mono', fontSize: '11px', letterSpacing: '0.1em',
+                  color: mode === m ? 'var(--text)' : 'var(--dim)',
+                  borderBottom: mode === m ? '1px solid var(--red)' : '1px solid transparent',
+                  marginBottom: '-1px', cursor: 'pointer',
+                }}>
+                  {m === 'login' ? 'SIGN IN' : 'JOIN'}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* reset password view */}
+          {mode === 'reset' && (
+            <div style={{ marginBottom: '28px' }}>
+              <button onClick={() => { setMode('login'); setError(''); setMessage('') }} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.1em', padding: 0, marginBottom: '20px', display: 'block',
+              }}>← BACK TO SIGN IN</button>
+              <div style={{ fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--text)', letterSpacing: '0.1em', marginBottom: '6px' }}>RESET PASSWORD</div>
+              <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', lineHeight: 1.6 }}>Enter your email and we'll send you a reset link.</div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+            {/* signup username */}
             {mode === 'signup' && (
               <div>
-                <label style={{ fontFamily: 'Space Mono', fontSize: '9px', letterSpacing: '0.12em', color: 'var(--dim)', display: 'block', marginBottom: '8px' }}>
-                  USERNAME
-                </label>
-                <input
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  placeholder="your_handle"
-                  required
-                  style={{
-                    width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                    padding: '13px 14px', color: 'var(--text)', fontSize: '14px', outline: 'none',
-                    transition: 'border-color 0.15s',
-                  }}
+                <label style={labelStyle}>USERNAME</label>
+                <input value={username} onChange={e => setUsername(e.target.value)}
+                  placeholder="your_handle" required style={inputStyle}
                   onFocus={e => e.target.style.borderColor = 'rgba(230,57,70,0.5)'}
-                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
-                />
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
             )}
 
-            <div>
-              <label style={{ fontFamily: 'Space Mono', fontSize: '9px', letterSpacing: '0.12em', color: 'var(--dim)', display: 'block', marginBottom: '8px' }}>
-                EMAIL
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                style={{
-                  width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                  padding: '13px 14px', color: 'var(--text)', fontSize: '14px', outline: 'none',
-                  transition: 'border-color 0.15s',
-                }}
-                onFocus={e => e.target.style.borderColor = 'rgba(230,57,70,0.5)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
-              />
-            </div>
+            {/* login: email or username */}
+            {mode === 'login' && (
+              <div>
+                <label style={labelStyle}>EMAIL OR USERNAME</label>
+                <input value={identifier} onChange={e => setIdentifier(e.target.value)}
+                  placeholder="you@email.com or your_handle" required style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = 'rgba(230,57,70,0.5)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+              </div>
+            )}
 
-            <div>
-              <label style={{ fontFamily: 'Space Mono', fontSize: '9px', letterSpacing: '0.12em', color: 'var(--dim)', display: 'block', marginBottom: '8px' }}>
-                PASSWORD
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                style={{
-                  width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                  padding: '13px 14px', color: 'var(--text)', fontSize: '14px', outline: 'none',
-                  transition: 'border-color 0.15s',
-                }}
-                onFocus={e => e.target.style.borderColor = 'rgba(230,57,70,0.5)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
-              />
-            </div>
+            {/* signup + reset: email */}
+            {(mode === 'signup' || mode === 'reset') && (
+              <div>
+                <label style={labelStyle}>EMAIL</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  required style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = 'rgba(230,57,70,0.5)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+              </div>
+            )}
+
+            {/* password — login + signup only */}
+            {mode !== 'reset' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ ...labelStyle, marginBottom: 0 }}>PASSWORD</label>
+                  {mode === 'login' && (
+                    <button type="button" onClick={() => { setMode('reset'); setError(''); setMessage('') }} style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--dim)', letterSpacing: '0.08em', padding: 0,
+                    }}>FORGOT?</button>
+                  )}
+                </div>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+                  required style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = 'rgba(230,57,70,0.5)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+              </div>
+            )}
 
             {error && (
               <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', padding: '10px 12px',
@@ -357,7 +394,7 @@ export default function Auth() {
               fontSize: '11px', letterSpacing: '0.12em', cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'opacity 0.15s',
             }}>
-              {loading ? '...' : mode === 'login' ? 'ENTER THE PIT' : 'CREATE ACCOUNT'}
+              {loading ? '...' : mode === 'login' ? 'ENTER THE PIT' : mode === 'signup' ? 'CREATE ACCOUNT' : 'SEND RESET LINK'}
             </button>
           </form>
         </div>
