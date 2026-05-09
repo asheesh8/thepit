@@ -39,6 +39,7 @@ export default function Navbar({ session }) {
     { path: '/strategies', label: 'STRATEGIES' },
     { path: '/backtesting', label: 'BACKTEST' },
     { path: '/review', label: 'REVIEW' },
+    { path: '/vault', label: 'VAULT' },
     { path: '/connections', label: 'CONNECTIONS' },
     { path: '/settings', label: 'SETTINGS' },
   ]
