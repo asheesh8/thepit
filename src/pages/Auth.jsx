@@ -43,28 +43,29 @@ export default function Auth() {
 
     const spawn = (ox, oy) => {
       const angle = Math.random() * Math.PI * 2
-      const speed = 0.3 + Math.pow(Math.random(), 2) * 2.8
+      const speed = 0.2 + Math.pow(Math.random(), 1.5) * 1.2
       const color = COLORS[Math.floor(Math.random() * COLORS.length)]
       return {
-        x: ox + (Math.random() - 0.5) * 8,
-        y: oy + (Math.random() - 0.5) * 8,
+        x: ox + (Math.random() - 0.5) * 6,
+        y: oy + (Math.random() - 0.5) * 6,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         life: 0,
-        maxLife: 120 + Math.random() * 200,
-        size: 0.4 + Math.random() * 1.4,
+        maxLife: 350 + Math.random() * 400,
+        size: 0.3 + Math.random() * 0.9,
         color,
-        haloScale: 4 + Math.random() * 8,
+        haloScale: 3 + Math.random() * 5,
       }
     }
 
     const { x: ox, y: oy } = getOrigin()
-    const particles = Array.from({ length: 500 }, () => {
+    const particles = Array.from({ length: 280 }, () => {
       const p = spawn(ox, oy)
-      // stagger initial life so they don't all burst at once
+      // stagger so screen fills naturally from start
       p.life = Math.random() * p.maxLife
-      p.x = ox + Math.cos(Math.random() * Math.PI * 2) * Math.random() * 300
-      p.y = oy + Math.sin(Math.random() * Math.PI * 2) * Math.random() * 200
+      const spread = Math.random()
+      p.x = ox + Math.cos(Math.random() * Math.PI * 2) * spread * window.innerWidth * 0.6
+      p.y = oy + Math.sin(Math.random() * Math.PI * 2) * spread * window.innerHeight * 0.5
       return p
     })
 
@@ -74,18 +75,18 @@ export default function Auth() {
       const H = canvas.height
       const { x: cx, y: cy } = getOrigin()
 
-      // trail fade — low alpha fill instead of clearRect creates glowing streaks
+      // soft trail fade — slower fade = longer, more floaty trails
       ctx.globalCompositeOperation = 'source-over'
-      ctx.fillStyle = 'rgba(3,4,12,0.18)'
+      ctx.fillStyle = 'rgba(3,4,12,0.07)'
       ctx.fillRect(0, 0, W, H)
 
       ctx.globalCompositeOperation = 'lighter'
 
-      // warm glow at logo origin
+      // subtle glow at logo origin
       ;[
-        { r: 80, a: 0.06, rgb: '230,57,70' },
-        { r: 40, a: 0.12, rgb: '255,140,80' },
-        { r: 18, a: 0.22, rgb: '255,210,140' },
+        { r: 60, a: 0.03, rgb: '230,57,70' },
+        { r: 28, a: 0.06, rgb: '255,140,80' },
+        { r: 12, a: 0.12, rgb: '255,210,140' },
       ].forEach(({ r, a, rgb }) => {
         const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
         g.addColorStop(0, `rgba(${rgb},${a})`)
@@ -96,21 +97,21 @@ export default function Auth() {
 
       particles.forEach(p => {
         p.life++
-        if (p.life >= p.maxLife || p.x < -60 || p.x > W + 60 || p.y < -60 || p.y > H + 60) {
+        if (p.life >= p.maxLife || p.x < -120 || p.x > W + 120 || p.y < -120 || p.y > H + 120) {
           Object.assign(p, spawn(cx, cy))
           return
         }
 
-        // drag: slow down over time, slight upward drift for nebula feel
-        p.vx *= 0.992
-        p.vy *= 0.992
-        p.vy -= 0.004
+        // very gentle drag — particles travel far and float slowly
+        p.vx *= 0.997
+        p.vy *= 0.997
+        p.vy -= 0.002
         p.x += p.vx
         p.y += p.vy
 
         const lifeRatio = p.life / p.maxLife
-        // fade in then out
-        const alpha = Math.sin(lifeRatio * Math.PI) * (0.5 + Math.random() * 0.5)
+        // fade in then out — gentler peak opacity
+        const alpha = Math.sin(lifeRatio * Math.PI) * (0.2 + Math.random() * 0.25)
         const [r, g, b] = p.color
 
         // glow halo
