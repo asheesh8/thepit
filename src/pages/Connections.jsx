@@ -82,7 +82,7 @@ export default function Connections({ session }) {
   const followingIds = new Set(following.map(u => u.id))
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="page-shell connections-shell" style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 24px' }}>
 
         <h1 style={{ fontSize: '3rem', letterSpacing: '0.05em', marginBottom: '4px' }}>CONNECTIONS</h1>

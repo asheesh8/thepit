@@ -120,7 +120,7 @@ export default function Backtesting({ session }) {
   }
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="page-shell backtesting-shell" style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px' }}>
         <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', alignItems: 'flex-end', marginBottom: '30px' }}>
           <div>

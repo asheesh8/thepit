@@ -1,4 +1,4 @@
-﻿/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/immutability, react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import EntryCard from '../components/EntryCard'
@@ -130,7 +130,7 @@ export default function Feed({ session }) {
   ]
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="floor-shell">
         <div className="floor-left-rail">
           <NotificationsRail session={session} />

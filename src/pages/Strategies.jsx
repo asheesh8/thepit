@@ -55,7 +55,7 @@ export default function Strategies({ session }) {
   const countFor = (rows, strategyId) => rows.filter(row => row.strategy_id === strategyId).length
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="page-shell strategies-shell" style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 24px' }}>
         <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px', marginBottom: '28px' }}>
           <div>

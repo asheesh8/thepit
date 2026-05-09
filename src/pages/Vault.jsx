@@ -140,7 +140,7 @@ export default function Vault({ session }) {
   const netPnl = totalPayouts - totalFeesPaid
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="page-shell" style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px' }}>
 
         {/* header */}

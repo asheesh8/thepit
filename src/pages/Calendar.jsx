@@ -151,7 +151,7 @@ export default function Calendar({ session }) {
   }
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="page-shell calendar-shell" style={{ maxWidth: '980px', margin: '0 auto', padding: '32px 24px' }}>
         <div className="page-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px', marginBottom: '26px' }}>
           <div>

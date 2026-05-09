@@ -121,7 +121,7 @@ export default function NewEntry({ session }) {
   }
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="page-shell new-entry-shell" style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 24px' }}>
 
         <h1 style={{ fontSize: '3rem', letterSpacing: '0.05em', marginBottom: '4px' }}>LOG A TRADE</h1>

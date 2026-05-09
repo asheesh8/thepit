@@ -155,7 +155,7 @@ export default function LiveRoom({ session }) {
 
   if (needsPassword) {
     return (
-      <div style={{ paddingTop: '56px', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 24px' }}>
+      <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 24px' }}>
         <form onSubmit={unlockRoom} className="card" style={{ width: '100%', maxWidth: '420px', padding: '24px' }}>
           <h1 style={{ fontSize: '2.7rem', lineHeight: 1, marginBottom: '8px' }}>ROOM LOCKED</h1>
           <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginBottom: '18px' }}>
@@ -253,7 +253,7 @@ export default function LiveRoom({ session }) {
   }
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="live-room-shell" style={{ maxWidth: '1440px', margin: '0 auto', padding: '18px' }}>
         <div className="room-header">
           <div>

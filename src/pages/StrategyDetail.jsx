@@ -167,7 +167,7 @@ export default function StrategyDetail({ session }) {
   if (!strategy) return <div style={{ paddingTop: '100px', textAlign: 'center', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--red)' }}>STRATEGY NOT FOUND</div>
 
   return (
-    <div style={{ paddingTop: '56px', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
       <div className="page-shell strategy-detail-shell" style={{ maxWidth: '820px', margin: '0 auto', padding: '32px 24px' }}>
         <Link to="/strategies" style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em' }}>BACK TO STRATEGIES</Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', alignItems: 'flex-end', margin: '16px 0 26px' }}>
