@@ -2,8 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-const FIRMS = ['FTMO', 'MyForexFunds', 'The Funded Trader', 'Apex', 'E8 Funding', 'True Forex Funds', 'Funder Trading', 'Other']
-const STATUS_COLORS = { active: '#2ec4b6', passed: '#4caf50', failed: '#e63946', payout_pending: '#f4a261', withdrawn: '#888' }
+const STATUS_COLORS ={ active: '#2ec4b6', passed: '#4caf50', failed: '#e63946', payout_pending: '#f4a261', withdrawn: '#888' }
 const STATUS_LABELS = { active: 'ACTIVE', passed: 'PASSED', failed: 'FAILED', payout_pending: 'PAYOUT PENDING', withdrawn: 'WITHDRAWN' }
 
 function fmt(n) {
@@ -39,7 +38,7 @@ export default function Vault({ session }) {
   const [editingAccount, setEditingAccount] = useState(null)
 
   const [acctForm, setAcctForm] = useState({
-    firm_name: 'FTMO', account_size: '', entry_fee: '', profit_target_pct: 10,
+    firm_name: '', account_type: '', account_size: '', entry_fee: '', profit_target_pct: 10,
     max_drawdown_pct: 10, daily_drawdown_pct: 5, current_balance: '', status: 'active', notes: '',
   })
   const [payoutForm, setPayoutForm] = useState({
@@ -64,6 +63,7 @@ export default function Vault({ session }) {
     const payload = {
       user_id: session.user.id,
       firm_name: acctForm.firm_name,
+      account_type: acctForm.account_type,
       account_size: size,
       entry_fee: Number(acctForm.entry_fee) || 0,
       profit_target: size * (Number(acctForm.profit_target_pct) / 100),
@@ -92,6 +92,7 @@ export default function Vault({ session }) {
     setEditingAccount(acct.id)
     setAcctForm({
       firm_name: acct.firm_name,
+      account_type: acct.account_type || '',
       account_size: acct.account_size,
       entry_fee: acct.entry_fee,
       profit_target_pct: ((acct.profit_target / acct.account_size) * 100).toFixed(0),
@@ -107,7 +108,7 @@ export default function Vault({ session }) {
   const resetAccountForm = () => {
     setShowAccountForm(false)
     setEditingAccount(null)
-    setAcctForm({ firm_name: 'FTMO', account_size: '', entry_fee: '', profit_target_pct: 10, max_drawdown_pct: 10, daily_drawdown_pct: 5, current_balance: '', status: 'active', notes: '' })
+    setAcctForm({ firm_name: '', account_type: '', account_size: '', entry_fee: '', profit_target_pct: 10, max_drawdown_pct: 10, daily_drawdown_pct: 5, current_balance: '', status: 'active', notes: '' })
   }
 
   // ── payouts ───────────────────────────────────────────────
@@ -193,9 +194,11 @@ export default function Vault({ session }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   <div>
                     <label style={lbl}>FIRM</label>
-                    <select value={acctForm.firm_name} onChange={e => setAcctForm(p => ({ ...p, firm_name: e.target.value }))} style={inp}>
-                      {FIRMS.map(f => <option key={f} value={f}>{f}</option>)}
-                    </select>
+                    <input value={acctForm.firm_name} onChange={e => setAcctForm(p => ({ ...p, firm_name: e.target.value }))} placeholder="FTMO, Apex, etc." required style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>ACCOUNT TYPE</label>
+                    <input value={acctForm.account_type} onChange={e => setAcctForm(p => ({ ...p, account_type: e.target.value }))} placeholder="Phase 1, Funded, etc." style={inp} />
                   </div>
                   <div>
                     <label style={lbl}>STATUS</label>
@@ -255,7 +258,10 @@ export default function Vault({ session }) {
                     <div key={acct.id} className="card" style={{ padding: '20px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                         <div>
-                          <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.5rem', letterSpacing: '0.05em', lineHeight: 1 }}>{acct.firm_name}</div>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                            <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.5rem', letterSpacing: '0.05em', lineHeight: 1 }}>{acct.firm_name}</div>
+                            {acct.account_type && <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--dim)', letterSpacing: '0.1em' }}>{acct.account_type.toUpperCase()}</div>}
+                          </div>
                           <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', marginTop: '3px' }}>
                             {fmtAbs(size)} ACCOUNT · ENTRY FEE {fmtAbs(acct.entry_fee)}
                           </div>
