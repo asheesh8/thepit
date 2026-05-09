@@ -2604,4 +2604,96 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   .piggy-bank-3d {
     transform: scale(0.82);
   }
+
+  /* ── Auth page ─────────────────────────────────────── */
+  .auth-layout {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+    padding: 0 !important;
+    align-items: start !important;
+  }
+
+  .auth-brand-col {
+    gap: 16px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: wrap;
+  }
+
+  .auth-brand-col h1 {
+    font-size: clamp(1.8rem, 8vw, 2.4rem) !important;
+    margin-bottom: 8px !important;
+  }
+
+  .auth-brand-col > div:last-child {
+    display: none;
+  }
+
+  .auth-form-card {
+    padding: 22px !important;
+    width: 100% !important;
+  }
+
+  /* ── Vault page ─────────────────────────────────────── */
+  .vault-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .vault-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Profile page ───────────────────────────────────── */
+  .profile-shell {
+    padding: 16px 12px 32px !important;
+  }
+
+  .profile-hero {
+    flex-direction: column !important;
+    gap: 14px !important;
+    padding: 16px !important;
+  }
+
+  .profile-hero > div:last-child {
+    width: 100%;
+  }
+
+  .profile-hero > div:last-child > div {
+    justify-content: flex-start !important;
+  }
+
+  /* ── Journal ────────────────────────────────────────── */
+  .journal-filter-row {
+    flex-wrap: wrap;
+    gap: 8px !important;
+  }
+
+  /* ── Backtesting ────────────────────────────────────── */
+  .backtest-reflection-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Strategies ─────────────────────────────────────── */
+  .strategy-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Connections ────────────────────────────────────── */
+  .connections-shell {
+    padding: 16px 12px 32px !important;
+  }
+
+  /* ── Review ─────────────────────────────────────────── */
+  .review-shell {
+    padding: 16px 12px 32px !important;
+  }
+
+  /* ── General page containers without class ──────────── */
+  div[style*="maxWidth: '860px'"],
+  div[style*="maxWidth: '920px'"],
+  div[style*="maxWidth: '1040px'"] {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
 }
