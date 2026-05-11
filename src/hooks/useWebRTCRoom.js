@@ -1,7 +1,34 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/**
+ * useWebRTCRoom — Perfect-Negotiation WebRTC hook
+ *
+ * Key design decisions
+ * ────────────────────
+ * 1. ONLY ONE side initiates an offer between any two peers.
+ *    The peer with the *lower* userId always starts, using this rule in both
+ *    the participants effect AND the peer-ready handler.  This eliminates the
+ *    "glare" (simultaneous offers) problem in normal operation.
+ *
+ * 2. Perfect Negotiation (RFC 8829 §4.1.1) as a safety net.
+ *    If glare somehow still occurs (e.g. simultaneous joins):
+ *      • "polite" peer (lower userId) rolls back its own offer and accepts
+ *        the incoming one.
+ *      • "impolite" peer ignores the incoming offer and waits for its answer.
+ *
+ * 3. onnegotiationneeded drives ALL offer creation.
+ *    We never call createOffer() manually.  Adding/removing tracks fires
+ *    onnegotiationneeded automatically, which handles both initial calls
+ *    and screen-share renegotiation without recreating peers.
+ *
+ * 4. joinMedia() does NOT call peers.
+ *    It sets joined=true (which fires the participants useEffect) and sends
+ *    peer-ready.  The participants effect + peer-ready handler take care of
+ *    establishing connections without duplication.
+ */
 import { useEffect, useRef, useState } from 'react'
 import { makePeerSignal } from '../lib/liveRooms'
 
-const rtcConfig = {
+const RTC_CONFIG = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
@@ -11,191 +38,150 @@ const rtcConfig = {
 }
 
 export default function useWebRTCRoom({ userId, participants, sendSignal }) {
-  const localVideoRef = useRef(null)
-  const peersRef = useRef(new Map())
-  const localStreamRef = useRef(null)
-  const screenStreamRef = useRef(null)
-  const cameraTrackRef = useRef(null)
-  const screenTrackIdsRef = useRef(new Set())
-  const remoteScreenStreamsRef = useRef(new Map())
-  const [localStream, setLocalStream] = useState(null)
+  const localVideoRef       = useRef(null)
+  const peersRef            = useRef(new Map())     // peerId → RTCPeerConnection
+  const localStreamRef      = useRef(null)
+  const screenStreamRef     = useRef(null)
+  const cameraTrackRef      = useRef(null)
+  const screenTrackIdsRef   = useRef(new Set())
+  const remoteScreenStreams  = useRef(new Map())     // peerId → Set<streamId>
+  const makingOfferRef      = useRef(new Map())     // peerId → bool
+  const ignoreOfferRef      = useRef(new Map())     // peerId → bool
+
+  const [localStream,       setLocalStream]       = useState(null)
   const [localScreenStream, setLocalScreenStream] = useState(null)
-  const [remoteStreams, setRemoteStreams] = useState([])
-  const [mediaState, setMediaState] = useState({ joined: false, mic: true, camera: true, sharing: false, error: '' })
+  const [remoteStreams,     setRemoteStreams]      = useState([])
+  const [mediaState,        setMediaState]        = useState({
+    joined: false, mic: true, camera: true, sharing: false, error: '',
+  })
 
-  useEffect(() => {
-    return () => leaveMedia()
-  }, [])
+  // ── Cleanup on unmount ────────────────────────────────────────────────────
+  useEffect(() => () => leaveMedia(), [])
 
-  // When our media is ready and participants change, try to connect to any new peers
+  // ── Connect to newly-discovered peers ────────────────────────────────────
+  // Only the peer with the *lower* userId initiates to avoid simultaneous offers.
   useEffect(() => {
     if (!mediaState.joined || !localStreamRef.current) return
-    participants.forEach(participant => {
-      if (participant.user_id && participant.user_id !== userId) {
-        callPeer(participant.user_id, false) // non-forced: skip if already connected
-      }
-    })
-  }, [participants, mediaState.joined, userId])
+    for (const p of participants) {
+      if (!p.user_id || p.user_id === userId) continue
+      if (userId >= p.user_id) continue              // other side will initiate
+      const existing = peersRef.current.get(p.user_id)
+      if (existing && !['failed', 'closed'].includes(existing.connectionState)) continue
+      _connectToPeer(p.user_id)
+    }
+  }, [participants, mediaState.joined])
 
-  const attachLocalStream = (stream) => {
-    localStreamRef.current = stream
-    cameraTrackRef.current = stream.getVideoTracks()[0] || null
-    peersRef.current.forEach(peer => addMissingLocalTracks(peer, stream))
-    setLocalStream(stream)
-    if (localVideoRef.current) localVideoRef.current.srcObject = stream
-  }
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const isPolite = (peerId) => userId < peerId      // polite = rolls back on collision
 
-  const setRemoteStreamType = (peerId, streamId, type) => {
-    const next = new Map(remoteScreenStreamsRef.current)
-    const current = new Set(next.get(peerId) || [])
-    if (type === 'screen') current.add(streamId)
-    else current.delete(streamId)
-    if (current.size) next.set(peerId, current)
-    else next.delete(peerId)
-    remoteScreenStreamsRef.current = next
-    setRemoteStreams(prev => prev.map(item => (
-      item.peerId === peerId && item.stream.id === streamId ? { ...item, type } : item
-    )))
-  }
-
-  const addMissingLocalTracks = (peer, stream) => {
-    const sentTrackIds = new Set(peer.getSenders().map(sender => sender.track?.id).filter(Boolean))
-    stream.getTracks().forEach(track => {
-      if (!sentTrackIds.has(track.id)) peer.addTrack(track, stream)
-    })
-  }
-
-  const addScreenTracksToPeer = (peer, stream) => {
-    const sentTrackIds = new Set(peer.getSenders().map(sender => sender.track?.id).filter(Boolean))
-    stream.getTracks().forEach(track => {
-      if (!sentTrackIds.has(track.id)) peer.addTrack(track, stream)
-    })
-  }
-
-  const announceScreenStream = async (stream, active) => {
-    await sendSignal(makePeerSignal({
-      kind: active ? 'screen-start' : 'screen-stop',
-      from: userId,
-      data: { streamId: stream.id },
-    }))
-  }
-
-  const stopScreenShare = async () => {
-    const stream = screenStreamRef.current
-    if (!stream) return
-    peersRef.current.forEach(peer => {
-      peer.getSenders()
-        .filter(sender => sender.track && screenTrackIdsRef.current.has(sender.track.id))
-        .forEach(sender => peer.removeTrack(sender))
-    })
-    stream.getTracks().forEach(track => track.stop())
-    screenStreamRef.current = null
-    screenTrackIdsRef.current = new Set()
-    setLocalScreenStream(null)
-    setMediaState(prev => ({ ...prev, sharing: false }))
-    await announceScreenStream(stream, false)
-    for (const participant of participants) {
-      if (participant.user_id !== userId) await callPeer(participant.user_id, true)
+  const _addMissingTracks = (peer, stream) => {
+    const sent = new Set(peer.getSenders().map(s => s.track?.id).filter(Boolean))
+    for (const track of stream.getTracks()) {
+      if (!sent.has(track.id)) peer.addTrack(track, stream)
     }
   }
 
-  // Tear down a peer cleanly and remove its streams
-  const closePeer = (peerId) => {
+  const _closePeer = (peerId) => {
     const peer = peersRef.current.get(peerId)
-    if (peer) {
-      try { peer.close() } catch (_) {}
-      peersRef.current.delete(peerId)
-    }
-    setRemoteStreams(prev => prev.filter(item => item.peerId !== peerId))
+    if (peer) { try { peer.close() } catch (_) {} peersRef.current.delete(peerId) }
+    setRemoteStreams(prev => prev.filter(r => r.peerId !== peerId))
   }
 
-  const getOrCreatePeer = (peerId) => {
+  const _getOrCreatePeer = (peerId) => {
     if (peersRef.current.has(peerId)) return peersRef.current.get(peerId)
-    const peer = new RTCPeerConnection(rtcConfig)
 
-    peer.onicecandidate = event => {
-      if (event.candidate) {
-        sendSignal(makePeerSignal({ kind: 'ice-candidate', from: userId, to: peerId, data: event.candidate }))
+    const peer = new RTCPeerConnection(RTC_CONFIG)
+
+    // ── Perfect Negotiation: onnegotiationneeded creates all offers ─────
+    peer.onnegotiationneeded = async () => {
+      try {
+        makingOfferRef.current.set(peerId, true)
+        await peer.setLocalDescription()           // browser creates offer automatically
+        await sendSignal(makePeerSignal({
+          kind: 'offer', from: userId, to: peerId, data: peer.localDescription,
+        }))
+      } catch (err) {
+        console.warn('[rtc] onnegotiationneeded:', peerId, err.message)
+      } finally {
+        makingOfferRef.current.set(peerId, false)
       }
     }
 
-    peer.ontrack = event => {
-      const [stream] = event.streams
+    peer.onicecandidate = ({ candidate }) => {
+      if (candidate) {
+        sendSignal(makePeerSignal({ kind: 'ice-candidate', from: userId, to: peerId, data: candidate }))
+      }
+    }
+
+    peer.ontrack = ({ streams }) => {
+      const stream = streams[0]
       if (!stream) return
-      const type = remoteScreenStreamsRef.current.get(peerId)?.has(stream.id) ? 'screen' : 'camera'
+      const type = remoteScreenStreams.current.get(peerId)?.has(stream.id) ? 'screen' : 'camera'
       setRemoteStreams(prev => {
         const key = `${peerId}:${stream.id}`
-        const without = prev.filter(item => `${item.peerId}:${item.stream.id}` !== key)
-        return [...without, { peerId, stream, type, _ts: Date.now() }]
+        return [...prev.filter(r => `${r.peerId}:${r.stream.id}` !== key), { peerId, stream, type, _ts: Date.now() }]
       })
     }
 
     peer.onconnectionstatechange = () => {
       if (['failed', 'closed'].includes(peer.connectionState)) {
         peersRef.current.delete(peerId)
-        setRemoteStreams(prev => prev.filter(item => item.peerId !== peerId))
+        setRemoteStreams(prev => prev.filter(r => r.peerId !== peerId))
       }
     }
 
-    // Auto-restart ICE if it disconnects transiently
     peer.oniceconnectionstatechange = () => {
       if (peer.iceConnectionState === 'failed') {
         try { peer.restartIce() } catch (_) {}
       }
     }
 
-    const stream = localStreamRef.current
-    if (stream) addMissingLocalTracks(peer, stream)
-    if (screenStreamRef.current) addScreenTracksToPeer(peer, screenStreamRef.current)
     peersRef.current.set(peerId, peer)
     return peer
   }
 
-  // force=true: always reconnect even if already connected (used on peer-ready)
-  // force=false: skip if already in good shape
-  const callPeer = async (peerId, force = false) => {
+  /**
+   * Ensure we have a peer connection to `peerId` and our local tracks are on it.
+   * onnegotiationneeded fires automatically after addTrack and sends the offer.
+   */
+  const _connectToPeer = (peerId) => {
     if (!localStreamRef.current || peerId === userId) return
-    const existing = peersRef.current.get(peerId)
-    if (existing) {
-      if (!force && existing.connectionState === 'connected') return
-      closePeer(peerId)
-    }
-    const peer = getOrCreatePeer(peerId)
-    addMissingLocalTracks(peer, localStreamRef.current)
-    if (screenStreamRef.current) addScreenTracksToPeer(peer, screenStreamRef.current)
-    try {
-      const offer = await peer.createOffer()
-      await peer.setLocalDescription(offer)
-      await sendSignal(makePeerSignal({ kind: 'offer', from: userId, to: peerId, data: offer }))
-    } catch (err) {
-      console.warn('callPeer error:', err)
-    }
+    const peer = _getOrCreatePeer(peerId)
+    _addMissingTracks(peer, localStreamRef.current)
+    if (screenStreamRef.current) _addMissingTracks(peer, screenStreamRef.current)
   }
 
+  // ── Public API ────────────────────────────────────────────────────────────
   const joinMedia = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
-      attachLocalStream(stream)
+      localStreamRef.current = stream
+      cameraTrackRef.current = stream.getVideoTracks()[0] || null
+      // Attach to any pre-existing peer connections (e.g. reconnecting)
+      peersRef.current.forEach(peer => _addMissingTracks(peer, stream))
+      setLocalStream(stream)
+      if (localVideoRef.current) localVideoRef.current.srcObject = stream
       setMediaState({ joined: true, mic: true, camera: true, sharing: false, error: '' })
+      // Announce readiness — the participants effect and peer-ready handler handle connections.
+      // We intentionally do NOT loop here; that would create offers simultaneously with peer-ready.
       await sendSignal(makePeerSignal({ kind: 'peer-ready', from: userId }))
-      for (const participant of participants) {
-        if (participant.user_id !== userId) await callPeer(participant.user_id, true)
-      }
-    } catch (error) {
-      setMediaState(prev => ({ ...prev, error: error.message || 'Media permissions failed.' }))
+    } catch (err) {
+      setMediaState(prev => ({ ...prev, error: err.message || 'Camera / mic permission denied.' }))
     }
   }
 
   const leaveMedia = () => {
-    screenStreamRef.current?.getTracks().forEach(track => track.stop())
-    localStreamRef.current?.getTracks().forEach(track => track.stop())
+    screenStreamRef.current?.getTracks().forEach(t => t.stop())
+    localStreamRef.current?.getTracks().forEach(t => t.stop())
     peersRef.current.forEach(peer => { try { peer.close() } catch (_) {} })
     peersRef.current.clear()
-    localStreamRef.current = null
-    screenStreamRef.current = null
-    cameraTrackRef.current = null
+    makingOfferRef.current.clear()
+    ignoreOfferRef.current.clear()
+    localStreamRef.current    = null
+    screenStreamRef.current   = null
+    cameraTrackRef.current    = null
     screenTrackIdsRef.current = new Set()
-    remoteScreenStreamsRef.current = new Map()
+    remoteScreenStreams.current = new Map()
     setLocalStream(null)
     setLocalScreenStream(null)
     setRemoteStreams([])
@@ -204,88 +190,152 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
   }
 
   const toggleMic = () => {
-    const audioTrack = localStreamRef.current?.getAudioTracks()[0]
-    if (!audioTrack) return
-    audioTrack.enabled = !audioTrack.enabled
-    setMediaState(prev => ({ ...prev, mic: audioTrack.enabled }))
+    const track = localStreamRef.current?.getAudioTracks()[0]
+    if (!track) return
+    track.enabled = !track.enabled
+    setMediaState(prev => ({ ...prev, mic: track.enabled }))
   }
 
   const toggleCamera = () => {
-    const videoTrack = localStreamRef.current?.getVideoTracks()[0]
-    if (!videoTrack) return
-    videoTrack.enabled = !videoTrack.enabled
-    setMediaState(prev => ({ ...prev, camera: videoTrack.enabled }))
+    const track = localStreamRef.current?.getVideoTracks()[0]
+    if (!track) return
+    track.enabled = !track.enabled
+    setMediaState(prev => ({ ...prev, camera: track.enabled }))
   }
 
   const shareScreen = async () => {
     try {
       if (!localStreamRef.current) await joinMedia()
-      if (screenStreamRef.current) {
-        await stopScreenShare()
-        return
-      }
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-      screenStreamRef.current = displayStream
-      screenTrackIdsRef.current = new Set(displayStream.getTracks().map(track => track.id))
-      peersRef.current.forEach(peer => addScreenTracksToPeer(peer, displayStream))
-      setLocalScreenStream(displayStream)
+      if (screenStreamRef.current) { await _stopScreenShare(); return }
+      const display = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+      screenStreamRef.current   = display
+      screenTrackIdsRef.current = new Set(display.getTracks().map(t => t.id))
+      // Adding tracks to existing peers fires onnegotiationneeded → renegotiation
+      peersRef.current.forEach(peer => _addMissingTracks(peer, display))
+      setLocalScreenStream(display)
       setMediaState(prev => ({ ...prev, sharing: true }))
-      await announceScreenStream(displayStream, true)
-      for (const participant of participants) {
-        if (participant.user_id !== userId) await callPeer(participant.user_id, true)
-      }
-      const screenTrack = displayStream.getVideoTracks()[0]
-      if (screenTrack) screenTrack.onended = () => stopScreenShare()
-    } catch (error) {
-      setMediaState(prev => ({ ...prev, error: error.message || 'Screenshare failed.' }))
+      await sendSignal(makePeerSignal({ kind: 'screen-start', from: userId, data: { streamId: display.id } }))
+      const videoTrack = display.getVideoTracks()[0]
+      if (videoTrack) videoTrack.onended = () => _stopScreenShare()
+    } catch (err) {
+      setMediaState(prev => ({ ...prev, error: err.message || 'Screenshare failed.' }))
     }
   }
 
-  const handleSignal = async (signal) => {
-    if (!signal || signal.from === userId || (signal.to && signal.to !== userId)) return
+  const _stopScreenShare = async () => {
+    const stream = screenStreamRef.current
+    if (!stream) return
+    // Removing tracks fires onnegotiationneeded → renegotiation (no peer close/reopen needed)
+    peersRef.current.forEach(peer => {
+      peer.getSenders()
+        .filter(s => s.track && screenTrackIdsRef.current.has(s.track.id))
+        .forEach(s => { try { peer.removeTrack(s) } catch (_) {} })
+    })
+    stream.getTracks().forEach(t => t.stop())
+    await sendSignal(makePeerSignal({ kind: 'screen-stop', from: userId, data: { streamId: stream.id } }))
+    screenStreamRef.current   = null
+    screenTrackIdsRef.current = new Set()
+    setLocalScreenStream(null)
+    setMediaState(prev => ({ ...prev, sharing: false }))
+  }
 
+  const handleSignal = async (signal) => {
+    if (!signal) return
+    if (signal.from === userId) return                          // own signal
+    if (signal.to && signal.to !== userId) return              // directed elsewhere
+
+    // ── Peer lifecycle ────────────────────────────────────────────────────
     if (signal.kind === 'peer-ready') {
-      // Force-reset any existing connection so we start fresh
-      closePeer(signal.from)
-      if (localStreamRef.current) await callPeer(signal.from, true)
+      // The remote peer just got camera/mic.
+      // We only initiate if we have the lower userId; otherwise they'll call us
+      // (from THEIR participants effect or peer-ready handler).
+      const existing = peersRef.current.get(signal.from)
+      if (existing && !['failed', 'closed'].includes(existing.connectionState)) {
+        // Connection already in progress or established — don't disturb it
+        return
+      }
+      _closePeer(signal.from)
+      makingOfferRef.current.delete(signal.from)
+      ignoreOfferRef.current.delete(signal.from)
+      if (localStreamRef.current && userId < signal.from) {
+        // We have lower ID → we initiate
+        _connectToPeer(signal.from)
+      }
+      // else: they have lower ID → they will call us from their participants effect
       return
     }
 
     if (signal.kind === 'peer-left') {
-      closePeer(signal.from)
-      remoteScreenStreamsRef.current.delete(signal.from)
+      _closePeer(signal.from)
+      remoteScreenStreams.current.delete(signal.from)
+      makingOfferRef.current.delete(signal.from)
+      ignoreOfferRef.current.delete(signal.from)
       return
     }
 
     if (signal.kind === 'screen-start' && signal.data?.streamId) {
-      setRemoteStreamType(signal.from, signal.data.streamId, 'screen')
-      return
-    }
-    if (signal.kind === 'screen-stop' && signal.data?.streamId) {
-      setRemoteStreamType(signal.from, signal.data.streamId, 'camera')
-      setRemoteStreams(prev => prev.filter(item => !(item.peerId === signal.from && item.stream.id === signal.data.streamId)))
+      const ids = new Set(remoteScreenStreams.current.get(signal.from) || [])
+      ids.add(signal.data.streamId)
+      remoteScreenStreams.current.set(signal.from, ids)
+      setRemoteStreams(prev => prev.map(r =>
+        r.peerId === signal.from && r.stream.id === signal.data.streamId ? { ...r, type: 'screen' } : r
+      ))
       return
     }
 
-    const peer = getOrCreatePeer(signal.from)
+    if (signal.kind === 'screen-stop' && signal.data?.streamId) {
+      const ids = new Set(remoteScreenStreams.current.get(signal.from) || [])
+      ids.delete(signal.data.streamId)
+      if (ids.size) remoteScreenStreams.current.set(signal.from, ids)
+      else remoteScreenStreams.current.delete(signal.from)
+      setRemoteStreams(prev => prev.filter(
+        r => !(r.peerId === signal.from && r.stream.id === signal.data.streamId)
+      ))
+      return
+    }
+
+    // ── Perfect Negotiation: offer / answer / ICE ─────────────────────────
+    const peer = _getOrCreatePeer(signal.from)
+
     if (signal.kind === 'offer') {
-      if (localStreamRef.current) addMissingLocalTracks(peer, localStreamRef.current)
+      const polite = isPolite(signal.from)
+      const collision = makingOfferRef.current.get(signal.from) || peer.signalingState !== 'stable'
+      const ignore = !polite && collision   // impolite side ignores colliding offers
+      ignoreOfferRef.current.set(signal.from, ignore)
+      if (ignore) return
+
+      if (localStreamRef.current) _addMissingTracks(peer, localStreamRef.current)
       try {
+        // setRemoteDescription triggers implicit rollback for the polite peer
         await peer.setRemoteDescription(new RTCSessionDescription(signal.data))
         const answer = await peer.createAnswer()
         await peer.setLocalDescription(answer)
         await sendSignal(makePeerSignal({ kind: 'answer', from: userId, to: signal.from, data: answer }))
       } catch (err) {
-        console.warn('offer handler error:', err)
+        console.warn('[rtc] offer handler:', signal.from, err.message)
       }
+      return
     }
+
     if (signal.kind === 'answer') {
-      try { await peer.setRemoteDescription(new RTCSessionDescription(signal.data)) } catch (err) {
-        console.warn('answer handler error:', err)
+      if (peer.signalingState === 'stable') return   // already settled
+      try {
+        await peer.setRemoteDescription(new RTCSessionDescription(signal.data))
+      } catch (err) {
+        console.warn('[rtc] answer handler:', signal.from, err.message)
       }
+      return
     }
+
     if (signal.kind === 'ice-candidate') {
-      try { await peer.addIceCandidate(new RTCIceCandidate(signal.data)) } catch (_) {}
+      try {
+        await peer.addIceCandidate(new RTCIceCandidate(signal.data))
+      } catch (err) {
+        // Suppress errors for ICE candidates belonging to ignored/rolled-back offers
+        if (!ignoreOfferRef.current.get(signal.from)) {
+          console.warn('[rtc] ICE candidate:', signal.from, err.message)
+        }
+      }
     }
   }
 
@@ -300,7 +350,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     toggleMic,
     toggleCamera,
     shareScreen,
-    stopScreenShare,
+    stopScreenShare: _stopScreenShare,
     handleSignal,
   }
 }

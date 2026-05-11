@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { showDeviceNotification } from '../lib/deviceNotifications'
 
@@ -15,7 +15,6 @@ export default function GlobalCallBanner({ session }) {
   const [call, setCall] = useState(null)
   const dismissTimer = useRef(null)
   const navigate = useNavigate()
-  const location = useLocation()
   const userId = session?.user?.id
 
   useEffect(() => {
@@ -24,8 +23,8 @@ export default function GlobalCallBanner({ session }) {
       .channel(`user-calls-${userId}`)
       .on('broadcast', { event: 'call-invite' }, ({ payload }) => {
         if (!payload?.roomId) return
-        // If already inside that exact room, skip — Rooms.jsx will show its own banner
-        if (location.pathname === `/rooms/${payload.roomId}`) return
+        // Use window.location (always current) to avoid stale closure
+        if (window.location.pathname === `/rooms/${payload.roomId}`) return
         setCall(payload)
         // Auto-dismiss after 30 s if unanswered
         clearTimeout(dismissTimer.current)
