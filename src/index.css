@@ -276,24 +276,27 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 }
 
 .app-nav-profile {
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
+  max-width: 140px;
   color: var(--dim);
   font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.05em;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .app-nav-avatar {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 1px solid var(--border);
   color: var(--red);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 9px;
   flex: 0 0 auto;
 }
 
