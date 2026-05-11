@@ -208,7 +208,9 @@ export default function Rooms({ session }) {
           ...r.live_rooms,
           lastMessage: [...(r.live_rooms.live_room_messages || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0],
         }))
-    } catch (_) {}
+    } catch (groupError) {
+      console.warn('Could not load group chats', groupError)
+    }
 
     setThreads([...dms, ...groups].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)))
     setLoading(false)
@@ -404,7 +406,7 @@ export default function Rooms({ session }) {
             </button>
             <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.7rem', letterSpacing: '0.06em' }}>MESSAGES</div>
           </div>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div className="dm-sidebar-actions" style={{ display: 'flex', gap: '6px' }}>
             <button className="btn" style={{ padding: '6px 10px', fontSize: '9px' }} onClick={() => setShowNewDm(v => !v)}>+ DM</button>
             <button className="btn" style={{ padding: '6px 10px', fontSize: '9px' }} onClick={() => setShowGroupModal(true)}>+ GROUP</button>
           </div>
@@ -480,7 +482,7 @@ export default function Rooms({ session }) {
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <div className="dm-chat-actions" style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                 <button className="btn btn-green" style={{ padding: '8px 14px', fontSize: '9px', letterSpacing: '0.1em' }} onClick={startCall}>▶ CALL</button>
                 <button className="btn" style={{ padding: '8px 12px', fontSize: '9px' }} onClick={startScreenShare}>SCREEN</button>
               </div>

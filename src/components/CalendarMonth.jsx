@@ -1,6 +1,6 @@
 import { getMonthMatrix } from '../lib/calendar'
 
-export default function CalendarMonth({ monthDate, mode, tradeSummary = {}, reflectionSummary = {}, selectedDay, onDayClick }) {
+export default function CalendarMonth({ monthDate, tradeSummary = {}, reflectionSummary = {}, selectedDay, onDayClick }) {
   const days = getMonthMatrix(monthDate)
   const weekdays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
@@ -15,16 +15,17 @@ export default function CalendarMonth({ monthDate, mode, tradeSummary = {}, refl
         {days.map(day => {
           const trade = tradeSummary[day.key]
           const reflection = reflectionSummary[day.key]
-          const active = mode === 'trades' ? trade : reflection
+          const active = trade || reflection
           const isSelected = selectedDay === day.key
           const pnl = trade?.pnl || 0
-          const color = mode === 'trades'
+          const color = trade
             ? pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--dim)'
             : reflection?.followThrough ? 'var(--green)' : 'var(--gold)'
 
           return (
             <div
               key={day.key}
+              className="calendar-day-cell"
               onClick={() => active && onDayClick?.(day.key)}
               style={{
                 minHeight: '92px',
@@ -39,7 +40,7 @@ export default function CalendarMonth({ monthDate, mode, tradeSummary = {}, refl
               onMouseLeave={e => { e.currentTarget.style.background = isSelected ? 'rgba(230,57,70,0.07)' : 'var(--card)' }}
             >
               <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: active ? color : 'var(--dim)' }}>{day.dayNumber}</div>
-              {mode === 'trades' && trade && (
+              {trade && (
                 <div style={{ marginTop: '16px' }}>
                   <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.4rem', color }}>
                     {pnl >= 0 ? '+' : '-'}${Math.abs(pnl).toFixed(0)}
@@ -49,11 +50,11 @@ export default function CalendarMonth({ monthDate, mode, tradeSummary = {}, refl
                   </div>
                 </div>
               )}
-              {mode === 'reflections' && reflection && (
-                <div style={{ marginTop: '16px' }}>
-                  <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.4rem', color }}>{reflection.count}</div>
+              {reflection && (
+                <div style={{ marginTop: trade ? '8px' : '16px' }}>
+                  <div style={{ fontFamily: 'Bebas Neue', fontSize: trade ? '1rem' : '1.4rem', color: reflection.followThrough ? 'var(--green)' : 'var(--gold)' }}>{reflection.count}</div>
                   <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--dim)', letterSpacing: '0.08em' }}>
-                    REFLECTION{reflection.count === 1 ? '' : 'S'}
+                    NOTE{reflection.count === 1 ? '' : 'S'}
                   </div>
                 </div>
               )}

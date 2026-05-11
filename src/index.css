@@ -2743,6 +2743,14 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   padding: 16px 14px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  gap: 10px;
+}
+
+.dm-sidebar-actions,
+.dm-chat-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .dm-page-thread-list {
@@ -3646,6 +3654,10 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     overflow-wrap: anywhere;
   }
 
+  .calendar-day-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
   .settings-shell {
     width: 100%;
     padding: 18px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
@@ -3812,8 +3824,9 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   .dm-page-shell {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
-    /* no bottom tab bar on this page, so full dvh is usable */
+    height: 100dvh;
     padding-top: calc(52px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
   }
 
   /* Default mobile: show sidebar, hide chat */
@@ -3843,11 +3856,62 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   }
 
   .dm-page-chat-header {
-    padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px;
+    padding: 10px 12px;
+    align-items: flex-start;
+  }
+
+  .dm-page-chat-header > div:first-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .dm-chat-actions {
+    width: auto;
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .dm-chat-actions .btn {
+    min-height: 34px;
+    padding: 7px 10px !important;
+    white-space: nowrap;
   }
 
   .dm-page-sidebar-header {
-    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    padding: 12px;
+    align-items: flex-start;
+  }
+
+  .dm-page-sidebar-header > div:first-child {
+    min-width: 0;
+  }
+
+  .dm-sidebar-actions {
+    flex-shrink: 0;
+  }
+
+  .dm-sidebar-actions .btn {
+    min-height: 34px;
+    padding: 7px 9px !important;
+    white-space: nowrap;
+  }
+
+  .dm-page-thread-item {
+    padding: 13px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .dm-message-list.full {
+    padding: 14px 10px;
+  }
+
+  .dm-msg-content {
+    max-width: min(82%, 340px);
+  }
+
+  .dm-message-form {
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
   }
 
   .dm-call-overlay {

@@ -15,6 +15,13 @@ function DayDetail({ dateKey, entries, reflections, onClose }) {
   const dayEntries = entries.filter(e => toDateKey(e.created_at) === dateKey)
   const dayReflections = reflections.filter(r => toDateKey(r.created_at) === dateKey)
   const totalPnl = dayEntries.reduce((s, e) => s + Number(e.pnl || 0), 0)
+  const wins = dayEntries.filter(e => Number(e.pnl || 0) > 0).length
+  const losses = dayEntries.filter(e => Number(e.pnl || 0) < 0).length
+  const avgMindset = dayEntries.length
+    ? dayEntries.reduce((sum, e) => sum + Number(e.mindset_rating || 0), 0) / dayEntries.length
+    : 0
+  const entryReflections = dayEntries.filter(e => e.reflection?.trim() || e.what_id_do_differently?.trim()).length
+  const completedFollowThrough = dayReflections.filter(r => r.completed_follow_through).length
   const pnlColor = totalPnl > 0 ? 'var(--green)' : totalPnl < 0 ? 'var(--red)' : 'var(--dim)'
 
   return (
@@ -31,10 +38,25 @@ function DayDetail({ dateKey, entries, reflections, onClose }) {
             {totalPnl >= 0 ? '+' : '-'}${Math.abs(totalPnl).toFixed(2)}
           </div>
           <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', marginTop: '2px' }}>
-            {dayEntries.length} trade{dayEntries.length !== 1 ? 's' : ''} · {dayReflections.length} backtest reflection{dayReflections.length !== 1 ? 's' : ''}
+            {dayEntries.length} trade{dayEntries.length !== 1 ? 's' : ''} · {entryReflections + dayReflections.length} reflection{entryReflections + dayReflections.length !== 1 ? 's' : ''}
           </div>
         </div>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--dim)', fontSize: '18px', cursor: 'pointer', padding: '0 4px' }}>×</button>
+      </div>
+
+      <div className="calendar-day-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '1px', background: 'var(--border)', marginBottom: '20px' }}>
+        {[
+          { label: 'TRADES', value: dayEntries.length },
+          { label: 'W/L', value: `${wins}/${losses}` },
+          { label: 'AVG MINDSET', value: dayEntries.length ? avgMindset.toFixed(1) : '-' },
+          { label: 'TRADE NOTES', value: entryReflections },
+          { label: 'BACKTEST', value: dayReflections.length },
+        ].map(stat => (
+          <div key={stat.label} style={{ background: 'var(--dark)', padding: '12px 10px', minWidth: 0 }}>
+            <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.45rem', color: 'var(--text)', lineHeight: 1 }}>{stat.value}</div>
+            <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--dim)', letterSpacing: '0.08em', marginTop: '4px' }}>{stat.label}</div>
+          </div>
+        ))}
       </div>
 
       {dayEntries.length > 0 && (
@@ -86,20 +108,26 @@ function DayDetail({ dateKey, entries, reflections, onClose }) {
 
       {dayReflections.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.12em' }}>BACKTEST REFLECTIONS</div>
+          <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.12em' }}>
+            BACKTEST REFLECTIONS {completedFollowThrough > 0 ? `· ${completedFollowThrough} FOLLOWED THROUGH` : ''}
+          </div>
           {dayReflections.map(r => (
             <div key={r.id} style={{ padding: '16px', border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
-              {r.overall_notes && <p style={{ fontSize: '13px', color: 'var(--dim)', lineHeight: 1.65, marginBottom: '8px' }}>{r.overall_notes}</p>}
-              {r.what_worked && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'baseline', marginBottom: '8px' }}>
+                <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.25rem', color: 'var(--text)', lineHeight: 1 }}>{r.title || 'BACKTEST REFLECTION'}</div>
+                {r.sample_size && <span className="tag" style={{ color: 'var(--dim)', fontSize: '8px' }}>{r.sample_size} SAMPLE</span>}
+              </div>
+              {r.body && <p style={{ fontSize: '13px', color: 'var(--dim)', lineHeight: 1.65, marginBottom: '8px' }}>{r.body}</p>}
+              {r.lesson && (
                 <div style={{ marginBottom: '8px' }}>
-                  <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--green)', letterSpacing: '0.1em', marginBottom: '4px' }}>WHAT WORKED</div>
-                  <p style={{ fontSize: '13px', color: 'var(--dim)', lineHeight: 1.6 }}>{r.what_worked}</p>
+                  <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--green)', letterSpacing: '0.1em', marginBottom: '4px' }}>LESSON</div>
+                  <p style={{ fontSize: '13px', color: 'var(--dim)', lineHeight: 1.6 }}>{r.lesson}</p>
                 </div>
               )}
-              {r.what_to_improve && (
+              {r.next_follow_through && (
                 <div>
-                  <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--gold)', letterSpacing: '0.1em', marginBottom: '4px' }}>TO IMPROVE</div>
-                  <p style={{ fontSize: '13px', color: 'var(--dim)', lineHeight: 1.6 }}>{r.what_to_improve}</p>
+                  <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--gold)', letterSpacing: '0.1em', marginBottom: '4px' }}>NEXT FOLLOW-THROUGH</div>
+                  <p style={{ fontSize: '13px', color: 'var(--dim)', lineHeight: 1.6 }}>{r.next_follow_through}</p>
                 </div>
               )}
             </div>
@@ -113,7 +141,6 @@ function DayDetail({ dateKey, entries, reflections, onClose }) {
 export default function Calendar({ session }) {
   const [entries, setEntries] = useState([])
   const [reflections, setReflections] = useState([])
-  const [mode, setMode] = useState('trades')
   const [monthDate, setMonthDate] = useState(new Date())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -168,15 +195,10 @@ export default function Calendar({ session }) {
 
         <div className="calendar-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '18px' }}>
           <h2 style={{ fontSize: '2.1rem' }}>{monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h2>
-          <div className="mobile-tabs" style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
-            {[['trades', 'TRADE CALENDAR'], ['reflections', 'REFLECTION CALENDAR']].map(([key, label]) => (
-              <button key={key} onClick={() => { setMode(key); setSelectedDay(null) }} style={{
-                padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer',
-                borderBottom: mode === key ? '1px solid var(--red)' : '1px solid transparent',
-                color: mode === key ? 'var(--text)' : 'var(--dim)',
-                fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.08em',
-              }}>{label}</button>
-            ))}
+          <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.1em', textAlign: 'right', lineHeight: 1.7 }}>
+            TRADES + REFLECTIONS
+            <br />
+            TAP A DAY FOR STATS
           </div>
         </div>
 
@@ -188,7 +210,6 @@ export default function Calendar({ session }) {
           <>
             <CalendarMonth
               monthDate={monthDate}
-              mode={mode}
               tradeSummary={tradeSummary}
               reflectionSummary={reflectionSummary}
               selectedDay={selectedDay}
