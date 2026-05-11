@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 
 export default function ParticipantTile({
   label,
+  sublabel,
   stream,
   muted = false,
   volume = 1,
@@ -12,6 +13,7 @@ export default function ParticipantTile({
   onContextMenu,
 }) {
   const ref = useRef(null)
+  const hasVideo = stream?.getVideoTracks?.().some(track => track.readyState === 'live')
 
   useEffect(() => {
     if (!ref.current) return
@@ -22,26 +24,35 @@ export default function ParticipantTile({
   return (
     <div className={`participant-tile ${featured ? 'participant-tile-featured' : ''}`} onContextMenu={onContextMenu}>
       {stream ? (
-        <video
-          ref={ref}
-          autoPlay
-          playsInline
-          muted={muted}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            display: 'block',
-            transform: mirror ? 'scaleX(-1)' : 'none',
-          }}
-        />
+        hasVideo ? (
+          <video
+            ref={ref}
+            autoPlay
+            playsInline
+            muted={muted}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+              transform: mirror ? 'scaleX(-1)' : 'none',
+            }}
+          />
+        ) : (
+          <div className="participant-audio-only">
+            <div className="participant-audio-avatar">{label.slice(0, 1)}</div>
+            <div className="participant-audio-label">AUDIO CONNECTED</div>
+          </div>
+        )
       ) : (
-        <div style={{ height: '100%', minHeight: featured ? '260px' : '128px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Bebas Neue', fontSize: featured ? '3.4rem' : '2rem', color: 'var(--border)' }}>
-          {label}
+        <div className="participant-empty-tile">
+          <div>{label}</div>
+          <span>CONNECTING</span>
         </div>
       )}
-      <div style={{ position: 'absolute', left: 10, bottom: 10, background: 'rgba(0,0,0,0.68)', border: '1px solid rgba(255,255,255,0.1)', padding: '5px 8px', fontFamily: 'Space Mono', fontSize: '9px', color: '#fff' }}>
-        {label}
+      <div className="participant-label">
+        <strong>{label}</strong>
+        {sublabel && <span>{sublabel}</span>}
       </div>
       {pinned && (
         <div style={{ position: 'absolute', right: 10, top: 10, border: '1px solid var(--gold)', color: 'var(--gold)', padding: '5px 7px', fontFamily: 'Space Mono', fontSize: '8px', background: 'rgba(0,0,0,0.68)' }}>

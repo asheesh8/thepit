@@ -7,10 +7,11 @@ export default function LiveStage({ localStream, remoteStreams, mediaState, rtc 
   const [audioPrefs, setAudioPrefs] = useState({})
   const [menu, setMenu] = useState(null)
   const tiles = useMemo(() => [
-      { id: 'local', label: 'YOU', stream: localStream, muted: true, active: mediaState.camera },
+      { id: 'local', label: 'YOU', sublabel: mediaState.sharing ? 'SCREEN' : 'LOCAL', stream: localStream, muted: true, active: mediaState.camera },
       ...remoteStreams.map(remote => ({
         id: remote.peerId,
-        label: `PEER ${remote.peerId.slice(0, 8)}`,
+        label: remoteStreams.length === 1 ? 'CALL PARTNER' : `GUEST ${remote.peerId.slice(0, 4).toUpperCase()}`,
+        sublabel: 'REMOTE',
         stream: remote.stream,
         muted: false,
         active: true,
@@ -23,7 +24,14 @@ export default function LiveStage({ localStream, remoteStreams, mediaState, rtc 
     return [pinned, ...tiles.filter(tile => tile.id !== pinnedId)]
   }, [tiles, pinnedId])
   const hasMedia = orderedTiles.some(tile => tile.stream)
-  const gridClass = orderedTiles.length <= 1 ? 'call-grid single' : orderedTiles.length === 2 ? 'call-grid two' : 'call-grid'
+  const isWaiting = !!localStream && remoteStreams.length === 0
+  const gridClass = isWaiting
+    ? 'call-grid solo-live'
+    : orderedTiles.length <= 1
+      ? 'call-grid single'
+      : orderedTiles.length === 2
+        ? 'call-grid two'
+        : 'call-grid group'
 
   const updateAudioPref = (tileId, patch) => {
     setAudioPrefs(prev => ({
@@ -51,21 +59,27 @@ export default function LiveStage({ localStream, remoteStreams, mediaState, rtc 
       <div className="call-stage-topbar">
         <div>
           <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--green)', letterSpacing: '0.14em' }}>LIVE CALL</div>
-          <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.7rem', lineHeight: 1 }}>VOICE. CAMERA. SCREEN.</div>
+          <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.7rem', lineHeight: 1 }}>
+            {isWaiting ? 'WAITING FOR THEM.' : orderedTiles.length === 2 ? 'ONE ON ONE.' : 'VOICE. CAMERA. SCREEN.'}
+          </div>
         </div>
-        <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)' }}>{tiles.length} TILE{tiles.length === 1 ? '' : 'S'}</div>
+        <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)' }}>
+          {remoteStreams.length} CONNECTED
+        </div>
       </div>
 
       <div className={gridClass}>
         {hasMedia ? (
-          orderedTiles.map((tile, index) => {
+          <>
+          {orderedTiles.map((tile, index) => {
             const prefs = { muted: false, volume: 1, ...audioPrefs[tile.id] }
             const isLocal = tile.id === 'local'
-            const isFeatured = !!pinnedId && index === 0
+            const isFeatured = (!!pinnedId && index === 0) || isWaiting
             return (
             <ParticipantTile
               key={tile.id}
               label={tile.label}
+              sublabel={tile.sublabel}
               stream={tile.stream}
               muted={tile.muted || prefs.muted}
               volume={isLocal ? 0 : prefs.volume}
@@ -76,7 +90,17 @@ export default function LiveStage({ localStream, remoteStreams, mediaState, rtc 
               onContextMenu={event => openMenu(event, tile)}
             />
             )
-          })
+          })}
+          {isWaiting && (
+            <div className="call-waiting-panel">
+              <div className="call-waiting-pulse" />
+              <div>
+                <h3>RINGING</h3>
+                <p>They will see an incoming call banner and phone notification. Keep this open.</p>
+              </div>
+            </div>
+          )}
+          </>
         ) : (
           <div className="call-empty">
             <div>
