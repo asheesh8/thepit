@@ -501,19 +501,23 @@ export default function Rooms({ session }) {
         ) : (
           <>
             <header className="dm-page-chat-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
                 <button className="dm-page-back-btn" onClick={() => { setMobileView('list'); navigate('/rooms') }}>←</button>
-                {selectedRoom?.room_type === 'group' ? <GroupIcon size={40} /> : <Avatar profile={dmPeer} size={40} />}
+                {selectedRoom?.room_type === 'group' ? <GroupIcon size={36} /> : <Avatar profile={dmPeer} size={36} />}
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.5rem', letterSpacing: '0.04em', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{chatTitle}</div>
-                  <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: connected ? 'var(--green)' : 'var(--muted)', letterSpacing: '0.08em', marginTop: '2px' }}>
-                    {connected ? '● LIVE' : '○ CONNECTING'} · {participants.length} PRESENT
+                  <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.3rem', letterSpacing: '0.04em', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {chatTitle}
                   </div>
+                  {isDm && dmPeer?.username && (
+                    <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--dim)', letterSpacing: '0.06em', marginTop: '1px' }}>
+                      @{dmPeer.username}
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="dm-chat-actions" style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                <button className="btn btn-green dm-call-btn" style={{ padding: '8px 14px', fontSize: '9px', letterSpacing: '0.1em' }} onClick={startCall}>▶ <span className="dm-call-label">CALL</span></button>
-                <button className="btn dm-screen-btn" style={{ padding: '8px 12px', fontSize: '9px' }} onClick={startScreenShare}>SCREEN</button>
+              <div className="dm-chat-actions" style={{ display: 'flex', gap: '6px', flexShrink: 0, alignItems: 'center' }}>
+                <button className="btn btn-green dm-call-btn" style={{ padding: '7px 13px', fontSize: '9px', letterSpacing: '0.1em' }} onClick={startCall}>▶ <span className="dm-call-label">CALL</span></button>
+                <button className="btn dm-screen-btn" style={{ padding: '7px 11px', fontSize: '9px' }} onClick={startScreenShare}>SCREEN</button>
               </div>
             </header>
             <div className="dm-page-chat-body">

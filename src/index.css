@@ -2891,10 +2891,11 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   gap: 10px;
+  min-height: 56px;
 }
 
 .dm-page-chat-body {
