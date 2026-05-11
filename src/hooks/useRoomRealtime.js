@@ -17,7 +17,14 @@ export default function useRoomRealtime({ roomId, userId, onSignal, onRefresh })
     channel
       .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState()
-        setParticipants(Object.values(state).flat())
+        // Deduplicate by user_id — stale presence entries can accumulate on reconnects
+        const seen = new Set()
+        const unique = Object.values(state).flat().filter(p => {
+          if (!p.user_id || seen.has(p.user_id)) return false
+          seen.add(p.user_id)
+          return true
+        })
+        setParticipants(unique)
       })
       .on('broadcast', { event: 'signal' }, payload => onSignal?.(payload.payload))
       .on('broadcast', { event: 'room-refresh' }, payload => onRefresh?.(payload.payload))
@@ -32,6 +39,7 @@ export default function useRoomRealtime({ roomId, userId, onSignal, onRefresh })
     channelRef.current = channel
 
     return () => {
+      channel.untrack()
       channel.send({ type: 'broadcast', event: 'signal', payload: { kind: 'peer-left', from: userId } })
       supabase.removeChannel(channel)
       channelRef.current = null

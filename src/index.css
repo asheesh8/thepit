@@ -4033,30 +4033,61 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* Full-screen call on mobile — like FaceTime/Discord */
   .dm-call-overlay {
-    padding: 12px;
-    align-items: flex-end;
+    padding: 0;
+    align-items: stretch;
   }
 
   .dm-call-overlay-box {
-    max-height: 90vh;
+    max-height: 100dvh;
+    height: 100dvh;
+    border: none;
+    border-radius: 0;
+  }
+
+  .dm-call-stage-wrap {
+    flex: 1;
+    min-height: 0;
   }
 
   .dm-call-overlay-header {
-    padding: 12px 14px;
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .dm-call-notes-wrap {
     padding: 10px 14px;
+    padding-top: max(10px, env(safe-area-inset-top, 10px));
+    gap: 8px;
   }
 
-  .dm-call-header-actions,
+  /* Hide notes on mobile — too cramped */
+  .dm-call-notes-wrap {
+    display: none !important;
+  }
+
+  .dm-call-header-actions {
+    display: flex;
+    gap: 8px;
+  }
+
   .incoming-call-actions {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  /* Compact call dock at bottom */
+  .call-dock {
+    padding: 10px 12px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px));
+    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .call-dock .btn {
+    flex: 1;
+    min-width: 70px;
+    max-width: 120px;
+    padding: 10px 6px;
+    font-size: 8px !important;
   }
 
   .incoming-call-banner {

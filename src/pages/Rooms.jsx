@@ -563,7 +563,9 @@ export default function Rooms({ session }) {
                 {selectedRoom?.room_type !== 'group' && <Avatar profile={dmPeer} size={34} />}
                 <div>
                   <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.5rem', letterSpacing: '0.06em', lineHeight: 1 }}>{chatTitle}</div>
-                  <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--green)', letterSpacing: '0.1em', marginTop: '2px' }}>● LIVE CALL · {participants.length} PRESENT</div>
+                  <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--green)', letterSpacing: '0.1em', marginTop: '2px' }}>
+                    ● LIVE · {participants.filter(p => p.user_id !== session.user.id).length > 0 ? `${participants.filter(p => p.user_id !== session.user.id).length} WITH YOU` : 'WAITING...'}
+                  </div>
                 </div>
               </div>
               <div className="dm-call-header-actions">
