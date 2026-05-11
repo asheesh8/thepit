@@ -241,12 +241,18 @@ export default function Rooms({ session }) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
+  const selectedThread = threads.find(t => t.id === selectedId)
+
   const dmPeer = selectedRoom?.room_type === 'dm'
     ? (selectedRoom.host_id === session.user.id ? selectedRoom.dm_peer : selectedRoom.profiles)
     : null
-  const chatTitle = selectedRoom?.room_type === 'dm'
-    ? `@${dmPeer?.username || 'trader'}`
-    : (selectedRoom?.title || 'Group Chat')
+
+  // Use thread data as fallback title while room is loading
+  const chatTitle = selectedRoom
+    ? (selectedRoom.room_type === 'dm' ? `@${dmPeer?.username || 'trader'}` : (selectedRoom.title || 'Group'))
+    : (selectedThread?.room_type === 'dm' ? `@${selectedThread?.other?.username || '...'}` : (selectedThread?.title || '...'))
+
+  const isDm = (selectedRoom ?? selectedThread)?.room_type === 'dm'
 
   return (
     <div className={`dm-page-shell${mobileView === 'chat' ? ' mobile-chat-view' : ''}`}>
@@ -349,6 +355,7 @@ export default function Rooms({ session }) {
                     roomId={selectedId}
                     session={session}
                     messages={messages}
+                    isDm={isDm}
                     onRefresh={payload => { broadcastRefresh(payload); loadRoom(selectedId); loadAll() }}
                   />
               }
