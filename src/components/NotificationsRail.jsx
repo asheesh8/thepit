@@ -150,7 +150,7 @@ export default function NotificationsRail({ session }) {
             id: `${isComment ? 'entry-comment' : isCallout ? 'callout' : 'entry-reaction'}-${row.user_id}-${row.created_at}`,
             actor: actorName(row.profiles),
             avatar: isComment ? 'C' : isCallout ? 'R' : 'P',
-            text: isComment ? 'commented on your trade' : isCallout ? 'opened a review thread' : `${row.type === 'callout' ? 'called out' : 'gave props to'} your trade`,
+            text: isComment ? 'commented on your trade' : isCallout ? 'opened a trade thread' : `${row.type === 'callout' ? 'called out' : 'gave props to'} your trade`,
             meta: entry?.symbol || 'TRADE',
             href: '/feed',
             created_at: row.created_at,

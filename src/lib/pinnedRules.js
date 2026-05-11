@@ -4,7 +4,6 @@ export const PINNED_RULE_CONTEXTS = [
   { key: 'journal', label: 'Journal' },
   { key: 'log_trade', label: 'Log Trade' },
   { key: 'backtesting', label: 'Backtesting' },
-  { key: 'review', label: 'Review' },
 ]
 
 export function contextLabel(key) {

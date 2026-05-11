@@ -39,7 +39,6 @@ import Strategies from './pages/Strategies'
 import StrategyDetail from './pages/StrategyDetail'
 import Backtesting from './pages/Backtesting'
 import Calendar from './pages/Calendar'
-import Review from './pages/Review'
 import Rooms from './pages/Rooms'
 import LiveRoom from './pages/LiveRoom'
 import AccountSettings from './pages/AccountSettings'
@@ -94,13 +93,14 @@ export default function App() {
             <Route path="/strategies/:id" element={<StrategyDetail session={session} />} />
             <Route path="/backtesting" element={<Backtesting session={session} />} />
             <Route path="/calendar" element={<Calendar session={session} />} />
-            <Route path="/review" element={<Review session={session} />} />
             <Route path="/rooms" element={<Rooms session={session} />} />
-            <Route path="/rooms/:id" element={<LiveRoom session={session} />} />
+            <Route path="/rooms/:id" element={<Rooms session={session} />} />
+            <Route path="/live/:id" element={<LiveRoom session={session} />} />
             <Route path="/settings" element={<AccountSettings session={session} />} />
             <Route path="/vault" element={<Vault session={session} />} />
             <Route path="/notifications" element={<Notifications session={session} />} />
             <Route path="/profile/:username" element={<Profile session={session} />} />
+            <Route path="*" element={<Navigate to="/feed" />} />
           </Routes>
         </DailyCheckInGate>
       ) : (

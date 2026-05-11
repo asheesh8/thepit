@@ -139,7 +139,6 @@ export default function Feed({ session }) {
     { to: '/rooms',       icon: '💬', label: 'DMs' },
     { to: '/strategies',  icon: '⚡', label: 'Strategies' },
     { to: '/backtesting', icon: '🔬', label: 'Backtest' },
-    { to: '/review',      icon: '🎯', label: 'Review' },
     { to: '/connections', icon: '👥', label: 'People' },
   ]
 

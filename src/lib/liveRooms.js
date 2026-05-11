@@ -1,7 +1,7 @@
 export const ROOM_TYPES = [
-  { key: 'trade_review', label: 'Trade Review', shortLabel: 'TRADE', color: 'var(--red)' },
+  { key: 'trade_review', label: 'Trade Breakdown', shortLabel: 'TRADE', color: 'var(--red)' },
   { key: 'strategy_breakdown', label: 'Strategy Breakdown', shortLabel: 'STRATEGY', color: 'var(--gold)' },
-  { key: 'backtest_review', label: 'Backtest Review', shortLabel: 'BACKTEST', color: 'var(--green)' },
+  { key: 'backtest_review', label: 'Backtest Lab', shortLabel: 'BACKTEST', color: 'var(--green)' },
   { key: 'open_floor', label: 'Open Floor', shortLabel: 'FLOOR', color: 'var(--dim)' },
   { key: 'funded_prep', label: 'Funded / Combine Prep', shortLabel: 'PREP', color: 'var(--green)' },
 ]

@@ -285,7 +285,7 @@ Give your honest assessment:`
             CALLOUT {reactions.callout > 0 && reactions.callout}
           </button>
           <button onClick={() => setShowCallouts(prev => !prev)} className="btn btn-gold" style={{ padding: '6px 12px', fontSize: '10px' }}>
-            REVIEW THREADS
+            THREADS
           </button>
           <button onClick={loadComments} className="btn" style={{ padding: '6px 12px', fontSize: '10px', color: 'var(--dim)', borderColor: 'var(--border)' }}>
             {showComments ? 'HIDE COMMENTS' : 'COMMENTS'}
@@ -333,5 +333,4 @@ Give your honest assessment:`
     </div>
   )
 }
-
 

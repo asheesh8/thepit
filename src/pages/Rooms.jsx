@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import useRoomRealtime from '../hooks/useRoomRealtime'
 import useWebRTCRoom from '../hooks/useWebRTCRoom'
@@ -39,6 +39,7 @@ function dmTitleFor(a, b) {
 export default function Rooms({ session }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const { id: routeRoomId } = useParams()
   const [threads, setThreads] = useState([])
   const [mutuals, setMutuals] = useState([])
   const [selectedId, setSelectedId] = useState(null)
@@ -55,6 +56,7 @@ export default function Rooms({ session }) {
   const [creatingGroup, setCreatingGroup] = useState(false)
   const [mobileView, setMobileView] = useState('list')
   const [pendingSignals, setPendingSignals] = useState([])
+  const [error, setError] = useState('')
 
   const { participants, connected, sendSignal, broadcastRefresh } = useRoomRealtime({
     roomId: selectedId,
@@ -68,6 +70,17 @@ export default function Rooms({ session }) {
     const openId = location.state?.openId
     loadAll(openId)
   }, [])
+
+  useEffect(() => {
+    if (routeRoomId) {
+      selectThread(routeRoomId, { syncUrl: false })
+      return
+    }
+    setSelectedId(null)
+    setSelectedRoom(null)
+    setMessages([])
+    setMobileView('list')
+  }, [routeRoomId])
 
   useEffect(() => {
     if (pendingSignals.length === 0) return
@@ -101,6 +114,7 @@ export default function Rooms({ session }) {
 
   const loadAll = async (autoOpenId = null) => {
     setLoading(true)
+    setError('')
     const [followingRes, followerRes, dmRes] = await Promise.all([
       supabase.from('follows')
         .select('following_id, profiles!follows_following_id_fkey(id, username, bio, avatar_url)')
@@ -113,6 +127,13 @@ export default function Rooms({ session }) {
         .order('updated_at', { ascending: false })
         .limit(40),
     ])
+
+    const loadError = followingRes.error || followerRes.error || dmRes.error
+    if (loadError) {
+      setError(loadError.message)
+      setLoading(false)
+      return
+    }
 
     const followerSet = new Set((followerRes.data || []).map(r => r.follower_id))
     setMutuals(
@@ -151,7 +172,8 @@ export default function Rooms({ session }) {
   const loadRoom = async (roomId) => {
     if (!roomId) return
     setRoomLoading(true)
-    const [{ data: roomData }, { data: msgData }] = await Promise.all([
+    setError('')
+    const [{ data: roomData, error: roomError }, { data: msgData, error: msgError }] = await Promise.all([
       supabase.from('live_rooms')
         .select('*, profiles!live_rooms_host_id_profiles_fkey(id, username, avatar_url, bio), dm_peer:profiles!live_rooms_dm_peer_id_profiles_fkey(id, username, avatar_url, bio)')
         .eq('id', roomId)
@@ -161,30 +183,45 @@ export default function Rooms({ session }) {
         .eq('room_id', roomId)
         .order('created_at', { ascending: true }),
     ])
+    if (roomError || msgError) setError(roomError?.message || msgError?.message)
     setSelectedRoom(roomData)
     setMessages(msgData || [])
     setRoomLoading(false)
   }
 
-  const selectThread = async (threadId) => {
-    if (selectedId === threadId) return
+  const selectThread = async (threadId, options = {}) => {
+    if (selectedId === threadId) {
+      setMobileView('chat')
+      if (options.syncUrl !== false && routeRoomId !== threadId) navigate(`/rooms/${threadId}`)
+      return
+    }
     if (callActive) { rtc.leaveMedia(); setCallActive(false); setCallNotes('') }
     setSelectedId(threadId)
     setMobileView('chat')
+    if (options.syncUrl !== false && routeRoomId !== threadId) navigate(`/rooms/${threadId}`)
     await loadRoom(threadId)
   }
 
   const openDm = async (peer) => {
     if (!peer?.id) return
     const title = dmTitleFor(session.user.id, peer.id)
-    const { data: existing } = await supabase.from('live_rooms').select('id').eq('title', title).eq('room_type', 'dm').maybeSingle()
+    setError('')
+    const { data: existing, error: existingError } = await supabase.from('live_rooms').select('id').eq('title', title).eq('room_type', 'dm').maybeSingle()
+    if (existingError) {
+      setError(existingError.message)
+      return
+    }
     let id = existing?.id
     if (!id) {
-      const { data } = await supabase.from('live_rooms').insert({
+      const { data, error: insertError } = await supabase.from('live_rooms').insert({
         title, room_type: 'dm', is_public: false, room_password: '',
         host_id: session.user.id, dm_peer_id: peer.id, status: 'live',
         agenda: `Direct message with @${peer.username}`,
       }).select('id').single()
+      if (insertError) {
+        setError(insertError.message)
+        return
+      }
       id = data?.id
     }
     if (id) { await loadAll(); selectThread(id) }
@@ -333,7 +370,7 @@ export default function Rooms({ session }) {
           <>
             <header className="dm-page-chat-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-                <button className="dm-page-back-btn" onClick={() => { setMobileView('list'); setSelectedId(null) }}>←</button>
+                <button className="dm-page-back-btn" onClick={() => { setMobileView('list'); navigate('/rooms') }}>←</button>
                 {selectedRoom?.room_type === 'group' ? <GroupIcon size={40} /> : <Avatar profile={dmPeer} size={40} />}
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.5rem', letterSpacing: '0.04em', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{chatTitle}</div>
@@ -350,7 +387,9 @@ export default function Rooms({ session }) {
             <div className="dm-page-chat-body">
               {roomLoading
                 ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)' }}>LOADING...</div>
-                : <RoomChat
+                : <>
+                  {error && <div className="dm-inline-error">{error}</div>}
+                  <RoomChat
                     embedded fullHeight title={null}
                     roomId={selectedId}
                     session={session}
@@ -358,6 +397,7 @@ export default function Rooms({ session }) {
                     isDm={isDm}
                     onRefresh={payload => { broadcastRefresh(payload); loadRoom(selectedId); loadAll() }}
                   />
+                </>
               }
             </div>
           </>

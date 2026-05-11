@@ -39,7 +39,6 @@ export default function Navbar({ session }) {
   }
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
-
   const profilePath = profile?.username ? `/profile/${profile.username}` : '/settings'
 
   const desktopLinks = [
@@ -53,7 +52,6 @@ export default function Navbar({ session }) {
     { path: '/journal', label: 'JOURNAL' },
     { path: '/strategies', label: 'STRATEGIES' },
     { path: '/backtesting', label: 'BACKTEST' },
-    { path: '/review', label: 'REVIEW' },
     { path: '/vault', label: 'VAULT' },
     { path: '/connections', label: 'CONNECTIONS' },
     { path: '/settings', label: 'SETTINGS' },
@@ -73,14 +71,12 @@ export default function Navbar({ session }) {
 
   return (
     <>
-      {/* ── Desktop / top nav ── */}
       <nav className="app-nav">
         <Link to="/feed" className="app-nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
           <PitLogo />
           THE PIT
         </Link>
 
-        {/* desktop links — hidden on mobile via CSS */}
         <div className="app-nav-links">
           {desktopLinks.map(({ path, label }) => (
             <Link key={path} to={path} className={`app-nav-link ${isActive(path) ? 'active' : ''}`}>
@@ -128,14 +124,11 @@ export default function Navbar({ session }) {
         </div>
       </nav>
 
-      {/* ── Mobile bottom tab bar — hidden on /rooms (full-screen chat) ── */}
       <nav className="mobile-tab-bar" style={location.pathname.startsWith('/rooms') ? { display: 'none' } : {}}>
-        {/* backdrop dismiss for more menu */}
         {showMore && (
           <div className="mobile-more-backdrop" onClick={() => setShowMore(false)} />
         )}
 
-        {/* more sheet — slides up above tab bar */}
         {showMore && (
           <div className="mobile-more-sheet">
             <div className="mobile-more-sheet-inner">
@@ -186,7 +179,6 @@ export default function Navbar({ session }) {
             )
           })}
 
-          {/* MORE tab */}
           <button
             onClick={() => setShowMore(prev => !prev)}
             className={`mobile-tab ${moreActive || showMore ? 'active' : ''}`}

@@ -64,7 +64,7 @@ export default function RoomCreateForm({ session, onCreate }) {
     <form onSubmit={submit} className="card room-create-form" style={{ padding: '20px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div>
         <label style={labelStyle}>ROOM TITLE</label>
-        <input value={form.title} onChange={event => set('title', event.target.value)} required placeholder="NQ London review desk" style={inputStyle} />
+        <input value={form.title} onChange={event => set('title', event.target.value)} required placeholder="NQ London desk" style={inputStyle} />
       </div>
       <div className="room-create-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '12px' }}>
         <div>
@@ -96,7 +96,7 @@ export default function RoomCreateForm({ session, onCreate }) {
       </div>
       <div>
         <label style={labelStyle}>AGENDA</label>
-        <textarea value={form.agenda} onChange={event => set('agenda', event.target.value)} rows={3} placeholder="What are we reviewing and what decision should come out of this room?" style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
+        <textarea value={form.agenda} onChange={event => set('agenda', event.target.value)} rows={3} placeholder="What are we breaking down and what decision should come out of this room?" style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
       </div>
       {error && <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)' }}>{error}</div>}
       <button type="submit" disabled={saving} className="btn btn-red" style={{ justifyContent: 'center', padding: '13px' }}>{saving ? 'CREATING...' : 'CREATE LIVE ROOM'}</button>

@@ -26,7 +26,7 @@ function DemoEntry() {
   )
 
   return (
-    <div style={{ border: '1px solid var(--border)', background: 'rgba(34,34,34,0.5)', marginBottom: '28px' }}>
+    <div className="guest-demo-entry" style={{ border: '1px solid var(--border)', background: 'rgba(34,34,34,0.5)', marginBottom: '28px' }}>
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--gold)', letterSpacing: '0.15em' }}>
           DEMO — TRY LOGGING A TRADE
@@ -36,9 +36,9 @@ function DemoEntry() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', borderBottom: '1px solid var(--border)' }}>
+      <div className="guest-demo-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', borderBottom: '1px solid var(--border)' }}>
         {/* form */}
-        <div style={{ padding: '20px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div className="guest-demo-form" style={{ padding: '20px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div>
             <label style={{ fontFamily: 'Space Mono', fontSize: '8px', letterSpacing: '0.12em', color: 'var(--dim)', display: 'block', marginBottom: '6px' }}>SYMBOL</label>
             <input value={symbol} onChange={e => setSymbol(e.target.value.toUpperCase())} placeholder="NQ, ES, AAPL..."
@@ -67,7 +67,7 @@ function DemoEntry() {
         </div>
 
         {/* live preview */}
-        <div style={{ padding: '20px' }}>
+        <div className="guest-demo-preview" style={{ padding: '20px' }}>
           <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--dim)', letterSpacing: '0.1em', marginBottom: '14px' }}>PREVIEW</div>
           {!hasPreview ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '140px', fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.08em', opacity: 0.5 }}>
@@ -94,7 +94,7 @@ function DemoEntry() {
         </div>
       </div>
 
-      <div style={{ padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="guest-demo-actions" style={{ padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.06em' }}>
           Real entries track your streak, badges & strategy history.
         </div>

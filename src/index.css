@@ -219,6 +219,10 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   white-space: nowrap;
 }
 
+.app-nav-icon {
+  display: none;
+}
+
 .app-nav-link.active {
   color: var(--text);
   border-bottom-color: var(--red);
@@ -1455,6 +1459,17 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   flex-shrink: 0;
 }
 
+.dm-inline-error {
+  margin: 8px 0;
+  padding: 9px 11px;
+  border: 1px solid rgba(230, 57, 70, 0.42);
+  background: rgba(230, 57, 70, 0.08);
+  color: var(--red);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
 .dm-thread-shell {
   min-height: 100vh;
   padding-top: 56px;
@@ -2665,6 +2680,33 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     padding: 34px 14px !important;
   }
 
+  .guest-demo-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .guest-demo-form {
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--border);
+    padding: 16px !important;
+  }
+
+  .guest-demo-preview {
+    padding: 16px !important;
+  }
+
+  .guest-demo-actions {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: stretch !important;
+  }
+
+  .guest-demo-actions button {
+    width: 100%;
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
   /* top nav — simplified on mobile, links move to bottom bar */
   .app-nav {
     height: calc(52px + env(safe-area-inset-top, 0px));
@@ -2721,7 +2763,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   .page-shell,
   .journal-shell,
   .new-entry-shell,
-  .floor-shell,
+    .floor-shell,
   .settings-shell {
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
   }
@@ -3172,11 +3214,6 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     padding: 16px 12px 32px !important;
   }
 
-  /* ── Review ─────────────────────────────────────────── */
-  .review-shell {
-    padding: 16px 12px 32px !important;
-  }
-
   /* ── General page containers without class ──────────── */
   div[style*="maxWidth: '860px'"],
   div[style*="maxWidth: '920px'"],
@@ -3217,6 +3254,14 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 
   .dm-sidebar-back-btn {
     display: block;
+  }
+
+  .dm-page-chat-header {
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px;
+  }
+
+  .dm-page-sidebar-header {
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
   }
 
   .dm-call-overlay {

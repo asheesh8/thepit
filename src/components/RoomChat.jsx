@@ -5,6 +5,7 @@ export default function RoomChat({ roomId, session, messages, onRefresh, embedde
   const [body, setBody] = useState('')
   const [saving, setSaving] = useState(false)
   const bottomRef = useRef(null)
+  const [error, setError] = useState('')
 
   // Auto-scroll to newest message
   useEffect(() => {
@@ -15,11 +16,22 @@ export default function RoomChat({ roomId, session, messages, onRefresh, embedde
     e?.preventDefault()
     if (!body.trim() || saving) return
     setSaving(true)
-    await supabase.from('live_room_messages').insert({ room_id: roomId, user_id: session.user.id, body: body.trim() })
+    setError('')
+    const messageBody = body.trim()
+    const { data, error: insertError } = await supabase
+      .from('live_room_messages')
+      .insert({ room_id: roomId, user_id: session.user.id, body: messageBody })
+      .select('*, profiles(username, avatar_url)')
+      .single()
+    if (insertError) {
+      setError(insertError.message)
+      setSaving(false)
+      return
+    }
     await supabase.from('live_rooms').update({ updated_at: new Date().toISOString() }).eq('id', roomId)
     setBody('')
     setSaving(false)
-    onRefresh?.({ kind: 'chat' })
+    onRefresh?.({ kind: 'chat', message: data })
   }
 
   const handleKeyDown = (e) => {
@@ -107,6 +119,7 @@ export default function RoomChat({ roomId, session, messages, onRefresh, embedde
           {saving ? '···' : '↑'}
         </button>
       </form>
+      {error && <div className="dm-inline-error">{error}</div>}
     </section>
   )
 }

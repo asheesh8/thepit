@@ -242,7 +242,7 @@ export default function Auth() {
               GET YOUR<br />TRADING FLOOR.
             </h1>
             <p style={{ color: 'var(--dim)', lineHeight: 1.7, maxWidth: '400px', fontSize: '14px' }}>
-              Journal, strategies, live review rooms, backtesting, and a public trading identity — all in one place.
+              Journal, strategies, live rooms, backtesting, and a public trading identity — all in one place.
             </p>
           </div>
 
