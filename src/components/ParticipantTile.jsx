@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export default function ParticipantTile({
   label,
@@ -15,28 +15,45 @@ export default function ParticipantTile({
   onSpotlight,
 }) {
   const videoRef = useRef(null)
-  const tileRef = useRef(null)
+  const tileRef  = useRef(null)
+  const [hasVideo, setHasVideo] = useState(false)
   const [fsActive, setFsActive] = useState(false)
-  const hasVideo = stream?.getVideoTracks?.().some(track => track.readyState === 'live' && track.enabled !== false)
 
-  // Sync srcObject whenever stream changes OR new tracks are added to it
+  // Recompute hasVideo from the live stream state
+  const recheckVideo = useCallback(() => {
+    const has = !!stream?.getVideoTracks().some(
+      t => t.readyState !== 'ended' && t.enabled !== false
+    )
+    setHasVideo(has)
+  }, [stream])
+
+  // Keep srcObject in sync.
+  // The <video> element is ALWAYS mounted when stream exists (just CSS-hidden when no video).
+  // This guarantees videoRef.current is non-null when this effect runs.
   useEffect(() => {
     const el = videoRef.current
-    if (!el || !stream) return
-    el.srcObject = stream
-    el.volume = Math.max(0, Math.min(1, volume))
-    el.play().catch(() => {})
+    if (!stream) {
+      setHasVideo(false)
+      if (el) el.srcObject = null
+      return
+    }
 
-    const onAddTrack = () => {
+    el.srcObject = stream
+    el.play().catch(() => {})
+    recheckVideo()
+
+    // Recheck & replay whenever tracks are added (e.g. video arrives after audio)
+    const onAdd = () => {
       el.srcObject = null
       el.srcObject = stream
       el.play().catch(() => {})
+      recheckVideo()
     }
-    stream.addEventListener('addtrack', onAddTrack)
-    return () => stream.removeEventListener('addtrack', onAddTrack)
-  }, [stream])
+    stream.addEventListener('addtrack', onAdd)
+    return () => stream.removeEventListener('addtrack', onAdd)
+  }, [stream, recheckVideo])
 
-  // Keep volume in sync separately
+  // Volume is separate so it doesn't retrigger srcObject assignment
   useEffect(() => {
     if (videoRef.current) videoRef.current.volume = Math.max(0, Math.min(1, volume))
   }, [volume])
@@ -50,11 +67,8 @@ export default function ParticipantTile({
 
   const requestFullscreen = (e) => {
     e.stopPropagation()
-    if (document.fullscreenElement) {
-      document.exitFullscreen()
-    } else {
-      tileRef.current?.requestFullscreen?.()
-    }
+    if (document.fullscreenElement) document.exitFullscreen()
+    else tileRef.current?.requestFullscreen?.()
   }
 
   return (
@@ -65,7 +79,9 @@ export default function ParticipantTile({
       onClick={onSpotlight}
     >
       {stream ? (
-        hasVideo ? (
+        <>
+          {/* Video element is ALWAYS in the DOM so srcObject can always be set.
+              Hide it with display:none when no video — never unmount it. */}
           <video
             ref={videoRef}
             autoPlay
@@ -75,16 +91,17 @@ export default function ParticipantTile({
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              display: 'block',
+              display: hasVideo ? 'block' : 'none',
               transform: mirror ? 'scaleX(-1)' : 'none',
             }}
           />
-        ) : (
-          <div className="participant-audio-only">
-            <div className="participant-audio-avatar">{label.slice(0, 1)}</div>
-            <div className="participant-audio-label">AUDIO ONLY</div>
-          </div>
-        )
+          {!hasVideo && (
+            <div className="participant-audio-only">
+              <div className="participant-audio-avatar">{label.slice(0, 1)}</div>
+              <div className="participant-audio-label">AUDIO ONLY</div>
+            </div>
+          )}
+        </>
       ) : (
         <div className="participant-empty-tile">
           <div>{label}</div>
@@ -98,27 +115,14 @@ export default function ParticipantTile({
         {sublabel && <span>{sublabel}</span>}
       </div>
 
-      {/* Fullscreen button — top-right */}
-      <button
-        className="participant-fs-btn"
-        onClick={requestFullscreen}
-        title="Fullscreen"
-      >
+      {/* Fullscreen button */}
+      <button className="participant-fs-btn" onClick={requestFullscreen} title="Fullscreen">
         {fsActive ? '⊠' : '⛶'}
       </button>
 
-      {/* Spotlight indicator */}
-      {spotlit && (
-        <div className="participant-spotlight-badge">FOCUS</div>
-      )}
-
-      {pinned && !spotlit && (
-        <div className="participant-pin-badge">PINNED</div>
-      )}
-
-      {!active && (
-        <div className="participant-cam-off-badge">CAM OFF</div>
-      )}
+      {spotlit && <div className="participant-spotlight-badge">FOCUS</div>}
+      {pinned && !spotlit && <div className="participant-pin-badge">PINNED</div>}
+      {!active && <div className="participant-cam-off-badge">CAM OFF</div>}
     </div>
   )
 }

@@ -257,11 +257,15 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
       _closePeer(signal.from)
       makingOfferRef.current.delete(signal.from)
       ignoreOfferRef.current.delete(signal.from)
-      if (localStreamRef.current && userId < signal.from) {
-        // We have lower ID → we initiate
-        _connectToPeer(signal.from)
+      if (localStreamRef.current) {
+        if (userId < signal.from) {
+          // We have the lower ID → we initiate (they'll answer)
+          _connectToPeer(signal.from)
+        }
+        // else: they have lower ID → they'll send an offer; we just need the peer ready
+        // _getOrCreatePeer alone (no tracks) won't trigger onnegotiationneeded
+        // — the offer handler will add our tracks after setRemoteDescription
       }
-      // else: they have lower ID → they will call us from their participants effect
       return
     }
 
@@ -304,10 +308,12 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
       ignoreOfferRef.current.set(signal.from, ignore)
       if (ignore) return
 
-      if (localStreamRef.current) _addMissingTracks(peer, localStreamRef.current)
       try {
-        // setRemoteDescription triggers implicit rollback for the polite peer
+        // setRemoteDescription first (triggers implicit rollback for polite peer if needed).
+        // We add local tracks AFTER this, while in have-remote-offer state, so
+        // onnegotiationneeded does NOT fire (it only fires in stable state).
         await peer.setRemoteDescription(new RTCSessionDescription(signal.data))
+        if (localStreamRef.current) _addMissingTracks(peer, localStreamRef.current)
         const answer = await peer.createAnswer()
         await peer.setLocalDescription(answer)
         await sendSignal(makePeerSignal({ kind: 'answer', from: userId, to: signal.from, data: answer }))
