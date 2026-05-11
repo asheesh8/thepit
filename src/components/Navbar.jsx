@@ -128,8 +128,8 @@ export default function Navbar({ session }) {
         </div>
       </nav>
 
-      {/* ── Mobile bottom tab bar ── */}
-      <nav className="mobile-tab-bar">
+      {/* ── Mobile bottom tab bar — hidden on /rooms (full-screen chat) ── */}
+      <nav className="mobile-tab-bar" style={location.pathname.startsWith('/rooms') ? { display: 'none' } : {}}>
         {/* backdrop dismiss for more menu */}
         {showMore && (
           <div className="mobile-more-backdrop" onClick={() => setShowMore(false)} />

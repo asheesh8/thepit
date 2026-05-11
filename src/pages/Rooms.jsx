@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import useRoomRealtime from '../hooks/useRoomRealtime'
 import useWebRTCRoom from '../hooks/useWebRTCRoom'
@@ -38,6 +38,7 @@ function dmTitleFor(a, b) {
 
 export default function Rooms({ session }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const [threads, setThreads] = useState([])
   const [mutuals, setMutuals] = useState([])
   const [selectedId, setSelectedId] = useState(null)
@@ -253,7 +254,12 @@ export default function Rooms({ session }) {
       {/* ── LEFT SIDEBAR ── */}
       <aside className="dm-page-sidebar">
         <div className="dm-page-sidebar-header">
-          <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.7rem', letterSpacing: '0.06em' }}>MESSAGES</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button className="dm-sidebar-back-btn" onClick={() => navigate('/feed')} aria-label="Back to feed">
+              ←
+            </button>
+            <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.7rem', letterSpacing: '0.06em' }}>MESSAGES</div>
+          </div>
           <div style={{ display: 'flex', gap: '6px' }}>
             <button className="btn" style={{ padding: '6px 10px', fontSize: '9px' }} onClick={() => setShowNewDm(v => !v)}>+ DM</button>
             <button className="btn" style={{ padding: '6px 10px', fontSize: '9px' }} onClick={() => setShowGroupModal(true)}>+ GROUP</button>
