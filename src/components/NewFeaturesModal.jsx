@@ -1,38 +1,11 @@
 import { useState, useEffect } from 'react'
-
-// Bump this string every time you want to show the modal again
-const FEATURES_VERSION = 'v2025-05-09'
-const STORAGE_KEY = `pit_features_seen_${FEATURES_VERSION}`
-
-const NEW_FEATURES = [
-  {
-    icon: '📅',
-    title: 'Activity Calendar',
-    desc: 'See every day you traded or backtested. Click any day to view those entries — left rail on the floor.',
-  },
-  {
-    icon: '🏦',
-    title: 'The Vault',
-    desc: 'Private P&L tracker. Log prop firm accounts with drawdown gauges, and record every payout and fee.',
-  },
-  {
-    icon: '🔑',
-    title: 'Username Login',
-    desc: 'Sign in with your username instead of your email. Forgot password link is there too.',
-  },
-  {
-    icon: '📱',
-    title: 'Mobile Polish',
-    desc: 'Every page rebuilt for iPhone — notch-aware, no more zoom, proper safe areas throughout.',
-  },
-]
+import { FEATURES_VERSION, NEW_FEATURES } from '../config/features'
 
 export default function NewFeaturesModal() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const seen = localStorage.getItem(STORAGE_KEY)
-    if (!seen) setVisible(true)
+    if (!localStorage.getItem(STORAGE_KEY)) setVisible(true)
   }, [])
 
   const dismiss = () => {
@@ -60,14 +33,12 @@ export default function NewFeaturesModal() {
         padding: '28px',
         position: 'relative',
       }}>
-        {/* close */}
         <button onClick={dismiss} style={{
           position: 'absolute', top: '14px', right: '14px',
           background: 'none', border: 'none', cursor: 'pointer',
           color: 'var(--dim)', fontSize: '18px', lineHeight: 1, padding: '4px 8px',
         }}>×</button>
 
-        {/* header */}
         <div style={{ marginBottom: '22px' }}>
           <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--red)', letterSpacing: '0.18em', marginBottom: '8px' }}>
             WHAT'S NEW
@@ -77,7 +48,6 @@ export default function NewFeaturesModal() {
           </h2>
         </div>
 
-        {/* features list */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
           {NEW_FEATURES.map(f => (
             <div key={f.title} style={{
