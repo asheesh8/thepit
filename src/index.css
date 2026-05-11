@@ -1433,6 +1433,107 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   grid-column: 1 / -1;
 }
 
+/* ── Fullscreen button on tiles ──────────────────────────── */
+.participant-fs-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  padding: 5px 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 4;
+}
+.participant-tile:hover .participant-fs-btn { opacity: 1; }
+
+/* Always visible on touch devices */
+@media (hover: none) {
+  .participant-fs-btn { opacity: 0.7; }
+}
+
+.participant-spotlight-badge,
+.participant-pin-badge,
+.participant-cam-off-badge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 4px 7px;
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  background: rgba(0,0,0,0.68);
+  letter-spacing: 0.08em;
+}
+.participant-spotlight-badge { border: 1px solid var(--green); color: var(--green); }
+.participant-pin-badge { border: 1px solid #c9a227; color: #c9a227; }
+.participant-cam-off-badge { border: 1px solid var(--red); color: var(--red); }
+
+/* ── Spotlight / focus layout ─────────────────────────────── */
+.call-spotlight-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: 8px;
+  padding: 10px;
+}
+
+.call-spotlight-main {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.call-spotlight-main .participant-tile {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: unset;
+  border-radius: 8px;
+}
+
+.call-thumbnail-strip {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  overflow-x: auto;
+  height: 110px;
+  scrollbar-width: none;
+}
+.call-thumbnail-strip::-webkit-scrollbar { display: none; }
+
+.call-thumbnail {
+  flex: 0 0 160px;
+  height: 110px;
+  cursor: pointer;
+}
+.call-thumbnail .participant-tile {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: unset;
+  border-radius: 6px;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
+.call-thumbnail .participant-tile:hover { opacity: 1; }
+
+/* Fullscreen CSS — fill screen natively */
+.participant-tile:fullscreen,
+.participant-tile:-webkit-full-screen {
+  background: #000;
+  border-radius: 0;
+}
+.participant-tile:fullscreen video,
+.participant-tile:-webkit-full-screen video {
+  object-fit: contain;
+}
+
 .participant-label {
   position: absolute;
   left: 10px;

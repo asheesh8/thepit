@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { makePeerSignal } from '../lib/liveRooms'
 
 const rtcConfig = {
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun.cloudflare.com:3478' },
+  ],
 }
 
 export default function useWebRTCRoom({ userId, participants, sendSignal }) {
@@ -22,10 +27,13 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     return () => leaveMedia()
   }, [])
 
+  // When our media is ready and participants change, try to connect to any new peers
   useEffect(() => {
     if (!mediaState.joined || !localStreamRef.current) return
     participants.forEach(participant => {
-      if (participant.user_id && participant.user_id !== userId) callPeer(participant.user_id)
+      if (participant.user_id && participant.user_id !== userId) {
+        callPeer(participant.user_id, false) // non-forced: skip if already connected
+      }
     })
   }, [participants, mediaState.joined, userId])
 
@@ -75,7 +83,6 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
   const stopScreenShare = async () => {
     const stream = screenStreamRef.current
     if (!stream) return
-
     peersRef.current.forEach(peer => {
       peer.getSenders()
         .filter(sender => sender.track && screenTrackIdsRef.current.has(sender.track.id))
@@ -88,8 +95,18 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     setMediaState(prev => ({ ...prev, sharing: false }))
     await announceScreenStream(stream, false)
     for (const participant of participants) {
-      if (participant.user_id !== userId) await callPeer(participant.user_id)
+      if (participant.user_id !== userId) await callPeer(participant.user_id, true)
     }
+  }
+
+  // Tear down a peer cleanly and remove its streams
+  const closePeer = (peerId) => {
+    const peer = peersRef.current.get(peerId)
+    if (peer) {
+      try { peer.close() } catch (_) {}
+      peersRef.current.delete(peerId)
+    }
+    setRemoteStreams(prev => prev.filter(item => item.peerId !== peerId))
   }
 
   const getOrCreatePeer = (peerId) => {
@@ -104,18 +121,26 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
 
     peer.ontrack = event => {
       const [stream] = event.streams
+      if (!stream) return
       const type = remoteScreenStreamsRef.current.get(peerId)?.has(stream.id) ? 'screen' : 'camera'
       setRemoteStreams(prev => {
         const key = `${peerId}:${stream.id}`
         const without = prev.filter(item => `${item.peerId}:${item.stream.id}` !== key)
-        return [...without, { peerId, stream, type }]
+        return [...without, { peerId, stream, type, _ts: Date.now() }]
       })
     }
 
     peer.onconnectionstatechange = () => {
-      if (['failed', 'disconnected', 'closed'].includes(peer.connectionState)) {
+      if (['failed', 'closed'].includes(peer.connectionState)) {
         peersRef.current.delete(peerId)
         setRemoteStreams(prev => prev.filter(item => item.peerId !== peerId))
+      }
+    }
+
+    // Auto-restart ICE if it disconnects transiently
+    peer.oniceconnectionstatechange = () => {
+      if (peer.iceConnectionState === 'failed') {
+        try { peer.restartIce() } catch (_) {}
       }
     }
 
@@ -126,14 +151,25 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     return peer
   }
 
-  const callPeer = async (peerId) => {
+  // force=true: always reconnect even if already connected (used on peer-ready)
+  // force=false: skip if already in good shape
+  const callPeer = async (peerId, force = false) => {
     if (!localStreamRef.current || peerId === userId) return
+    const existing = peersRef.current.get(peerId)
+    if (existing) {
+      if (!force && existing.connectionState === 'connected') return
+      closePeer(peerId)
+    }
     const peer = getOrCreatePeer(peerId)
-    if (peer.signalingState !== 'stable') return
     addMissingLocalTracks(peer, localStreamRef.current)
-    const offer = await peer.createOffer()
-    await peer.setLocalDescription(offer)
-    await sendSignal(makePeerSignal({ kind: 'offer', from: userId, to: peerId, data: offer }))
+    if (screenStreamRef.current) addScreenTracksToPeer(peer, screenStreamRef.current)
+    try {
+      const offer = await peer.createOffer()
+      await peer.setLocalDescription(offer)
+      await sendSignal(makePeerSignal({ kind: 'offer', from: userId, to: peerId, data: offer }))
+    } catch (err) {
+      console.warn('callPeer error:', err)
+    }
   }
 
   const joinMedia = async () => {
@@ -143,7 +179,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
       setMediaState({ joined: true, mic: true, camera: true, sharing: false, error: '' })
       await sendSignal(makePeerSignal({ kind: 'peer-ready', from: userId }))
       for (const participant of participants) {
-        if (participant.user_id !== userId) await callPeer(participant.user_id)
+        if (participant.user_id !== userId) await callPeer(participant.user_id, true)
       }
     } catch (error) {
       setMediaState(prev => ({ ...prev, error: error.message || 'Media permissions failed.' }))
@@ -153,7 +189,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
   const leaveMedia = () => {
     screenStreamRef.current?.getTracks().forEach(track => track.stop())
     localStreamRef.current?.getTracks().forEach(track => track.stop())
-    peersRef.current.forEach(peer => peer.close())
+    peersRef.current.forEach(peer => { try { peer.close() } catch (_) {} })
     peersRef.current.clear()
     localStreamRef.current = null
     screenStreamRef.current = null
@@ -196,7 +232,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
       setMediaState(prev => ({ ...prev, sharing: true }))
       await announceScreenStream(displayStream, true)
       for (const participant of participants) {
-        if (participant.user_id !== userId) await callPeer(participant.user_id)
+        if (participant.user_id !== userId) await callPeer(participant.user_id, true)
       }
       const screenTrack = displayStream.getVideoTracks()[0]
       if (screenTrack) screenTrack.onended = () => stopScreenShare()
@@ -207,17 +243,20 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
 
   const handleSignal = async (signal) => {
     if (!signal || signal.from === userId || (signal.to && signal.to !== userId)) return
-    if (signal.kind === 'peer-ready' && localStreamRef.current) {
-      await callPeer(signal.from)
+
+    if (signal.kind === 'peer-ready') {
+      // Force-reset any existing connection so we start fresh
+      closePeer(signal.from)
+      if (localStreamRef.current) await callPeer(signal.from, true)
       return
     }
+
     if (signal.kind === 'peer-left') {
-      peersRef.current.get(signal.from)?.close()
-      peersRef.current.delete(signal.from)
+      closePeer(signal.from)
       remoteScreenStreamsRef.current.delete(signal.from)
-      setRemoteStreams(prev => prev.filter(item => item.peerId !== signal.from))
       return
     }
+
     if (signal.kind === 'screen-start' && signal.data?.streamId) {
       setRemoteStreamType(signal.from, signal.data.streamId, 'screen')
       return
@@ -231,16 +270,22 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     const peer = getOrCreatePeer(signal.from)
     if (signal.kind === 'offer') {
       if (localStreamRef.current) addMissingLocalTracks(peer, localStreamRef.current)
-      await peer.setRemoteDescription(new RTCSessionDescription(signal.data))
-      const answer = await peer.createAnswer()
-      await peer.setLocalDescription(answer)
-      await sendSignal(makePeerSignal({ kind: 'answer', from: userId, to: signal.from, data: answer }))
+      try {
+        await peer.setRemoteDescription(new RTCSessionDescription(signal.data))
+        const answer = await peer.createAnswer()
+        await peer.setLocalDescription(answer)
+        await sendSignal(makePeerSignal({ kind: 'answer', from: userId, to: signal.from, data: answer }))
+      } catch (err) {
+        console.warn('offer handler error:', err)
+      }
     }
     if (signal.kind === 'answer') {
-      await peer.setRemoteDescription(new RTCSessionDescription(signal.data))
+      try { await peer.setRemoteDescription(new RTCSessionDescription(signal.data)) } catch (err) {
+        console.warn('answer handler error:', err)
+      }
     }
     if (signal.kind === 'ice-candidate') {
-      await peer.addIceCandidate(new RTCIceCandidate(signal.data))
+      try { await peer.addIceCandidate(new RTCIceCandidate(signal.data)) } catch (_) {}
     }
   }
 
