@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { FEATURES_VERSION, NEW_FEATURES } from '../config/features'
 
+const STORAGE_KEY = `pit_features_seen_${FEATURES_VERSION}`
+
 export default function NewFeaturesModal() {
   const [visible, setVisible] = useState(false)
 
