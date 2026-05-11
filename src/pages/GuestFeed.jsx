@@ -260,8 +260,11 @@ export default function GuestFeed() {
     <div style={{ minHeight: '100vh', background: 'var(--black)' }}>
 
       {/* guest navbar */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: '56px',
-        padding: '0 24px', borderBottom: '1px solid var(--border)', background: 'rgba(26,26,26,0.95)',
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        height: 'calc(56px + env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingLeft: '24px', paddingRight: '24px',
+        borderBottom: '1px solid var(--border)', background: 'rgba(26,26,26,0.95)',
         backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link to="/" style={{ fontFamily: 'Bebas Neue', fontSize: '1.4rem', letterSpacing: '0.15em', color: 'var(--red)' }}>
           THE PIT
