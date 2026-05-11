@@ -136,7 +136,7 @@ export default function Profile({ session }) {
       .eq('room_type', 'dm')
       .maybeSingle()
     if (existing) {
-      navigate('/rooms', { state: { openId: existing.id } })
+      navigate(`/rooms/${existing.id}`)
       return
     }
     const { data } = await supabase
@@ -153,7 +153,7 @@ export default function Profile({ session }) {
       })
       .select('id')
       .single()
-    if (data) navigate('/rooms', { state: { openId: data.id } })
+    if (data) navigate(`/rooms/${data.id}`)
   }
 
   const addResource = async (e) => {
@@ -336,6 +336,5 @@ export default function Profile({ session }) {
     </div>
   )
 }
-
 
 

@@ -36,6 +36,10 @@ function dmTitleFor(a, b) {
   return `DM:${[a, b].sort().join(':')}`
 }
 
+function uniqueIds(ids) {
+  return [...new Set(ids.filter(Boolean))]
+}
+
 export default function Rooms({ session }) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -115,38 +119,62 @@ export default function Rooms({ session }) {
   const loadAll = async (autoOpenId = null) => {
     setLoading(true)
     setError('')
-    const [followingRes, followerRes, dmRes] = await Promise.all([
-      supabase.from('follows')
-        .select('following_id, profiles!follows_following_id_fkey(id, username, bio, avatar_url)')
-        .eq('follower_id', session.user.id),
+    const [followingRes, followerRes, dmRoomRes] = await Promise.all([
+      supabase.from('follows').select('following_id').eq('follower_id', session.user.id),
       supabase.from('follows').select('follower_id').eq('following_id', session.user.id),
       supabase.from('live_rooms')
-        .select('id, title, host_id, dm_peer_id, updated_at, room_type, profiles!live_rooms_host_id_profiles_fkey(id, username, avatar_url), dm_peer:profiles!live_rooms_dm_peer_id_profiles_fkey(id, username, avatar_url), live_room_messages(body, created_at, profiles(username))')
-        .or(`host_id.eq.${session.user.id},dm_peer_id.eq.${session.user.id}`)
+        .select('id, title, host_id, dm_peer_id, updated_at, room_type')
         .eq('room_type', 'dm')
+        .or(`host_id.eq.${session.user.id},dm_peer_id.eq.${session.user.id}`)
         .order('updated_at', { ascending: false })
-        .limit(40),
+        .limit(80),
     ])
 
-    const loadError = followingRes.error || followerRes.error || dmRes.error
+    const loadError = followingRes.error || followerRes.error || dmRoomRes.error
     if (loadError) {
       setError(loadError.message)
       setLoading(false)
       return
     }
 
-    const followerSet = new Set((followerRes.data || []).map(r => r.follower_id))
-    setMutuals(
-      (followingRes.data || [])
-        .filter(r => followerSet.has(r.following_id))
-        .map(r => r.profiles)
-        .filter(Boolean)
-    )
+    const followingIds = (followingRes.data || []).map(row => row.following_id)
+    const followerIds = (followerRes.data || []).map(row => row.follower_id)
+    const followerSet = new Set(followerIds)
+    const mutualIds = followingIds.filter(id => followerSet.has(id))
+    const dmRooms = dmRoomRes.data || []
+    const dmPeerIds = dmRooms.map(room => room.host_id === session.user.id ? room.dm_peer_id : room.host_id)
+    const profileIds = uniqueIds([...mutualIds, ...dmPeerIds])
+    const roomIds = dmRooms.map(room => room.id)
 
-    const dms = (dmRes.data || []).map(room => ({
+    const [profileRes, messageRes] = await Promise.all([
+      profileIds.length
+        ? supabase.from('profiles').select('id, username, bio, avatar_url').in('id', profileIds)
+        : Promise.resolve({ data: [], error: null }),
+      roomIds.length
+        ? supabase.from('live_room_messages')
+          .select('room_id, body, created_at, profiles(username)')
+          .in('room_id', roomIds)
+          .order('created_at', { ascending: false })
+          .limit(120)
+        : Promise.resolve({ data: [], error: null }),
+    ])
+
+    if (profileRes.error || messageRes.error) {
+      setError(profileRes.error?.message || messageRes.error?.message)
+    }
+
+    const profileById = new Map((profileRes.data || []).map(profile => [profile.id, profile]))
+    setMutuals(mutualIds.map(id => profileById.get(id)).filter(Boolean))
+
+    const latestMessageByRoom = new Map()
+    for (const message of (messageRes.data || [])) {
+      if (!latestMessageByRoom.has(message.room_id)) latestMessageByRoom.set(message.room_id, message)
+    }
+
+    const dms = dmRooms.map(room => ({
       ...room,
-      other: room.host_id === session.user.id ? room.dm_peer : room.profiles,
-      lastMessage: [...(room.live_room_messages || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0],
+      other: profileById.get(room.host_id === session.user.id ? room.dm_peer_id : room.host_id),
+      lastMessage: latestMessageByRoom.get(room.id),
     }))
 
     // Group chats — requires live_room_members table (see SQL setup)
@@ -175,7 +203,7 @@ export default function Rooms({ session }) {
     setError('')
     const [{ data: roomData, error: roomError }, { data: msgData, error: msgError }] = await Promise.all([
       supabase.from('live_rooms')
-        .select('*, profiles!live_rooms_host_id_profiles_fkey(id, username, avatar_url, bio), dm_peer:profiles!live_rooms_dm_peer_id_profiles_fkey(id, username, avatar_url, bio)')
+        .select('*')
         .eq('id', roomId)
         .single(),
       supabase.from('live_room_messages')
@@ -184,7 +212,21 @@ export default function Rooms({ session }) {
         .order('created_at', { ascending: true }),
     ])
     if (roomError || msgError) setError(roomError?.message || msgError?.message)
-    setSelectedRoom(roomData)
+    if (roomData?.room_type === 'dm') {
+      const peerId = roomData.host_id === session.user.id ? roomData.dm_peer_id : roomData.host_id
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url, bio')
+        .in('id', uniqueIds([roomData.host_id, peerId]))
+      const profileById = new Map((profiles || []).map(profile => [profile.id, profile]))
+      setSelectedRoom({
+        ...roomData,
+        profiles: profileById.get(roomData.host_id),
+        dm_peer: profileById.get(peerId),
+      })
+    } else {
+      setSelectedRoom(roomData)
+    }
     setMessages(msgData || [])
     setRoomLoading(false)
   }

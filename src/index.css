@@ -462,6 +462,12 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   opacity: 0.6;
 }
 
+.page-shell,
+.page-shell-wide {
+  width: 100%;
+  min-width: 0;
+}
+
 .card { background: var(--card); border: 1px solid var(--border); transition: background 0.2s, border-color 0.2s; }
 
 .tag {
@@ -2545,6 +2551,80 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     font-size: 16px !important;
   }
 
+  input,
+  textarea,
+  select,
+  button {
+    max-width: 100%;
+  }
+
+  .card,
+  .pit-card {
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+
+  .page-shell,
+  .page-shell-wide,
+  .journal-shell,
+  .new-entry-shell,
+  .search-shell,
+  .connections-shell,
+  .strategies-shell,
+  .strategy-detail-shell,
+  .backtesting-shell,
+  .calendar-shell,
+  .profile-shell,
+  .settings-shell {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 18px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .page-shell > h1,
+  .page-title-row h1,
+  .settings-header h1 {
+    letter-spacing: 0.04em !important;
+    margin-bottom: 6px !important;
+  }
+
+  .page-shell > p,
+  .page-title-row p {
+    line-height: 1.6 !important;
+  }
+
+  .page-shell .card,
+  .journal-shell .card,
+  .new-entry-shell .card,
+  .strategies-shell .card,
+  .strategy-detail-shell .card,
+  .backtesting-shell .card,
+  .calendar-shell .card,
+  .profile-shell .card,
+  .connections-shell .card,
+  .search-shell .card,
+  .settings-panel {
+    padding: 14px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .page-shell input,
+  .page-shell textarea,
+  .page-shell select,
+  .settings-shell input,
+  .settings-shell textarea,
+  .settings-shell select {
+    width: 100% !important;
+    min-height: 44px;
+  }
+
+  .page-shell .btn,
+  .settings-shell .btn {
+    min-width: 0;
+    min-height: 42px;
+  }
+
   .checkin-screen {
     align-items: start;
     padding-top: max(env(safe-area-inset-top, 0px), 16px);
@@ -2763,7 +2843,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   .page-shell,
   .journal-shell,
   .new-entry-shell,
-    .floor-shell,
+  .floor-shell,
   .settings-shell {
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
   }
@@ -2787,7 +2867,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   .new-entry-shell {
     width: 100% !important;
     max-width: none !important;
-    padding: 20px 12px 32px !important;
+    padding: 18px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .page-title-row {
@@ -3062,7 +3142,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 
   .settings-shell {
     width: 100%;
-    padding: 20px 12px 32px;
+    padding: 18px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .settings-header {
@@ -3176,7 +3256,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 
   /* ── Profile page ───────────────────────────────────── */
   .profile-shell {
-    padding: 16px 12px 32px !important;
+    padding: 18px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .profile-hero {
@@ -3211,7 +3291,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 
   /* ── Connections ────────────────────────────────────── */
   .connections-shell {
-    padding: 16px 12px 32px !important;
+    padding: 18px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   /* ── General page containers without class ──────────── */
