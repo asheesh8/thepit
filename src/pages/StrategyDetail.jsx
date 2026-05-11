@@ -45,7 +45,7 @@ export default function StrategyDetail({ session }) {
     setError('')
     const [{ data: strategyData, error: strategyError }, { data: entryData }] = await Promise.all([
       supabase.from('strategies').select('*, profiles(username)').eq('id', id).single(),
-      supabase.from('entries').select('*, profiles(username), strategies(name)').eq('strategy_id', id).eq('is_public', true).order('created_at', { ascending: false }),
+      supabase.from('entries').select('*, profiles!entries_user_id_fkey(username), strategies(name)').eq('strategy_id', id).eq('is_public', true).order('created_at', { ascending: false }),
     ])
     if (strategyError) setError(strategyError.message)
     if (strategyData && !isPublicStrategyViewable(strategyData, session.user.id)) {

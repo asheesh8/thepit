@@ -234,7 +234,7 @@ export default function GuestFeed() {
       const [{ data: entries }, { data: posts }] = await Promise.all([
         supabase
           .from('entries')
-          .select('*, profiles(username, avatar_url), strategies(name)')
+          .select('*, profiles!entries_user_id_fkey(username, avatar_url), strategies(name)')
           .eq('is_public', true)
           .order('created_at', { ascending: false })
           .limit(30),

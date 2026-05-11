@@ -80,7 +80,7 @@ export default function Profile({ session }) {
     // public entries
     const { data: entriesData } = await supabase
       .from('entries')
-      .select('*, profiles(username), strategies(name), reactions(type, user_id)')
+      .select('*, profiles!entries_user_id_fkey(username), strategies(name), reactions(type, user_id)')
       .eq('user_id', prof.id)
       .eq('is_public', true)
       .order('created_at', { ascending: false })
@@ -336,5 +336,4 @@ export default function Profile({ session }) {
     </div>
   )
 }
-
 

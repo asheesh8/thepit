@@ -20,7 +20,7 @@ export default function Journal({ session }) {
   const loadEntries = async () => {
     const { data } = await supabase
       .from('entries')
-      .select('*, profiles(username), strategies(name)')
+      .select('*, profiles!entries_user_id_fkey(username), strategies(name)')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
@@ -63,7 +63,7 @@ export default function Journal({ session }) {
       .update({ reflection: '', what_id_do_differently: '' })
       .eq('id', entry.id)
       .eq('user_id', session.user.id)
-      .select('*, profiles(username), strategies(name)')
+      .select('*, profiles!entries_user_id_fkey(username), strategies(name)')
       .single()
     if (data) setEntries(prev => prev.map(row => row.id === data.id ? data : row))
   }

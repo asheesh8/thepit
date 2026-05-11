@@ -46,7 +46,7 @@ export default function Feed({ session }) {
 
     let entryQuery = supabase
       .from('entries')
-      .select('*, profiles(username, avatar_url), strategies(name), reactions(type, user_id)')
+      .select('*, profiles!entries_user_id_fkey(username, avatar_url), strategies(name), reactions(type, user_id)')
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(40)
