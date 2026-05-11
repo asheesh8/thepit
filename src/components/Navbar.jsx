@@ -72,7 +72,8 @@ export default function Navbar({ session }) {
 
   return (
     <>
-      <nav className="app-nav">
+      {/* ── Desktop / top nav — hidden on mobile when in /rooms ── */}
+      <nav className={`app-nav${location.pathname.startsWith('/rooms') ? ' app-nav--rooms' : ''}`}>
         <Link to="/feed" className="app-nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
           <PitLogo />
           THE PIT

@@ -3820,13 +3820,19 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     padding-right: 12px !important;
   }
 
+  /* ── Hide top nav on /rooms — DM page has its own header ── */
+  .app-nav--rooms {
+    display: none !important;
+  }
+
   /* ── DM page mobile ───────────────────────────────────── */
   .dm-page-shell {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
     height: 100dvh;
-    padding-top: calc(52px + env(safe-area-inset-top, 0px));
-    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+    /* top nav hidden, only safe-area for status bar; no bottom tab bar either */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: 0;
   }
 
   /* Default mobile: show sidebar, hide chat */
@@ -3856,8 +3862,8 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   }
 
   .dm-page-chat-header {
-    padding: 10px 12px;
-    align-items: flex-start;
+    padding: 10px 14px;
+    gap: 8px;
   }
 
   .dm-page-chat-header > div:first-child {
@@ -3865,11 +3871,22 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     flex: 1;
   }
 
-  .dm-chat-actions {
-    width: auto;
-    display: grid !important;
-    grid-template-columns: 1fr;
-    gap: 6px;
+  /* On mobile: hide SCREEN button and CALL label, show just ▶ icon */
+  .dm-screen-btn {
+    display: none !important;
+  }
+
+  .dm-call-label {
+    display: none;
+  }
+
+  .dm-call-btn {
+    padding: 8px 10px !important;
+  }
+
+  /* Sidebar header padding */
+  .dm-page-sidebar-header {
+    padding: 12px 12px;
   }
 
   .dm-chat-actions .btn {

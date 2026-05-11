@@ -512,8 +512,8 @@ export default function Rooms({ session }) {
                 </div>
               </div>
               <div className="dm-chat-actions" style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                <button className="btn btn-green" style={{ padding: '8px 14px', fontSize: '9px', letterSpacing: '0.1em' }} onClick={startCall}>▶ CALL</button>
-                <button className="btn" style={{ padding: '8px 12px', fontSize: '9px' }} onClick={startScreenShare}>SCREEN</button>
+                <button className="btn btn-green dm-call-btn" style={{ padding: '8px 14px', fontSize: '9px', letterSpacing: '0.1em' }} onClick={startCall}>▶ <span className="dm-call-label">CALL</span></button>
+                <button className="btn dm-screen-btn" style={{ padding: '8px 12px', fontSize: '9px' }} onClick={startScreenShare}>SCREEN</button>
               </div>
             </header>
             <div className="dm-page-chat-body">
