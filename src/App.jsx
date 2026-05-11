@@ -49,6 +49,7 @@ import DailyCheckInGate from './components/DailyCheckInGate'
 import GuestFeed from './pages/GuestFeed'
 import NewFeaturesModal from './components/NewFeaturesModal'
 import NotificationToast from './components/NotificationToast'
+import Notifications from './pages/Notifications'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -98,6 +99,7 @@ export default function App() {
             <Route path="/rooms/:id" element={<LiveRoom session={session} />} />
             <Route path="/settings" element={<AccountSettings session={session} />} />
             <Route path="/vault" element={<Vault session={session} />} />
+            <Route path="/notifications" element={<Notifications session={session} />} />
             <Route path="/profile/:username" element={<Profile session={session} />} />
           </Routes>
         </DailyCheckInGate>

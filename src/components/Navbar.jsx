@@ -49,6 +49,7 @@ export default function Navbar({ session }) {
   ]
 
   const moreLinks = [
+    { path: '/notifications', label: 'NOTIFICATIONS' },
     { path: '/journal', label: 'JOURNAL' },
     { path: '/strategies', label: 'STRATEGIES' },
     { path: '/backtesting', label: 'BACKTEST' },

@@ -42,7 +42,6 @@ export default function Connections({ session }) {
         .neq('following_id', session.user.id)
         .limit(10)
 
-      // filter out already following
       const alreadyFollowing = new Set(followingIds)
       const unique = []
       const seen = new Set()
@@ -52,7 +51,27 @@ export default function Connections({ session }) {
           seen.add(s.following_id)
         }
       }
+      // If social-graph suggestions are sparse, pad with newest users
+      if (unique.length < 5) {
+        const alreadySeen = new Set([...alreadyFollowing, ...unique.map(u => u.id), session.user.id])
+        const { data: newest } = await supabase
+          .from('profiles')
+          .select('id, username, bio')
+          .not('id', 'in', `(${[...alreadySeen].join(',')})`)
+          .order('created_at', { ascending: false })
+          .limit(5 - unique.length)
+        unique.push(...(newest || []))
+      }
       setSuggestions(unique.slice(0, 5))
+    } else {
+      // Not following anyone yet — show newest traders
+      const { data: newest } = await supabase
+        .from('profiles')
+        .select('id, username, bio')
+        .neq('id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(8)
+      setSuggestions(newest || [])
     }
 
     setLoading(false)

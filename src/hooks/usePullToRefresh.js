@@ -1,31 +1,31 @@
 import { useEffect, useRef, useState } from 'react'
 
-const THRESHOLD = 100   // px of pull needed to trigger (was 72 — raised to prevent accidental fires)
-const MAX_PULL  = 120
+const THRESHOLD   = 130
+const MAX_PULL    = 150
+const MIN_HOLD_MS = 200   // must be pulling for this long before it can trigger
 
 export function usePullToRefresh(onRefresh, enabled = true) {
   const [pullY, setPullY]           = useState(0)
   const [refreshing, setRefreshing] = useState(false)
-  const startY  = useRef(null)
-  const pulling = useRef(false)
-  const pullRef = useRef(0)  // shadow ref so touchend reads current value without stale closure
+  const startY    = useRef(null)
+  const startTime = useRef(null)
+  const pulling   = useRef(false)
+  const pullRef   = useRef(0)
 
   useEffect(() => {
     if (!enabled) return
 
     const onTouchStart = (e) => {
-      if (window.scrollY > 10) return   // only fire from the very top
-      startY.current = e.touches[0].clientY
-      pulling.current = true
+      if (window.scrollY !== 0) return
+      startY.current    = e.touches[0].clientY
+      startTime.current = Date.now()
+      pulling.current   = true
     }
 
     const onTouchMove = (e) => {
       if (!pulling.current || startY.current === null) return
       const delta = e.touches[0].clientY - startY.current
       if (delta <= 0) { setPullY(0); pullRef.current = 0; return }
-      // require the gesture to be more vertical than horizontal to avoid catching diagonal scrolls
-      const touch = e.touches[0]
-      // (startX not tracked, but we can check current vs window center — skip, keep simple)
       const clamped = Math.min(MAX_PULL, delta * 0.45)
       setPullY(clamped)
       pullRef.current = clamped
@@ -34,11 +34,13 @@ export function usePullToRefresh(onRefresh, enabled = true) {
     const onTouchEnd = async () => {
       if (!pulling.current) return
       pulling.current = false
+      const held    = Date.now() - (startTime.current || 0)
       const current = pullRef.current
       setPullY(0)
-      pullRef.current = 0
-      startY.current = null
-      if (current >= THRESHOLD) {
+      pullRef.current   = 0
+      startY.current    = null
+      startTime.current = null
+      if (current >= THRESHOLD && held >= MIN_HOLD_MS) {
         setRefreshing(true)
         try { await onRefresh() } finally { setRefreshing(false) }
       }

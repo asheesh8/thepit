@@ -22,6 +22,10 @@ export default function AccountSettings({ session }) {
     return stored ? { ...defaultLabels, ...JSON.parse(stored) } : defaultLabels
   })
 
+  const [usernameChanged, setUsernameChanged] = useState(false)
+  const [newUsername, setNewUsername] = useState('')
+  const [usernameUnlocked, setUsernameUnlocked] = useState(false)
+
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -36,6 +40,8 @@ export default function AccountSettings({ session }) {
       .then(({ data }) => {
         if (!data) return
         setUsername(data.username || '')
+        const changedKey = `pit_username_changed_${session.user.id}`
+        setUsernameChanged(!!localStorage.getItem(changedKey))
         setAvatarUrl(data.avatar_url || '')
         setAvatarPreview(data.avatar_url || '')
         setBio(data.bio || '')
@@ -50,6 +56,24 @@ export default function AccountSettings({ session }) {
       .order('created_at', { ascending: true })
       .then(({ data }) => setRules(data || []))
   }, [session.user.id])
+
+  const handleUsernameChange = async () => {
+    const clean = newUsername.toLowerCase().replace(/[^a-z0-9_]/g, '')
+    if (clean.length < 3) { setError('Username must be 3+ characters (letters, numbers, _)'); return }
+    if (clean === username) { setError('That is already your username'); return }
+    setSaving(true); setError('')
+    const { data: taken } = await supabase.from('profiles').select('id').eq('username', clean).maybeSingle()
+    if (taken) { setError('Username already taken'); setSaving(false); return }
+    const { error: err } = await supabase.from('profiles').update({ username: clean }).eq('id', session.user.id)
+    if (err) { setError(err.message); setSaving(false); return }
+    localStorage.setItem(`pit_username_changed_${session.user.id}`, '1')
+    setUsername(clean)
+    setUsernameChanged(true)
+    setUsernameUnlocked(false)
+    setNewUsername('')
+    setSaving(false)
+    setSaved(true); setTimeout(() => setSaved(false), 2500)
+  }
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0]
@@ -177,6 +201,46 @@ export default function AccountSettings({ session }) {
           <section className="settings-panel">
             <div className="settings-panel-title">IDENTITY</div>
 
+            {/* Username */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{ fontFamily: 'Space Mono', fontSize: '9px', letterSpacing: '0.12em', color: 'var(--dim)' }}>USERNAME</label>
+                {!usernameChanged && !usernameUnlocked && (
+                  <button type="button" onClick={() => setUsernameUnlocked(true)} style={{ background: 'none', border: 'none', fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--red)', cursor: 'pointer', letterSpacing: '0.08em' }}>
+                    CHANGE (1Ã—)
+                  </button>
+                )}
+                {usernameChanged && (
+                  <span style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.06em' }}>LOCKED</span>
+                )}
+              </div>
+              {usernameUnlocked ? (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    value={newUsername}
+                    onChange={e => setNewUsername(e.target.value)}
+                    placeholder={username}
+                    style={{ flex: 1, background: 'var(--dark)', border: '1px solid var(--red)', padding: '10px 14px', color: 'var(--text)', fontSize: '14px', outline: 'none', fontFamily: 'Space Mono' }}
+                  />
+                  <button type="button" onClick={handleUsernameChange} disabled={saving} className="btn btn-red" style={{ padding: '10px 16px', fontSize: '10px', whiteSpace: 'nowrap' }}>
+                    SAVE
+                  </button>
+                  <button type="button" onClick={() => { setUsernameUnlocked(false); setNewUsername('') }} style={{ background: 'none', border: '1px solid var(--border)', padding: '10px 14px', color: 'var(--dim)', cursor: 'pointer', fontSize: '12px' }}>
+                    âœ•
+                  </button>
+                </div>
+              ) : (
+                <div style={{ fontFamily: 'Space Mono', fontSize: '13px', color: 'var(--text)', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                  @{username}
+                </div>
+              )}
+              {usernameUnlocked && (
+                <p style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', marginTop: '6px', letterSpacing: '0.06em', lineHeight: 1.5 }}>
+                  THIS IS YOUR ONE-TIME CHANGE. CHOOSE CAREFULLY.
+                </p>
+              )}
+            </div>
+
             <div className="settings-identity-grid" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '28px', alignItems: 'start', paddingTop: '4px' }}>
 
               {/* avatar upload */}
@@ -220,18 +284,14 @@ export default function AccountSettings({ session }) {
                   {uploading ? 'UPLOADING...' : 'UPLOAD PHOTO'}
                 </button>
                 <span style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--muted)', letterSpacing: '0.04em', textAlign: 'center', lineHeight: 1.7 }}>
-                  JPG · PNG · WEBP
+                  JPG ï¿½ PNG ï¿½ WEBP
                 </span>
                 <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp"
                   onChange={handleFileChange} style={{ display: 'none' }} />
               </div>
 
-              {/* username + bio */}
+              {/* bio */}
               <div style={{ display: 'grid', gap: '10px' }}>
-                <div>
-                  <label>USERNAME</label>
-                  <input value={username} disabled style={{ opacity: 0.45, cursor: 'not-allowed' }} />
-                </div>
                 <div>
                   <label>BIO</label>
                   <div style={{ position: 'relative' }}>
