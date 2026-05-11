@@ -193,14 +193,13 @@ export default function Profile({ session }) {
             <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
               <h1 style={{
                 fontFamily: 'Bebas Neue',
-                fontSize: 'clamp(1.4rem, 5vw, 3rem)',
+                fontSize: `clamp(1rem, ${(115 / ('@' + profile.username).length).toFixed(1)}vw, 3rem)`,
                 letterSpacing: '0.05em', lineHeight: 1,
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                maxWidth: '100%',
+                whiteSpace: 'nowrap',
               }}>
                 @{profile.username}
               </h1>
-              <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginTop: '4px' }}>
                 {followerCount} FOLLOWERS · {entries.length} PUBLIC TRADES
               </div>
             </div>
