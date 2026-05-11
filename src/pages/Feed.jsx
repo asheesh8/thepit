@@ -66,7 +66,7 @@ export default function Feed({ session }) {
 
     let reflectionQuery = supabase
       .from('backtest_reflections')
-      .select('*, profiles!backtest_reflections_user_id_profiles_fkey(username, avatar_url), strategies(name)')
+      .select('*, strategies(name)')
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(20)
@@ -88,11 +88,12 @@ export default function Feed({ session }) {
 
     let entries = entryResult.data || []
     let posts = postResult.data || []
-    const reflections = reflectionResult.data || []
+    let reflections = reflectionResult.data || []
 
     try {
       entries = await attachProfiles(entries, 'id, username, avatar_url')
       posts = await attachProfiles(posts, 'id, username, avatar_url')
+      reflections = await attachProfiles(reflections, 'id, username, avatar_url')
     } catch (profileError) {
       setError(profileError.message)
       if (!silent) setLoading(false)
