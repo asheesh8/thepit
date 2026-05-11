@@ -189,7 +189,12 @@ export default function Profile({ session }) {
               {!profile.avatar_url && profile.username?.slice(0, 1).toUpperCase()}
             </div>
             <div style={{ minWidth: 0, overflow: 'hidden' }}>
-              <h1 style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(1.6rem, 6vw, 3.5rem)', letterSpacing: '0.05em', lineHeight: 1, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+              <h1 style={{
+                fontFamily: 'Bebas Neue',
+                fontSize: (() => { const n = (profile.username || '').length; return n <= 7 ? '3.5rem' : n <= 10 ? '2.6rem' : n <= 13 ? '2rem' : '1.6rem' })(),
+                letterSpacing: '0.05em', lineHeight: 1,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
                 @{profile.username}
               </h1>
               <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginTop: '4px' }}>

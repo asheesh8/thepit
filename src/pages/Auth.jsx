@@ -163,6 +163,7 @@ export default function Auth() {
       if (!username.trim()) { setError('Username is required'); setLoading(false); return }
       const clean = username.toLowerCase().replace(/[^a-z0-9_]/g, '')
       if (clean.length < 3) { setError('Username must be at least 3 characters (letters, numbers, _)'); setLoading(false); return }
+      if (clean.length > 15) { setError('Username must be 15 characters or less'); setLoading(false); return }
 
       const { data: existing } = await supabase
         .from('profiles').select('id').eq('username', clean).maybeSingle()
@@ -294,7 +295,7 @@ export default function Auth() {
               <div>
                 <label style={labelStyle}>USERNAME</label>
                 <input value={username} onChange={e => setUsername(e.target.value)}
-                  placeholder="your_handle" required style={inputStyle}
+                  placeholder="your_handle" required maxLength={15} style={inputStyle}
                   onFocus={e => e.target.style.borderColor = 'rgba(230,57,70,0.5)'}
                   onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
               </div>
