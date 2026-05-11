@@ -66,6 +66,7 @@ export default function Rooms({ session }) {
   const [incomingCall, setIncomingCall] = useState(null)
   const [callAnnounced, setCallAnnounced] = useState(false)
   const [showCallNotes, setShowCallNotes] = useState(false)
+  const [pendingAutoJoin, setPendingAutoJoin] = useState(false)
 
   const { participants, connected, sendSignal, broadcastRefresh } = useRoomRealtime({
     roomId: selectedId,
@@ -99,6 +100,8 @@ export default function Rooms({ session }) {
 
   useEffect(() => {
     const openId = location.state?.openId
+    const autoJoin = location.state?.autoJoinCall
+    if (autoJoin) setPendingAutoJoin(true)
     loadAll(openId)
   }, [])
 
@@ -112,6 +115,15 @@ export default function Rooms({ session }) {
     setMessages([])
     setMobileView('list')
   }, [routeRoomId])
+
+  // Auto-join call after navigating from a global call banner
+  useEffect(() => {
+    if (pendingAutoJoin && selectedRoom && !callActive && !roomLoading) {
+      setPendingAutoJoin(false)
+      startCall({ announce: false })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAutoJoin, selectedRoom, roomLoading])
 
   useEffect(() => {
     if (pendingSignals.length === 0) return
@@ -353,13 +365,34 @@ export default function Rooms({ session }) {
     if (!selectedId || callAnnounced) return
     const callerName = currentProfile?.username ? `@${currentProfile.username}` : 'Someone'
     setCallAnnounced(true)
-    await sendSignal({
+    const invitePayload = {
       kind: 'call-invite',
       from: session.user.id,
       callerName,
       title: chatTitle,
+      roomId: selectedId,
       sent_at: new Date().toISOString(),
-    })
+    }
+    await sendSignal(invitePayload)
+
+    // Also ping each peer's personal notification channel so the banner shows
+    // even if they're not currently on this room page.
+    const peerIds = selectedRoom?.room_type === 'dm'
+      ? [selectedRoom.host_id === session.user.id ? selectedRoom.dm_peer_id : selectedRoom.host_id].filter(Boolean)
+      : []  // group peer IDs would require a separate query; handled by DB message notification
+    for (const peerId of peerIds) {
+      try {
+        const peerCh = supabase.channel(`user-calls-${peerId}`)
+        await new Promise(resolve => {
+          const t = setTimeout(resolve, 3000)
+          peerCh.subscribe(status => { if (status === 'SUBSCRIBED') { clearTimeout(t); resolve() } })
+        })
+        await peerCh.send({ type: 'broadcast', event: 'call-invite', payload: invitePayload })
+        supabase.removeChannel(peerCh)
+      } catch (e) {
+        console.warn('Could not send peer call notification', e)
+      }
+    }
     const { data } = await supabase
       .from('live_room_messages')
       .insert({

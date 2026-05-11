@@ -48,6 +48,7 @@ import DailyCheckInGate from './components/DailyCheckInGate'
 import GuestFeed from './pages/GuestFeed'
 import NewFeaturesModal from './components/NewFeaturesModal'
 import NotificationToast from './components/NotificationToast'
+import GlobalCallBanner from './components/GlobalCallBanner'
 import Notifications from './pages/Notifications'
 import { primeDeviceNotificationPermission, registerDeviceNotifications } from './lib/deviceNotifications'
 
@@ -84,6 +85,7 @@ export default function App() {
           <Navbar session={session} />
           <NewFeaturesModal />
           <NotificationToast session={session} />
+          <GlobalCallBanner session={session} />
           <Routes>
             <Route path="/" element={<Navigate to="/feed" />} />
             <Route path="/auth" element={<Navigate to="/feed" />} />
