@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { ensureProfile } from '../lib/ensureProfile'
 
 export default function PostComposer({ session, onPost }) {
   const [body, setBody] = useState('')
@@ -29,6 +30,7 @@ export default function PostComposer({ session, onPost }) {
     setError('')
 
     let media_url = ''
+    const profile = await ensureProfile(session)
 
     if (mediaFile) {
       const ext = mediaFile.name.split('.').pop()
@@ -44,10 +46,16 @@ export default function PostComposer({ session, onPost }) {
       media_url = data.publicUrl || ''
     }
 
+    const payload = {
+      user_id: session.user.id,
+      body: body.trim() || null,
+    }
+    if (media_url) payload.media_url = media_url
+
     const { data, error: postError } = await supabase
       .from('posts')
-      .insert({ user_id: session.user.id, body: body.trim() || null, media_url })
-      .select('*, profiles(username, avatar_url)')
+      .insert(payload)
+      .select('*')
       .single()
 
     if (postError) {
@@ -56,7 +64,7 @@ export default function PostComposer({ session, onPost }) {
       return
     }
 
-    if (data && onPost) onPost(data)
+    if (data && onPost) onPost({ ...data, profiles: profile || null })
 
     setBody('')
     setMediaFile(null)
