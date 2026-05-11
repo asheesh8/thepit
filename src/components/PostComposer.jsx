@@ -7,10 +7,12 @@ export default function PostComposer({ session, onPost }) {
   const [mediaPreview, setMediaPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const [error, setError] = useState('')
 
   const handleMedia = (e) => {
     const file = e.target.files[0]
     if (!file) return
+    setError('')
     setMediaFile(file)
     setMediaPreview(URL.createObjectURL(file))
   }
@@ -24,24 +26,35 @@ export default function PostComposer({ session, onPost }) {
     e.preventDefault()
     if (!body.trim() && !mediaFile) return
     setLoading(true)
+    setError('')
 
-    let media_url = null
+    let media_url = ''
 
     if (mediaFile) {
       const ext = mediaFile.name.split('.').pop()
       const path = `posts/${session.user.id}/${Date.now()}.${ext}`
       const { error } = await supabase.storage.from('charts').upload(path, mediaFile)
-      if (!error) {
-        const { data } = supabase.storage.from('charts').getPublicUrl(path)
-        media_url = data.publicUrl
+      if (error) {
+        setError(error.message || 'Could not upload media.')
+        setLoading(false)
+        return
       }
+
+      const { data } = supabase.storage.from('charts').getPublicUrl(path)
+      media_url = data.publicUrl || ''
     }
 
-    const { data } = await supabase
+    const { data, error: postError } = await supabase
       .from('posts')
       .insert({ user_id: session.user.id, body: body.trim() || null, media_url })
-      .select('*, profiles(username)')
+      .select('*, profiles(username, avatar_url)')
       .single()
+
+    if (postError) {
+      setError(postError.message || 'Could not post to the feed.')
+      setLoading(false)
+      return
+    }
 
     if (data && onPost) onPost(data)
 
@@ -105,6 +118,12 @@ export default function PostComposer({ session, onPost }) {
               </button>
             </div>
           </div>
+        )}
+
+        {error && (
+          <p role="alert" style={{ margin: '12px 0 0', fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--red)', letterSpacing: '0.08em' }}>
+            {error.toUpperCase()}
+          </p>
         )}
       </form>
     </div>
