@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useState, useEffect } from 'react'
 import { useTheme } from '../hooks/useTheme'
 import ThemeToggle from './ThemeToggle'
+import { useSwipeBack } from '../hooks/useSwipeBack'
 
 const PitLogo = () => (
   <svg width="22" height="22" viewBox="0 0 64 64" fill="none" style={{ flexShrink: 0 }}>
@@ -66,6 +67,8 @@ export default function Navbar({ session }) {
   ]
 
   const moreActive = moreLinks.some(link => isActive(link.path))
+
+  useSwipeBack()
 
   return (
     <>
@@ -154,6 +157,7 @@ export default function Navbar({ session }) {
 
         <div className="mobile-tab-bar-inner">
           {bottomTabs.map(({ path, label, icon: Icon, isAction, isProfile }) => {
+            const active = isActive(path)
             if (isAction) return (
               <Link key={path} to={path} className="mobile-tab-action">
                 <span className="mobile-tab-action-plus">+</span>
@@ -161,7 +165,8 @@ export default function Navbar({ session }) {
               </Link>
             )
             if (isProfile) return (
-              <Link key={path} to={path} className={`mobile-tab ${isActive(path) ? 'active' : ''}`}>
+              <Link key={path} to={path} className={`mobile-tab ${active ? 'active' : ''}`}>
+                {active && <span className="mobile-tab-pip" />}
                 <span
                   className="mobile-tab-avatar"
                   style={{ background: profile?.avatar_url ? `url(${profile.avatar_url}) center/cover` : 'var(--dark)' }}
@@ -172,8 +177,9 @@ export default function Navbar({ session }) {
               </Link>
             )
             return (
-              <Link key={path} to={path} className={`mobile-tab ${isActive(path) ? 'active' : ''}`}>
-                <span className="mobile-tab-icon"><Icon active={isActive(path)} /></span>
+              <Link key={path} to={path} className={`mobile-tab ${active ? 'active' : ''}`}>
+                {active && <span className="mobile-tab-pip" />}
+                <span className="mobile-tab-icon"><Icon active={active} /></span>
                 <span className="mobile-tab-label">{label}</span>
               </Link>
             )
@@ -184,6 +190,7 @@ export default function Navbar({ session }) {
             onClick={() => setShowMore(prev => !prev)}
             className={`mobile-tab ${moreActive || showMore ? 'active' : ''}`}
           >
+            {(moreActive || showMore) && <span className="mobile-tab-pip" />}
             <span className="mobile-tab-icon"><MoreIcon active={moreActive || showMore} /></span>
             <span className="mobile-tab-label">MORE</span>
           </button>

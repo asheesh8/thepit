@@ -1,7 +1,9 @@
-﻿import { useState } from 'react'
+﻿import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
 import Avatar from './Avatar'
+
+const haptic = (pattern = 10) => navigator.vibrate?.(pattern)
 
 export default function PostCard({ post, session }) {
   const [comments, setComments] = useState([])
@@ -10,6 +12,8 @@ export default function PostCard({ post, session }) {
   const [reactions, setReactions] = useState({ props: post.props_count || 0, callout: post.callout_count || 0 })
   const [userReaction, setUserReaction] = useState(post.user_reaction || null)
   const [lightbox, setLightbox] = useState(false)
+  const [swipeFlash, setSwipeFlash] = useState(null)
+  const swipeStart = useRef(null)
 
   const isVideo = post.media_url?.match(/\.(mp4|webm|mov)$/i)
 
@@ -37,6 +41,7 @@ export default function PostCard({ post, session }) {
   }
 
   const handleReaction = async (type) => {
+    haptic(10)
     if (userReaction === type) {
       await supabase.from('post_reactions').delete().match({ post_id: post.id, user_id: session.user.id })
       setReactions(prev => ({ ...prev, [type]: prev[type] - 1 }))
@@ -50,6 +55,21 @@ export default function PostCard({ post, session }) {
       setReactions(prev => ({ ...prev, [type]: prev[type] + 1 }))
       setUserReaction(type)
     }
+  }
+
+  const swipeHandlers = {
+    onTouchStart: (e) => { swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } },
+    onTouchEnd: (e) => {
+      if (!swipeStart.current) return
+      const dx = e.changedTouches[0].clientX - swipeStart.current.x
+      const dy = Math.abs(e.changedTouches[0].clientY - swipeStart.current.y)
+      swipeStart.current = null
+      if (dy > 30 || Math.abs(dx) < 60) return
+      const type = dx > 0 ? 'props' : 'callout'
+      setSwipeFlash(type)
+      setTimeout(() => setSwipeFlash(null), 600)
+      handleReaction(type)
+    },
   }
 
   return (
@@ -77,7 +97,16 @@ export default function PostCard({ post, session }) {
         </div>
       )}
 
-      <div className="card fade-in post-card" style={{ padding: '24px', marginBottom: '16px' }}>
+      <div
+        className={`card fade-in post-card${swipeFlash ? ` card-swipe-flash card-swipe-flash--${swipeFlash}` : ''}`}
+        style={{ padding: '24px', marginBottom: '16px', position: 'relative' }}
+        {...swipeHandlers}
+      >
+        {swipeFlash && (
+          <div className="card-swipe-indicator">
+            {swipeFlash === 'props' ? '🤜 PROPS' : '⚡ CALLOUT'}
+          </div>
+        )}
         {/* header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>

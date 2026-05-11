@@ -1,9 +1,11 @@
-﻿import { useState } from 'react'
+﻿import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
 import { getTradeContext } from '../lib/discipline'
 import CalloutThreadList from './CalloutThreadList'
 import Avatar from './Avatar'
+
+const haptic = (pattern = 10) => navigator.vibrate?.(pattern)
 
 export default function EntryCard({ entry, session, showActions = true, onDeleteReflection = null, onDeleteEntry = null }) {
   const [comments, setComments] = useState([])
@@ -15,6 +17,8 @@ export default function EntryCard({ entry, session, showActions = true, onDelete
   const [pitBossLoading, setPitBossLoading] = useState(false)
   const [pitBossResponse, setPitBossResponse] = useState(null)
   const [isPublic, setIsPublic] = useState(!!entry.is_public)
+  const [swipeFlash, setSwipeFlash] = useState(null)  // 'props' | 'callout' | null
+  const swipeStart = useRef(null)
 
   const pnl = entry.pnl || 0
   const context = getTradeContext(entry.trade_context)
@@ -46,6 +50,7 @@ export default function EntryCard({ entry, session, showActions = true, onDelete
   }
 
   const handleReaction = async (type) => {
+    haptic(10)
     if (userReaction === type) {
       await supabase.from('reactions').delete().match({ entry_id: entry.id, user_id: session.user.id })
       setReactions(prev => ({ ...prev, [type]: prev[type] - 1 }))
@@ -61,8 +66,24 @@ export default function EntryCard({ entry, session, showActions = true, onDelete
     }
   }
 
+  const swipeHandlers = {
+    onTouchStart: (e) => { swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } },
+    onTouchEnd: (e) => {
+      if (!swipeStart.current) return
+      const dx = e.changedTouches[0].clientX - swipeStart.current.x
+      const dy = Math.abs(e.changedTouches[0].clientY - swipeStart.current.y)
+      swipeStart.current = null
+      if (dy > 30 || Math.abs(dx) < 60) return
+      const type = dx > 0 ? 'props' : 'callout'
+      setSwipeFlash(type)
+      setTimeout(() => setSwipeFlash(null), 600)
+      handleReaction(type)
+    },
+  }
+
   const getPitBossRoast = async () => {
     if (!entry.reflection) return
+    haptic([10, 60, 20])
     setPitBossLoading(true)
     setPitBossResponse(null)
     try {
@@ -112,7 +133,16 @@ Give your honest assessment:`
   }
 
   return (
-    <div className="card fade-in entry-card" style={{ padding: '24px', marginBottom: '16px' }}>
+    <div
+      className={`card fade-in entry-card${swipeFlash ? ` card-swipe-flash card-swipe-flash--${swipeFlash}` : ''}`}
+      style={{ padding: '24px', marginBottom: '16px', position: 'relative' }}
+      {...swipeHandlers}
+    >
+      {swipeFlash && (
+        <div className="card-swipe-indicator">
+          {swipeFlash === 'props' ? '🤜 PROPS' : '⚡ CALLOUT'}
+        </div>
+      )}
       {/* header row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>

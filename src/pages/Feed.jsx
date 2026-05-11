@@ -133,13 +133,14 @@ export default function Feed({ session }) {
     { key: 'losing',  label: 'RED' },
   ]
 
-  const workbenchLinks = [
-    { to: '/journal',     label: 'Journal',    meta: 'private log' },
-    { to: '/strategies',  label: 'Strategies', meta: 'playbook' },
-    { to: '/backtesting', label: 'Backtest',   meta: 'lab notes' },
-    { to: '/rooms',       label: 'DMs',        meta: 'mutuals' },
-    { to: '/review',      label: 'Review',     meta: 'callouts' },
-    { to: '/connections', label: 'People',     meta: 'network' },
+  const quickLinks = [
+    { to: '/journal',     icon: '📔', label: 'Journal' },
+    { to: '/calendar',    icon: '📅', label: 'Calendar' },
+    { to: '/rooms',       icon: '💬', label: 'DMs' },
+    { to: '/strategies',  icon: '⚡', label: 'Strategies' },
+    { to: '/backtesting', icon: '🔬', label: 'Backtest' },
+    { to: '/review',      icon: '🎯', label: 'Review' },
+    { to: '/connections', icon: '👥', label: 'People' },
   ]
 
   return (
@@ -177,11 +178,11 @@ export default function Feed({ session }) {
             </Link>
           </div>
 
-          <div className="floor-workbench">
-            {workbenchLinks.map(link => (
-              <Link key={link.to} to={link.to} className="floor-workbench-link">
-                <span>{link.label}</span>
-                <small>{link.meta}</small>
+          <div className="floor-quicklinks">
+            {quickLinks.map(link => (
+              <Link key={link.to} to={link.to} className="floor-quicklink">
+                <span className="floor-quicklink-icon">{link.icon}</span>
+                <span className="floor-quicklink-label">{link.label}</span>
               </Link>
             ))}
           </div>
