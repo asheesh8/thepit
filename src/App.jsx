@@ -1,6 +1,31 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Component } from 'react'
 import { supabase } from './lib/supabase'
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { crashed: false }
+  }
+  static getDerivedStateFromError() {
+    return { crashed: true }
+  }
+  render() {
+    if (this.state.crashed) return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        height: '100vh', background: '#0a0a0a', gap: '16px', padding: '24px', textAlign: 'center' }}>
+        <span style={{ fontFamily: 'Bebas Neue', fontSize: '2rem', letterSpacing: '0.2em', color: '#e63946' }}>THE PIT</span>
+        <p style={{ fontFamily: 'Space Mono', fontSize: '11px', color: '#555', letterSpacing: '0.1em' }}>SOMETHING WENT WRONG</p>
+        <button onClick={() => { this.setState({ crashed: false }); window.location.href = '/feed' }}
+          style={{ fontFamily: 'Space Mono', fontSize: '10px', letterSpacing: '0.1em', padding: '10px 24px',
+            background: '#e63946', color: '#fff', border: 'none', cursor: 'pointer' }}>
+          RELOAD
+        </button>
+      </div>
+    )
+    return this.props.children
+  }
+}
 import Landing from './pages/Landing'
 import Feed from './pages/Feed'
 import Journal from './pages/Journal'
@@ -46,6 +71,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+    <ErrorBoundary>
       {session ? (
         <DailyCheckInGate session={session}>
           <Navbar session={session} />
@@ -78,6 +104,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       )}
+    </ErrorBoundary>
     </BrowserRouter>
   )
 }
