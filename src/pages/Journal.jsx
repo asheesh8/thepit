@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import BadgeStrip from '../components/BadgeStrip'
 import { deriveBadgeKeys, persistEarnedBadges } from '../lib/discipline'
 import PinnedRulesPanel from '../components/PinnedRulesPanel'
+import { attachProfiles } from '../lib/profiles'
 
 export default function Journal({ session }) {
   const [entries, setEntries] = useState([])
@@ -20,11 +21,11 @@ export default function Journal({ session }) {
   const loadEntries = async () => {
     const { data } = await supabase
       .from('entries')
-      .select('*, profiles!entries_user_id_fkey(username), strategies(name)')
+      .select('*, strategies(name)')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
-    const all = data || []
+    const all = await attachProfiles(data || [], 'id, username')
     setEntries(all)
 
     const [{ data: strategies }, { data: reflections }, { data: badgeRows }] = await Promise.all([
@@ -63,9 +64,12 @@ export default function Journal({ session }) {
       .update({ reflection: '', what_id_do_differently: '' })
       .eq('id', entry.id)
       .eq('user_id', session.user.id)
-      .select('*, profiles!entries_user_id_fkey(username), strategies(name)')
+      .select('*, strategies(name)')
       .single()
-    if (data) setEntries(prev => prev.map(row => row.id === data.id ? data : row))
+    if (data) {
+      const [entryWithProfile] = await attachProfiles([data], 'id, username')
+      setEntries(prev => prev.map(row => row.id === data.id ? entryWithProfile : row))
+    }
   }
 
   const deleteEntry = async (entry) => {

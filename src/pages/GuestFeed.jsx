@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getTradeContext } from '../lib/discipline'
+import { attachProfiles } from '../lib/profiles'
 
 function DemoEntry() {
   const [symbol, setSymbol] = useState('')
@@ -231,10 +232,10 @@ export default function GuestFeed() {
 
   useEffect(() => {
     const load = async () => {
-      const [{ data: entries }, { data: posts }] = await Promise.all([
+      const [{ data: rawEntries }, { data: posts }] = await Promise.all([
         supabase
           .from('entries')
-          .select('*, profiles!entries_user_id_fkey(username, avatar_url), strategies(name)')
+          .select('*, strategies(name)')
           .eq('is_public', true)
           .order('created_at', { ascending: false })
           .limit(30),
@@ -244,9 +245,10 @@ export default function GuestFeed() {
           .order('created_at', { ascending: false })
           .limit(20),
       ])
+      const entries = await attachProfiles(rawEntries || [], 'id, username, avatar_url')
 
       const merged = [
-        ...(entries || []).map(e => ({ ...e, _type: 'entry' })),
+        ...entries.map(e => ({ ...e, _type: 'entry' })),
         ...(posts || []).map(p => ({ ...p, _type: 'post' })),
       ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 

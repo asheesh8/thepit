@@ -12,6 +12,7 @@ import TradingGlobe from '../components/TradingGlobe'
 import PinnedRulesPanel from '../components/PinnedRulesPanel'
 import ActivityCalendarWidget from '../components/ActivityCalendarWidget'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
+import { attachProfiles } from '../lib/profiles'
 
 const POLL_INTERVAL = 5000
 
@@ -46,7 +47,7 @@ export default function Feed({ session }) {
 
     let entryQuery = supabase
       .from('entries')
-      .select('*, profiles!entries_user_id_fkey(username, avatar_url), strategies(name), reactions(type, user_id)')
+      .select('*, strategies(name), reactions(type, user_id)')
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(40)
@@ -87,9 +88,17 @@ export default function Feed({ session }) {
       return
     }
 
-    const entries = entryResult.data || []
+    let entries = entryResult.data || []
     const posts = postResult.data || []
     const reflections = reflectionResult.data || []
+
+    try {
+      entries = await attachProfiles(entries, 'id, username, avatar_url')
+    } catch (profileError) {
+      setError(profileError.message)
+      if (!silent) setLoading(false)
+      return
+    }
 
     const processedEntries = entries.map(e => ({
       ...e, _type: 'entry',

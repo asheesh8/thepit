@@ -6,6 +6,7 @@ import EntryCard from '../components/EntryCard'
 import StrategyForm from '../components/StrategyForm'
 import { EMPTY_STRATEGY, formatPosterText, STRATEGY_FIELDS } from '../lib/discipline'
 import { isPublicStrategyViewable } from '../lib/community'
+import { attachProfiles } from '../lib/profiles'
 
 function posterSection(title, lines) {
   if (lines.length === 0) return ''
@@ -43,9 +44,9 @@ export default function StrategyDetail({ session }) {
   const loadStrategy = async () => {
     setLoading(true)
     setError('')
-    const [{ data: strategyData, error: strategyError }, { data: entryData }] = await Promise.all([
+    const [{ data: strategyData, error: strategyError }, { data: rawEntryData }] = await Promise.all([
       supabase.from('strategies').select('*, profiles(username)').eq('id', id).single(),
-      supabase.from('entries').select('*, profiles!entries_user_id_fkey(username), strategies(name)').eq('strategy_id', id).eq('is_public', true).order('created_at', { ascending: false }),
+      supabase.from('entries').select('*, strategies(name)').eq('strategy_id', id).eq('is_public', true).order('created_at', { ascending: false }),
     ])
     if (strategyError) setError(strategyError.message)
     if (strategyData && !isPublicStrategyViewable(strategyData, session.user.id)) {
@@ -55,7 +56,7 @@ export default function StrategyDetail({ session }) {
       setStrategy(strategyData)
       setForm({ ...EMPTY_STRATEGY, ...(strategyData || {}) })
     }
-    setEntries(entryData || [])
+    setEntries(await attachProfiles(rawEntryData || [], 'id, username'))
     setLoading(false)
   }
 

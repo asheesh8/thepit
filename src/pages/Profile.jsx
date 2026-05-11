@@ -9,6 +9,7 @@ import { calculateProfileStats } from '../lib/community'
 import ProfileStatsStrip from '../components/ProfileStatsStrip'
 import PublicStrategyPanel from '../components/PublicStrategyPanel'
 import MotivationVault from '../components/MotivationVault'
+import { attachProfiles } from '../lib/profiles'
 
 const CATEGORIES = ['mentorship', 'psychology', 'strategy', 'tools', 'other']
 const CATEGORY_COLORS = {
@@ -78,14 +79,15 @@ export default function Profile({ session }) {
     setFollowerCount(count || 0)
 
     // public entries
-    const { data: entriesData } = await supabase
+    const { data: rawEntriesData } = await supabase
       .from('entries')
-      .select('*, profiles!entries_user_id_fkey(username), strategies(name), reactions(type, user_id)')
+      .select('*, strategies(name), reactions(type, user_id)')
       .eq('user_id', prof.id)
       .eq('is_public', true)
       .order('created_at', { ascending: false })
 
-    const processed = (entriesData || []).map(entry => ({
+    const entriesData = await attachProfiles(rawEntriesData || [], 'id, username')
+    const processed = entriesData.map(entry => ({
       ...entry,
       props_count: entry.reactions?.filter(r => r.type === 'props').length || 0,
       callout_count: entry.reactions?.filter(r => r.type === 'callout').length || 0,
@@ -336,4 +338,3 @@ export default function Profile({ session }) {
     </div>
   )
 }
-
