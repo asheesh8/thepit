@@ -160,15 +160,29 @@ export default function Auth() {
     }
 
     if (mode === 'signup') {
+      if (!username.trim()) { setError('Username is required'); setLoading(false); return }
+      const clean = username.toLowerCase().replace(/[^a-z0-9_]/g, '')
+      if (clean.length < 3) { setError('Username must be at least 3 characters (letters, numbers, _)'); setLoading(false); return }
+
       const { data: existing } = await supabase
-        .from('profiles').select('id').eq('username', username.toLowerCase()).single()
+        .from('profiles').select('id').eq('username', clean).maybeSingle()
       if (existing) { setError('Username already taken'); setLoading(false); return }
 
-      const { data, error } = await supabase.auth.signUp({ email, password })
+      // Pass username as metadata so the DB trigger captures it even before email confirmation
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { username: clean } },
+      })
       if (error) { setError(error.message); setLoading(false); return }
 
-      await supabase.from('profiles').insert({ id: data.user.id, username: username.toLowerCase(), email })
-      setMessage('Check your email to confirm your account.')
+      // If session is immediately available (email confirmation off), upsert profile now
+      if (data.session) {
+        await supabase.from('profiles')
+          .upsert({ id: data.user.id, username: clean, email }, { onConflict: 'id' })
+      }
+
+      setMessage('Account created! Check your email if confirmation is required.')
       setLoading(false)
       return
     }

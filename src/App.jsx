@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, useState, Component } from 'react'
 import { supabase } from './lib/supabase'
+import { ensureProfile } from './lib/ensureProfile'
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -57,9 +58,11 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
+      if (session) ensureProfile(session)
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      if (session) ensureProfile(session)
     })
     return () => subscription.unsubscribe()
   }, [])

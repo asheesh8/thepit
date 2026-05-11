@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { ensureProfile } from '../lib/ensureProfile'
 import { getLocalDateKey } from '../lib/dateKeys'
 
 const SLEEP_OPTIONS = ['bad', 'okay', 'good', 'locked in']
@@ -68,6 +69,10 @@ export default function DailyCheckInGate({ session, children }) {
     event.preventDefault()
     setSaving(true)
     setError('')
+
+    // Guarantee profile row exists before writing (new accounts may not have it yet)
+    await ensureProfile(session)
+
     const { error: insertError } = await supabase
       .from('daily_checkins')
       .upsert({
