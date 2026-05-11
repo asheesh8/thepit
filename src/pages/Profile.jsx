@@ -186,20 +186,21 @@ export default function Profile({ session }) {
 
         {/* profile header */}
         <div className="profile-hero">
-          <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start', minWidth: 0, overflow: 'hidden' }}>
             <div className="profile-avatar-xl" style={{ background: profile.avatar_url ? `url(${profile.avatar_url}) center/cover` : 'var(--black)' }}>
               {!profile.avatar_url && profile.username?.slice(0, 1).toUpperCase()}
             </div>
-            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+            <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
               <h1 style={{
                 fontFamily: 'Bebas Neue',
-                fontSize: (() => { const n = (profile.username || '').length; return n <= 7 ? '3.5rem' : n <= 10 ? '2.6rem' : n <= 13 ? '2rem' : '1.6rem' })(),
+                fontSize: 'clamp(1.4rem, 5vw, 3rem)',
                 letterSpacing: '0.05em', lineHeight: 1,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                maxWidth: '100%',
               }}>
                 @{profile.username}
               </h1>
-              <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginTop: '4px' }}>
+              <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {followerCount} FOLLOWERS · {entries.length} PUBLIC TRADES
               </div>
             </div>
