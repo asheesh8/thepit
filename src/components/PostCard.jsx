@@ -64,7 +64,7 @@ export default function PostCard({ post, session }) {
       const dx = e.changedTouches[0].clientX - swipeStart.current.x
       const dy = Math.abs(e.changedTouches[0].clientY - swipeStart.current.y)
       swipeStart.current = null
-      if (dy > 30 || Math.abs(dx) < 60) return
+      if (Math.abs(dx) < 90 || dy > Math.abs(dx) / 3) return
       const type = dx > 0 ? 'props' : 'callout'
       setSwipeFlash(type)
       setTimeout(() => setSwipeFlash(null), 600)

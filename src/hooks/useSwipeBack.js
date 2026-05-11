@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const EDGE_THRESHOLD = 30   // px from left edge to start tracking
-const SWIPE_DISTANCE = 80   // px needed to trigger back
+const EDGE_THRESHOLD = 18   // must start within 18px of left edge
+const SWIPE_DISTANCE = 110  // must travel 110px horizontally
+const ABORT_DY       = 15   // abort if vertical drift exceeds this
 
 export function useSwipeBack() {
   const navigate = useNavigate()
@@ -22,7 +23,7 @@ export function useSwipeBack() {
     const onMove = (e) => {
       if (!tracking.current) return
       const dy = Math.abs(e.touches[0].clientY - startY.current)
-      if (dy > 20) { tracking.current = false; return }  // vertical scroll — abort
+      if (dy > ABORT_DY) { tracking.current = false }
     }
 
     const onEnd = (e) => {
