@@ -136,7 +136,7 @@ export default function Profile({ session }) {
       .eq('room_type', 'dm')
       .maybeSingle()
     if (existing) {
-      navigate(`/rooms/${existing.id}`)
+      navigate('/rooms', { state: { openId: existing.id } })
       return
     }
     const { data } = await supabase
@@ -153,7 +153,7 @@ export default function Profile({ session }) {
       })
       .select('id')
       .single()
-    if (data) navigate(`/rooms/${data.id}`)
+    if (data) navigate('/rooms', { state: { openId: data.id } })
   }
 
   const addResource = async (e) => {
@@ -193,7 +193,7 @@ export default function Profile({ session }) {
                 @{profile.username}
               </h1>
               <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginTop: '4px' }}>
-                {followerCount} FOLLOWERS · {entries.length} PUBLIC TRADES
+                {followerCount} FOLLOWERS ï¿½ {entries.length} PUBLIC TRADES
               </div>
             </div>
           </div>

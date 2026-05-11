@@ -61,11 +61,13 @@ export default function LiveRoom({ session }) {
     if (!room || needsPassword) return
 
     const markPresence = async () => {
-      await supabase.from('live_room_presence').upsert({
-        room_id: room.id,
-        user_id: session.user.id,
-        last_seen: new Date().toISOString(),
-      })
+      try {
+        await supabase.from('live_room_presence').upsert({
+          room_id: room.id,
+          user_id: session.user.id,
+          last_seen: new Date().toISOString(),
+        })
+      } catch (_) {}
     }
 
     markPresence()
@@ -73,7 +75,7 @@ export default function LiveRoom({ session }) {
 
     return () => {
       clearInterval(interval)
-      supabase.from('live_room_presence').delete().eq('room_id', room.id).eq('user_id', session.user.id)
+      try { supabase.from('live_room_presence').delete().eq('room_id', room.id).eq('user_id', session.user.id) } catch (_) {}
     }
   }, [room?.id, needsPassword, session.user.id])
 
@@ -90,7 +92,7 @@ export default function LiveRoom({ session }) {
     const [{ data: roomData, error: roomError }, { data: messageData }, { data: actionData }] = await Promise.all([
       supabase
         .from('live_rooms')
-        .select('*, profiles!live_rooms_host_id_profiles_fkey(id, username, avatar_url, bio), dm_peer:profiles!live_rooms_dm_peer_id_profiles_fkey(id, username, avatar_url, bio), entries(*, profiles(username), strategies(name)), strategies(*)')
+        .select('*, profiles!live_rooms_host_id_profiles_fkey(id, username, avatar_url, bio), dm_peer:profiles!live_rooms_dm_peer_id_profiles_fkey(id, username, avatar_url, bio)')
         .eq('id', id)
         .single(),
       supabase
@@ -131,7 +133,7 @@ export default function LiveRoom({ session }) {
   }
 
   const completeRoom = async () => {
-    const { data } = await supabase.from('live_rooms').update({ status: 'complete', updated_at: new Date().toISOString() }).eq('id', id).select('*, profiles!live_rooms_host_id_profiles_fkey(username, avatar_url), entries(*, profiles(username), strategies(name)), strategies(*)').single()
+    const { data } = await supabase.from('live_rooms').update({ status: 'complete', updated_at: new Date().toISOString() }).eq('id', id).select('*, profiles!live_rooms_host_id_profiles_fkey(username, avatar_url)').single()
     if (data) {
       setRoom(data)
       broadcastRefresh({ kind: 'room' })

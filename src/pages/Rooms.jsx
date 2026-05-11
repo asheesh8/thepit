@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import useRoomRealtime from '../hooks/useRoomRealtime'
 import useWebRTCRoom from '../hooks/useWebRTCRoom'
@@ -36,6 +37,7 @@ function dmTitleFor(a, b) {
 }
 
 export default function Rooms({ session }) {
+  const location = useLocation()
   const [threads, setThreads] = useState([])
   const [mutuals, setMutuals] = useState([])
   const [selectedId, setSelectedId] = useState(null)
@@ -61,7 +63,10 @@ export default function Rooms({ session }) {
   })
   const rtc = useWebRTCRoom({ userId: session.user.id, participants, sendSignal })
 
-  useEffect(() => { loadAll() }, [])
+  useEffect(() => {
+    const openId = location.state?.openId
+    loadAll(openId)
+  }, [])
 
   useEffect(() => {
     if (pendingSignals.length === 0) return
@@ -93,7 +98,7 @@ export default function Rooms({ session }) {
     return () => supabase.removeChannel(channel)
   }, [selectedId])
 
-  const loadAll = async () => {
+  const loadAll = async (autoOpenId = null) => {
     setLoading(true)
     const [followingRes, followerRes, dmRes] = await Promise.all([
       supabase.from('follows')
@@ -139,6 +144,7 @@ export default function Rooms({ session }) {
 
     setThreads([...dms, ...groups].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)))
     setLoading(false)
+    if (autoOpenId) selectThread(autoOpenId)
   }
 
   const loadRoom = async (roomId) => {
