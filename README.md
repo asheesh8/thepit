@@ -61,13 +61,35 @@ cp .env.example .env.local
 
 ### 3. Set up Supabase
 
-Go to **Supabase > SQL Editor** and run:
+**Fresh project (or after a wipe)** — go to Supabase > SQL Editor and run `docs/supabase/schema.sql`. That one file creates every table, index, RLS policy, and realtime subscription. Fully idempotent — safe to re-run.
 
-```
-docs/supabase/schema.sql
+**If you need to wipe first**, run this in the SQL Editor before the schema:
+
+```sql
+drop table if exists public.payouts cascade;
+drop table if exists public.prop_accounts cascade;
+drop table if exists public.live_room_presence cascade;
+drop table if exists public.live_room_action_items cascade;
+drop table if exists public.live_room_messages cascade;
+drop table if exists public.live_room_members cascade;
+drop table if exists public.live_rooms cascade;
+drop table if exists public.pinned_rules cascade;
+drop table if exists public.daily_checkins cascade;
+drop table if exists public.callout_replies cascade;
+drop table if exists public.callout_threads cascade;
+drop table if exists public.user_badges cascade;
+drop table if exists public.backtest_reflections cascade;
+drop table if exists public.post_reactions cascade;
+drop table if exists public.posts cascade;
+drop table if exists public.reactions cascade;
+drop table if exists public.entries cascade;
+drop table if exists public.strategies cascade;
+drop table if exists public.follows cascade;
+drop table if exists public.profiles cascade;
+drop function if exists public.cleanup_stale_live_rooms cascade;
 ```
 
-That one file creates every table, index, RLS policy, and realtime subscription. It's fully idempotent — safe to re-run.
+Then run `docs/supabase/schema.sql` right after.
 
 Then go to **Supabase > Storage** and create two public buckets:
 
