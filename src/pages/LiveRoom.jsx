@@ -67,7 +67,9 @@ export default function LiveRoom({ session }) {
           user_id: session.user.id,
           last_seen: new Date().toISOString(),
         })
-      } catch (_) {}
+      } catch (presenceError) {
+        console.warn('Could not update room presence', presenceError)
+      }
     }
 
     markPresence()
@@ -75,7 +77,7 @@ export default function LiveRoom({ session }) {
 
     return () => {
       clearInterval(interval)
-      try { supabase.from('live_room_presence').delete().eq('room_id', room.id).eq('user_id', session.user.id) } catch (_) {}
+      supabase.from('live_room_presence').delete().eq('room_id', room.id).eq('user_id', session.user.id)
     }
   }, [room?.id, needsPassword, session.user.id])
 
@@ -237,7 +239,7 @@ export default function LiveRoom({ session }) {
         <aside className="dm-tools-panel">
           <section className="dm-tool-card dm-call-card">
             <div className="dm-tool-eyebrow">LIVE CALL</div>
-            <LiveStage localStream={rtc.localStream} remoteStreams={rtc.remoteStreams} mediaState={rtc.mediaState} rtc={rtc} />
+            <LiveStage localStream={rtc.localStream} localScreenStream={rtc.localScreenStream} remoteStreams={rtc.remoteStreams} mediaState={rtc.mediaState} rtc={rtc} />
           </section>
           <section className="dm-tool-card">
             <div className="dm-tool-eyebrow">MUSIC</div>
@@ -286,7 +288,7 @@ export default function LiveRoom({ session }) {
 
         <div className="discord-room-shell">
           <main style={{ minWidth: 0 }}>
-            <LiveStage localStream={rtc.localStream} remoteStreams={rtc.remoteStreams} mediaState={rtc.mediaState} rtc={rtc} />
+            <LiveStage localStream={rtc.localStream} localScreenStream={rtc.localScreenStream} remoteStreams={rtc.remoteStreams} mediaState={rtc.mediaState} rtc={rtc} />
           </main>
           <aside className="room-functions-panel">
             <div className="card" style={{ padding: '0', overflow: 'hidden' }}>

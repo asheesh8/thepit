@@ -2,21 +2,25 @@ import ParticipantTile from './ParticipantTile'
 import CallControls from './CallControls'
 import { useMemo, useState } from 'react'
 
-export default function LiveStage({ localStream, remoteStreams, mediaState, rtc }) {
+export default function LiveStage({ localStream, localScreenStream, remoteStreams, mediaState, rtc }) {
   const [pinnedId, setPinnedId] = useState(null)
   const [audioPrefs, setAudioPrefs] = useState({})
   const [menu, setMenu] = useState(null)
   const tiles = useMemo(() => [
-      { id: 'local', label: 'YOU', sublabel: mediaState.sharing ? 'SCREEN' : 'LOCAL', stream: localStream, muted: true, active: mediaState.camera },
+      { id: 'local', label: 'YOU', sublabel: 'CAMERA', stream: localStream, muted: true, active: mediaState.camera, type: 'camera' },
+      ...(localScreenStream ? [{ id: 'local-screen', label: 'YOUR SCREEN', sublabel: 'SHARING', stream: localScreenStream, muted: true, active: true, type: 'screen' }] : []),
       ...remoteStreams.map(remote => ({
-        id: remote.peerId,
-        label: remoteStreams.length === 1 ? 'CALL PARTNER' : `GUEST ${remote.peerId.slice(0, 4).toUpperCase()}`,
-        sublabel: 'REMOTE',
+        id: `${remote.peerId}-${remote.stream.id}`,
+        label: remote.type === 'screen'
+          ? 'THEIR SCREEN'
+          : remoteStreams.length === 1 ? 'CALL PARTNER' : `GUEST ${remote.peerId.slice(0, 4).toUpperCase()}`,
+        sublabel: remote.type === 'screen' ? 'SCREEN' : 'REMOTE',
         stream: remote.stream,
         muted: false,
         active: true,
+        type: remote.type || 'camera',
       })),
-    ], [localStream, mediaState.camera, remoteStreams])
+    ], [localScreenStream, localStream, mediaState.camera, remoteStreams])
   const orderedTiles = useMemo(() => {
     if (!pinnedId) return tiles
     const pinned = tiles.find(tile => tile.id === pinnedId)
@@ -73,7 +77,7 @@ export default function LiveStage({ localStream, remoteStreams, mediaState, rtc 
           <>
           {orderedTiles.map((tile, index) => {
             const prefs = { muted: false, volume: 1, ...audioPrefs[tile.id] }
-            const isLocal = tile.id === 'local'
+            const isLocal = tile.id === 'local' || tile.id === 'local-screen'
             const isFeatured = (!!pinnedId && index === 0) || isWaiting
             return (
             <ParticipantTile
@@ -83,7 +87,7 @@ export default function LiveStage({ localStream, remoteStreams, mediaState, rtc 
               stream={tile.stream}
               muted={tile.muted || prefs.muted}
               volume={isLocal ? 0 : prefs.volume}
-              mirror={!mediaState.sharing || tile.id !== 'local'}
+              mirror={tile.type !== 'screen'}
               featured={isFeatured}
               active={tile.active}
               pinned={tile.id === pinnedId}

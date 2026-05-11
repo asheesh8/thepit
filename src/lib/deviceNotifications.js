@@ -4,7 +4,8 @@ export async function registerDeviceNotifications() {
   if (!('serviceWorker' in navigator)) return null
   try {
     return await navigator.serviceWorker.register('/pit-notifications-sw.js')
-  } catch (_) {
+  } catch (error) {
+    console.warn('Could not register notification service worker', error)
     return null
   }
 }
@@ -16,7 +17,8 @@ export async function requestDeviceNotificationPermission() {
   try {
     localStorage.setItem(NOTIFICATION_PERMISSION_KEY, 'true')
     return await Notification.requestPermission()
-  } catch (_) {
+  } catch (error) {
+    console.warn('Could not request notification permission', error)
     return Notification.permission
   }
 }
@@ -36,7 +38,7 @@ export function primeDeviceNotificationPermission() {
   window.addEventListener('keydown', ask, { once: true })
 }
 
-export async function showDeviceNotification({ title, body, tag, url = '/' }) {
+export async function showDeviceNotification({ title, body, tag, url = '/', type = 'default', requireInteraction = false }) {
   if (!('Notification' in window)) return false
   if (Notification.permission !== 'granted') return false
 
@@ -46,6 +48,15 @@ export async function showDeviceNotification({ title, body, tag, url = '/' }) {
     badge: '/icon-192.png',
     icon: '/icon-192.png',
     data: { url },
+    requireInteraction,
+    renotify: type === 'call',
+    vibrate: type === 'call' ? [220, 90, 220, 90, 420] : [80, 40, 80],
+    actions: type === 'call'
+      ? [
+        { action: 'answer', title: 'Answer' },
+        { action: 'decline', title: 'Decline' },
+      ]
+      : [],
   }
 
   try {
@@ -56,7 +67,9 @@ export async function showDeviceNotification({ title, body, tag, url = '/' }) {
       await registration.showNotification(title, options)
       return true
     }
-  } catch (_) {}
+  } catch (error) {
+    console.warn('Could not show service worker notification', error)
+  }
 
   try {
     const notification = new Notification(title, options)
@@ -65,7 +78,8 @@ export async function showDeviceNotification({ title, body, tag, url = '/' }) {
       if (url) window.location.href = url
     }
     return true
-  } catch (_) {
+  } catch (error) {
+    console.warn('Could not show browser notification', error)
     return false
   }
 }

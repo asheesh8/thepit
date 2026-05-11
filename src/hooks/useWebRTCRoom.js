@@ -9,8 +9,12 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
   const localVideoRef = useRef(null)
   const peersRef = useRef(new Map())
   const localStreamRef = useRef(null)
+  const screenStreamRef = useRef(null)
   const cameraTrackRef = useRef(null)
+  const screenTrackIdsRef = useRef(new Set())
+  const remoteScreenStreamsRef = useRef(new Map())
   const [localStream, setLocalStream] = useState(null)
+  const [localScreenStream, setLocalScreenStream] = useState(null)
   const [remoteStreams, setRemoteStreams] = useState([])
   const [mediaState, setMediaState] = useState({ joined: false, mic: true, camera: true, sharing: false, error: '' })
 
@@ -33,6 +37,19 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     if (localVideoRef.current) localVideoRef.current.srcObject = stream
   }
 
+  const setRemoteStreamType = (peerId, streamId, type) => {
+    const next = new Map(remoteScreenStreamsRef.current)
+    const current = new Set(next.get(peerId) || [])
+    if (type === 'screen') current.add(streamId)
+    else current.delete(streamId)
+    if (current.size) next.set(peerId, current)
+    else next.delete(peerId)
+    remoteScreenStreamsRef.current = next
+    setRemoteStreams(prev => prev.map(item => (
+      item.peerId === peerId && item.stream.id === streamId ? { ...item, type } : item
+    )))
+  }
+
   const addMissingLocalTracks = (peer, stream) => {
     const sentTrackIds = new Set(peer.getSenders().map(sender => sender.track?.id).filter(Boolean))
     stream.getTracks().forEach(track => {
@@ -40,11 +57,39 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     })
   }
 
-  const replaceVideoTrack = (track) => {
-    peersRef.current.forEach(peer => {
-      const sender = peer.getSenders().find(item => item.track?.kind === 'video')
-      if (sender) sender.replaceTrack(track)
+  const addScreenTracksToPeer = (peer, stream) => {
+    const sentTrackIds = new Set(peer.getSenders().map(sender => sender.track?.id).filter(Boolean))
+    stream.getTracks().forEach(track => {
+      if (!sentTrackIds.has(track.id)) peer.addTrack(track, stream)
     })
+  }
+
+  const announceScreenStream = async (stream, active) => {
+    await sendSignal(makePeerSignal({
+      kind: active ? 'screen-start' : 'screen-stop',
+      from: userId,
+      data: { streamId: stream.id },
+    }))
+  }
+
+  const stopScreenShare = async () => {
+    const stream = screenStreamRef.current
+    if (!stream) return
+
+    peersRef.current.forEach(peer => {
+      peer.getSenders()
+        .filter(sender => sender.track && screenTrackIdsRef.current.has(sender.track.id))
+        .forEach(sender => peer.removeTrack(sender))
+    })
+    stream.getTracks().forEach(track => track.stop())
+    screenStreamRef.current = null
+    screenTrackIdsRef.current = new Set()
+    setLocalScreenStream(null)
+    setMediaState(prev => ({ ...prev, sharing: false }))
+    await announceScreenStream(stream, false)
+    for (const participant of participants) {
+      if (participant.user_id !== userId) await callPeer(participant.user_id)
+    }
   }
 
   const getOrCreatePeer = (peerId) => {
@@ -59,9 +104,11 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
 
     peer.ontrack = event => {
       const [stream] = event.streams
+      const type = remoteScreenStreamsRef.current.get(peerId)?.has(stream.id) ? 'screen' : 'camera'
       setRemoteStreams(prev => {
-        const without = prev.filter(item => item.peerId !== peerId)
-        return [...without, { peerId, stream }]
+        const key = `${peerId}:${stream.id}`
+        const without = prev.filter(item => `${item.peerId}:${item.stream.id}` !== key)
+        return [...without, { peerId, stream, type }]
       })
     }
 
@@ -74,6 +121,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
 
     const stream = localStreamRef.current
     if (stream) addMissingLocalTracks(peer, stream)
+    if (screenStreamRef.current) addScreenTracksToPeer(peer, screenStreamRef.current)
     peersRef.current.set(peerId, peer)
     return peer
   }
@@ -103,12 +151,17 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
   }
 
   const leaveMedia = () => {
+    screenStreamRef.current?.getTracks().forEach(track => track.stop())
     localStreamRef.current?.getTracks().forEach(track => track.stop())
     peersRef.current.forEach(peer => peer.close())
     peersRef.current.clear()
     localStreamRef.current = null
+    screenStreamRef.current = null
     cameraTrackRef.current = null
+    screenTrackIdsRef.current = new Set()
+    remoteScreenStreamsRef.current = new Map()
     setLocalStream(null)
+    setLocalScreenStream(null)
     setRemoteStreams([])
     setMediaState({ joined: false, mic: true, camera: true, sharing: false, error: '' })
     sendSignal(makePeerSignal({ kind: 'peer-left', from: userId }))
@@ -130,24 +183,23 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
 
   const shareScreen = async () => {
     try {
-      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-      const screenTrack = displayStream.getVideoTracks()[0]
-      const currentVideo = localStreamRef.current?.getVideoTracks()[0]
-      replaceVideoTrack(screenTrack)
-      if (currentVideo) localStreamRef.current.removeTrack(currentVideo)
-      localStreamRef.current.addTrack(screenTrack)
-      setLocalStream(new MediaStream(localStreamRef.current.getTracks()))
-      setMediaState(prev => ({ ...prev, sharing: true }))
-      screenTrack.onended = () => {
-        const cameraTrack = cameraTrackRef.current
-        if (cameraTrack && localStreamRef.current) {
-          localStreamRef.current.removeTrack(screenTrack)
-          localStreamRef.current.addTrack(cameraTrack)
-          replaceVideoTrack(cameraTrack)
-          setLocalStream(new MediaStream(localStreamRef.current.getTracks()))
-        }
-        setMediaState(prev => ({ ...prev, sharing: false, camera: !!cameraTrack && cameraTrack.enabled }))
+      if (!localStreamRef.current) await joinMedia()
+      if (screenStreamRef.current) {
+        await stopScreenShare()
+        return
       }
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+      screenStreamRef.current = displayStream
+      screenTrackIdsRef.current = new Set(displayStream.getTracks().map(track => track.id))
+      peersRef.current.forEach(peer => addScreenTracksToPeer(peer, displayStream))
+      setLocalScreenStream(displayStream)
+      setMediaState(prev => ({ ...prev, sharing: true }))
+      await announceScreenStream(displayStream, true)
+      for (const participant of participants) {
+        if (participant.user_id !== userId) await callPeer(participant.user_id)
+      }
+      const screenTrack = displayStream.getVideoTracks()[0]
+      if (screenTrack) screenTrack.onended = () => stopScreenShare()
     } catch (error) {
       setMediaState(prev => ({ ...prev, error: error.message || 'Screenshare failed.' }))
     }
@@ -162,7 +214,17 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     if (signal.kind === 'peer-left') {
       peersRef.current.get(signal.from)?.close()
       peersRef.current.delete(signal.from)
+      remoteScreenStreamsRef.current.delete(signal.from)
       setRemoteStreams(prev => prev.filter(item => item.peerId !== signal.from))
+      return
+    }
+    if (signal.kind === 'screen-start' && signal.data?.streamId) {
+      setRemoteStreamType(signal.from, signal.data.streamId, 'screen')
+      return
+    }
+    if (signal.kind === 'screen-stop' && signal.data?.streamId) {
+      setRemoteStreamType(signal.from, signal.data.streamId, 'camera')
+      setRemoteStreams(prev => prev.filter(item => !(item.peerId === signal.from && item.stream.id === signal.data.streamId)))
       return
     }
 
@@ -185,6 +247,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
   return {
     localVideoRef,
     localStream,
+    localScreenStream,
     remoteStreams,
     mediaState,
     joinMedia,
@@ -192,6 +255,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     toggleMic,
     toggleCamera,
     shareScreen,
+    stopScreenShare,
     handleSignal,
   }
 }

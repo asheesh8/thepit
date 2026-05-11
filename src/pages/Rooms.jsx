@@ -78,6 +78,8 @@ export default function Rooms({ session }) {
           body: signal.title || 'Tap to join the call',
           tag: `call-${selectedId}`,
           url: `/rooms/${selectedId}`,
+          type: 'call',
+          requireInteraction: true,
         })
         return
       }
@@ -86,6 +88,14 @@ export default function Rooms({ session }) {
     onRefresh: () => loadRoom(selectedId),
   })
   const rtc = useWebRTCRoom({ userId: session.user.id, participants, sendSignal })
+  const selectedThread = threads.find(t => t.id === selectedId)
+  const dmPeer = selectedRoom?.room_type === 'dm'
+    ? (selectedRoom.host_id === session.user.id ? selectedRoom.dm_peer : selectedRoom.profiles)
+    : null
+  const chatTitle = selectedRoom
+    ? (selectedRoom.room_type === 'dm' ? `@${dmPeer?.username || 'trader'}` : (selectedRoom.title || 'Group'))
+    : (selectedThread?.room_type === 'dm' ? `@${selectedThread?.other?.username || '...'}` : (selectedThread?.title || '...'))
+  const isDm = (selectedRoom ?? selectedThread)?.room_type === 'dm'
 
   useEffect(() => {
     const openId = location.state?.openId
@@ -109,6 +119,38 @@ export default function Rooms({ session }) {
     setPendingSignals(rest)
     rtc.handleSignal(next)
   }, [pendingSignals])
+
+  useEffect(() => {
+    if (!callActive) return
+    let wakeLock = null
+    let cancelled = false
+    const originalTitle = document.title
+
+    const keepAwake = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen')
+        }
+      } catch (wakeError) {
+        console.warn('Could not keep call screen awake', wakeError)
+      }
+    }
+
+    document.title = `LIVE CALL · ${chatTitle}`
+    keepAwake()
+
+    const handleVisibility = () => {
+      if (!cancelled && document.visibilityState === 'visible' && !wakeLock) keepAwake()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      cancelled = true
+      document.title = originalTitle
+      document.removeEventListener('visibilitychange', handleVisibility)
+      wakeLock?.release?.()
+    }
+  }, [callActive, chatTitle])
 
   // Real-time message delivery for the active conversation
   useEffect(() => {
@@ -340,7 +382,7 @@ export default function Rooms({ session }) {
     setCallActive(true)
     setIncomingCall(null)
     if (announce) await announceCall()
-    rtc.joinMedia()
+    await rtc.joinMedia()
   }
 
   const joinIncomingCall = () => {
@@ -355,7 +397,7 @@ export default function Rooms({ session }) {
     setIncomingCall(null)
     await announceCall()
     if (!rtc.mediaState.joined) await rtc.joinMedia()
-    rtc.shareScreen()
+    await rtc.shareScreen()
   }
 
   const endCall = async () => {
@@ -380,19 +422,6 @@ export default function Rooms({ session }) {
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
-
-  const selectedThread = threads.find(t => t.id === selectedId)
-
-  const dmPeer = selectedRoom?.room_type === 'dm'
-    ? (selectedRoom.host_id === session.user.id ? selectedRoom.dm_peer : selectedRoom.profiles)
-    : null
-
-  // Use thread data as fallback title while room is loading
-  const chatTitle = selectedRoom
-    ? (selectedRoom.room_type === 'dm' ? `@${dmPeer?.username || 'trader'}` : (selectedRoom.title || 'Group'))
-    : (selectedThread?.room_type === 'dm' ? `@${selectedThread?.other?.username || '...'}` : (selectedThread?.title || '...'))
-
-  const isDm = (selectedRoom ?? selectedThread)?.room_type === 'dm'
 
   return (
     <div className={`dm-page-shell${mobileView === 'chat' ? ' mobile-chat-view' : ''}`}>
@@ -541,7 +570,7 @@ export default function Rooms({ session }) {
               </div>
             </header>
             <div className="dm-call-stage-wrap">
-              <LiveStage localStream={rtc.localStream} remoteStreams={rtc.remoteStreams} mediaState={rtc.mediaState} rtc={rtc} />
+              <LiveStage localStream={rtc.localStream} localScreenStream={rtc.localScreenStream} remoteStreams={rtc.remoteStreams} mediaState={rtc.mediaState} rtc={rtc} />
             </div>
             <div className={`dm-call-notes-wrap ${showCallNotes ? 'open' : ''}`}>
               <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.1em', marginBottom: '8px' }}>

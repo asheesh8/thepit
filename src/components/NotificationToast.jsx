@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications'
 import { showDeviceNotification } from '../lib/deviceNotifications'
 
-export function useToastQueue() {
+function useToastQueue() {
   const [toasts, setToasts] = useState([])
 
   const push = useCallback((n) => {
@@ -66,6 +66,8 @@ export default function NotificationToast({ session }) {
       body: notification.body,
       tag: notification.roomId ? `${notification.type}-${notification.roomId}` : notification.type,
       url: notification.link || '/',
+      type: notification.type,
+      requireInteraction: notification.type === 'call',
     })
   })
 
