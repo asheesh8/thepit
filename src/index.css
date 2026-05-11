@@ -2720,7 +2720,9 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   /* pages need bottom padding so content isn't hidden behind the tab bar */
   .page-shell,
   .journal-shell,
-  .new-entry-shell {
+  .new-entry-shell,
+  .floor-shell,
+  .settings-shell {
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
