@@ -498,6 +498,48 @@ create index if not exists live_rooms_room_type_idx   on public.live_rooms(room_
 
 alter table public.live_rooms enable row level security;
 
+
+-- =============================================================================
+-- SECTION 14 · LIVE ROOM MEMBERS (group chat membership)
+-- =============================================================================
+-- Created before live_rooms RLS policies because those policies reference this table.
+
+create table if not exists public.live_room_members (
+  room_id    uuid        not null references public.live_rooms(id) on delete cascade,
+  user_id    uuid        not null references public.profiles(id) on delete cascade,
+  joined_at  timestamptz not null default now(),
+  primary key (room_id, user_id)
+);
+
+create index if not exists live_room_members_user_id_idx on public.live_room_members(user_id);
+
+alter table public.live_room_members enable row level security;
+
+drop policy if exists "Members can read own memberships" on public.live_room_members;
+create policy "Members can read own memberships"
+  on public.live_room_members for select using (auth.uid() = user_id);
+
+drop policy if exists "Hosts can add members" on public.live_room_members;
+create policy "Hosts can add members"
+  on public.live_room_members for insert
+  with check (
+    exists (
+      select 1 from public.live_rooms r
+      where r.id = room_id and r.host_id = auth.uid()
+    )
+    or auth.uid() = user_id
+  );
+
+drop policy if exists "Members can leave" on public.live_room_members;
+create policy "Members can leave"
+  on public.live_room_members for delete using (auth.uid() = user_id);
+
+
+-- =============================================================================
+-- SECTION 13 (cont.) · LIVE ROOMS RLS policies
+-- =============================================================================
+-- Applied after live_room_members exists so the subquery references resolve.
+
 drop policy if exists "Users can read visible rooms" on public.live_rooms;
 create policy "Users can read visible rooms"
   on public.live_rooms for select
@@ -543,41 +585,6 @@ create policy "Room participants can update rooms"
       where m.room_id = live_rooms.id and m.user_id = auth.uid()
     )
   );
-
-
--- =============================================================================
--- SECTION 14 · LIVE ROOM MEMBERS (group chat membership)
--- =============================================================================
-
-create table if not exists public.live_room_members (
-  room_id    uuid        not null references public.live_rooms(id) on delete cascade,
-  user_id    uuid        not null references public.profiles(id) on delete cascade,
-  joined_at  timestamptz not null default now(),
-  primary key (room_id, user_id)
-);
-
-create index if not exists live_room_members_user_id_idx on public.live_room_members(user_id);
-
-alter table public.live_room_members enable row level security;
-
-drop policy if exists "Members can read own memberships" on public.live_room_members;
-create policy "Members can read own memberships"
-  on public.live_room_members for select using (auth.uid() = user_id);
-
-drop policy if exists "Hosts can add members" on public.live_room_members;
-create policy "Hosts can add members"
-  on public.live_room_members for insert
-  with check (
-    exists (
-      select 1 from public.live_rooms r
-      where r.id = room_id and r.host_id = auth.uid()
-    )
-    or auth.uid() = user_id
-  );
-
-drop policy if exists "Members can leave" on public.live_room_members;
-create policy "Members can leave"
-  on public.live_room_members for delete using (auth.uid() = user_id);
 
 
 -- =============================================================================
