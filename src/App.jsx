@@ -49,12 +49,15 @@ import GuestFeed from './pages/GuestFeed'
 import NewFeaturesModal from './components/NewFeaturesModal'
 import NotificationToast from './components/NotificationToast'
 import Notifications from './pages/Notifications'
+import { primeDeviceNotificationPermission, registerDeviceNotifications } from './lib/deviceNotifications'
 
 export default function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    registerDeviceNotifications()
+    primeDeviceNotificationPermission()
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)

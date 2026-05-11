@@ -2500,6 +2500,14 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   padding: 16px 22px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  gap: 12px;
+}
+
+.dm-call-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .dm-call-stage-wrap {
@@ -2509,9 +2517,63 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 }
 
 .dm-call-notes-wrap {
+  display: none;
   padding: 14px 22px;
   border-top: 1px solid var(--border);
   flex-shrink: 0;
+}
+
+.dm-call-notes-wrap.open {
+  display: block;
+}
+
+.incoming-call-banner {
+  position: fixed;
+  left: 50%;
+  top: calc(76px + env(safe-area-inset-top, 0px));
+  z-index: 9100;
+  width: min(460px, calc(100vw - 28px));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(46, 196, 182, 0.5);
+  background: rgba(20, 28, 28, 0.98);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.46);
+  animation: call-ring 1.2s ease-in-out infinite;
+}
+
+.incoming-call-kicker,
+.incoming-call-room {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--green);
+}
+
+.incoming-call-title {
+  margin: 3px 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.65rem;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.incoming-call-room {
+  color: var(--dim);
+}
+
+.incoming-call-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@keyframes call-ring {
+  0%, 100% { border-color: rgba(46, 196, 182, 0.5); }
+  50% { border-color: rgba(46, 196, 182, 1); box-shadow: 0 18px 60px rgba(46, 196, 182, 0.16); }
 }
 
 @media (max-width: 640px) {
@@ -3355,10 +3417,25 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 
   .dm-call-overlay-header {
     padding: 12px 14px;
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .dm-call-notes-wrap {
     padding: 10px 14px;
+  }
+
+  .dm-call-header-actions,
+  .incoming-call-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .incoming-call-banner {
+    top: calc(64px + env(safe-area-inset-top, 0px));
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

@@ -52,10 +52,12 @@ export function useRealtimeNotifications(session, onNotification) {
             .single()
 
           notify({
-            type: 'message',
-            title: sender?.username ? `@${sender.username}` : 'New message',
-            body: msg.body?.slice(0, 80) || '...',
-            link: '/rooms',
+            type: msg.body?.startsWith('📞') ? 'call' : 'message',
+            title: msg.body?.startsWith('📞')
+              ? `${sender?.username ? `@${sender.username}` : 'Someone'} is calling`
+              : (sender?.username ? `@${sender.username}` : 'New message'),
+            body: msg.body?.startsWith('📞') ? 'Tap to join the call' : (msg.body?.slice(0, 80) || '...'),
+            link: `/rooms/${msg.room_id}`,
             roomId: msg.room_id,
           })
         }

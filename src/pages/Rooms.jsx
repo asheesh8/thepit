@@ -6,6 +6,7 @@ import useRoomRealtime from '../hooks/useRoomRealtime'
 import useWebRTCRoom from '../hooks/useWebRTCRoom'
 import RoomChat from '../components/RoomChat'
 import LiveStage from '../components/LiveStage'
+import { showDeviceNotification } from '../lib/deviceNotifications'
 
 function Avatar({ profile, size = 42 }) {
   return (
@@ -61,11 +62,27 @@ export default function Rooms({ session }) {
   const [mobileView, setMobileView] = useState('list')
   const [pendingSignals, setPendingSignals] = useState([])
   const [error, setError] = useState('')
+  const [currentProfile, setCurrentProfile] = useState(null)
+  const [incomingCall, setIncomingCall] = useState(null)
+  const [callAnnounced, setCallAnnounced] = useState(false)
+  const [showCallNotes, setShowCallNotes] = useState(false)
 
   const { participants, connected, sendSignal, broadcastRefresh } = useRoomRealtime({
     roomId: selectedId,
     userId: session.user.id,
-    onSignal: signal => setPendingSignals(prev => [...prev, signal]),
+    onSignal: signal => {
+      if (signal?.kind === 'call-invite' && signal.from !== session.user.id) {
+        setIncomingCall(signal)
+        showDeviceNotification({
+          title: `${signal.callerName || 'Someone'} is calling`,
+          body: signal.title || 'Tap to join the call',
+          tag: `call-${selectedId}`,
+          url: `/rooms/${selectedId}`,
+        })
+        return
+      }
+      setPendingSignals(prev => [...prev, signal])
+    },
     onRefresh: () => loadRoom(selectedId),
   })
   const rtc = useWebRTCRoom({ userId: session.user.id, participants, sendSignal })
@@ -143,7 +160,7 @@ export default function Rooms({ session }) {
     const mutualIds = followingIds.filter(id => followerSet.has(id))
     const dmRooms = dmRoomRes.data || []
     const dmPeerIds = dmRooms.map(room => room.host_id === session.user.id ? room.dm_peer_id : room.host_id)
-    const profileIds = uniqueIds([...mutualIds, ...dmPeerIds])
+    const profileIds = uniqueIds([session.user.id, ...mutualIds, ...dmPeerIds])
     const roomIds = dmRooms.map(room => room.id)
 
     const [profileRes, messageRes] = await Promise.all([
@@ -164,6 +181,7 @@ export default function Rooms({ session }) {
     }
 
     const profileById = new Map((profileRes.data || []).map(profile => [profile.id, profile]))
+    setCurrentProfile(profileById.get(session.user.id) || null)
     setMutuals(mutualIds.map(id => profileById.get(id)).filter(Boolean))
 
     const latestMessageByRoom = new Map()
@@ -287,15 +305,53 @@ export default function Rooms({ session }) {
     setShowGroupModal(false); setGroupName(''); setGroupMembers([]); setCreatingGroup(false)
   }
 
-  const startCall = () => {
+  const announceCall = async () => {
+    if (!selectedId || callAnnounced) return
+    const callerName = currentProfile?.username ? `@${currentProfile.username}` : 'Someone'
+    setCallAnnounced(true)
+    await sendSignal({
+      kind: 'call-invite',
+      from: session.user.id,
+      callerName,
+      title: chatTitle,
+      sent_at: new Date().toISOString(),
+    })
+    const { data } = await supabase
+      .from('live_room_messages')
+      .insert({
+        room_id: selectedId,
+        user_id: session.user.id,
+        body: `📞 ${callerName} started a call. Tap to join.`,
+      })
+      .select('*, profiles(username, avatar_url)')
+      .single()
+    if (data) {
+      setMessages(prev => prev.some(message => message.id === data.id) ? prev : [...prev, data])
+      await supabase.from('live_rooms').update({ updated_at: new Date().toISOString() }).eq('id', selectedId)
+      broadcastRefresh({ kind: 'chat', message: data })
+    }
+  }
+
+  const startCall = async ({ announce = true } = {}) => {
     setCallNotes('')
+    setShowCallNotes(false)
     setCallActive(true)
+    setIncomingCall(null)
+    if (announce) await announceCall()
     rtc.joinMedia()
+  }
+
+  const joinIncomingCall = () => {
+    setCallAnnounced(true)
+    startCall({ announce: false })
   }
 
   const startScreenShare = async () => {
     setCallNotes('')
+    setShowCallNotes(false)
     setCallActive(true)
+    setIncomingCall(null)
+    await announceCall()
     if (!rtc.mediaState.joined) await rtc.joinMedia()
     rtc.shareScreen()
   }
@@ -303,6 +359,9 @@ export default function Rooms({ session }) {
   const endCall = async () => {
     rtc.leaveMedia()
     setCallActive(false)
+    setIncomingCall(null)
+    setCallAnnounced(false)
+    setShowCallNotes(false)
     if (callNotes.trim() && selectedId) {
       const body = `\u{1F4CB} CALL NOTES\n${'─'.repeat(26)}\n${callNotes.trim()}`
       await supabase.from('live_room_messages').insert({ room_id: selectedId, user_id: session.user.id, body })
@@ -446,6 +505,20 @@ export default function Rooms({ session }) {
         )}
       </main>
 
+      {incomingCall && !callActive && (
+        <div className="incoming-call-banner">
+          <div>
+            <div className="incoming-call-kicker">INCOMING CALL</div>
+            <div className="incoming-call-title">{incomingCall.callerName || 'Someone'} is calling</div>
+            <div className="incoming-call-room">{incomingCall.title || chatTitle}</div>
+          </div>
+          <div className="incoming-call-actions">
+            <button className="btn" onClick={() => setIncomingCall(null)}>DECLINE</button>
+            <button className="btn btn-green" onClick={joinIncomingCall}>JOIN</button>
+          </div>
+        </div>
+      )}
+
       {/* ── CALL OVERLAY ── */}
       {callActive && (
         <div className="dm-call-overlay">
@@ -458,12 +531,17 @@ export default function Rooms({ session }) {
                   <div style={{ fontFamily: 'Space Mono', fontSize: '8px', color: 'var(--green)', letterSpacing: '0.1em', marginTop: '2px' }}>● LIVE CALL · {participants.length} PRESENT</div>
                 </div>
               </div>
-              <button className="btn btn-red" style={{ padding: '9px 18px', fontSize: '9px', letterSpacing: '0.12em' }} onClick={endCall}>END CALL</button>
+              <div className="dm-call-header-actions">
+                <button className="btn" style={{ padding: '9px 14px', fontSize: '9px', letterSpacing: '0.12em' }} onClick={() => setShowCallNotes(prev => !prev)}>
+                  {showCallNotes ? 'HIDE NOTES' : 'NOTES'}
+                </button>
+                <button className="btn btn-red" style={{ padding: '9px 18px', fontSize: '9px', letterSpacing: '0.12em' }} onClick={endCall}>END CALL</button>
+              </div>
             </header>
             <div className="dm-call-stage-wrap">
               <LiveStage localStream={rtc.localStream} remoteStreams={rtc.remoteStreams} mediaState={rtc.mediaState} rtc={rtc} />
             </div>
-            <div className="dm-call-notes-wrap">
+            <div className={`dm-call-notes-wrap ${showCallNotes ? 'open' : ''}`}>
               <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)', letterSpacing: '0.1em', marginBottom: '8px' }}>
                 CALL NOTES — sent to chat when you end the call
               </div>

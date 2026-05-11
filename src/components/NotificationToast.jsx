@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications'
+import { showDeviceNotification } from '../lib/deviceNotifications'
 
 export function useToastQueue() {
   const [toasts, setToasts] = useState([])
@@ -22,6 +23,7 @@ export function useToastQueue() {
 
 function typeIcon(type) {
   if (type === 'message') return '💬'
+  if (type === 'call') return '📞'
   if (type === 'reaction') return '⚡'
   if (type === 'follow')   return '👤'
   return '🔔'
@@ -57,7 +59,15 @@ function Toast({ toast, onDismiss }) {
 
 export default function NotificationToast({ session }) {
   const { toasts, push, dismiss } = useToastQueue()
-  useRealtimeNotifications(session, push)
+  useRealtimeNotifications(session, notification => {
+    push(notification)
+    showDeviceNotification({
+      title: notification.title || 'The Pit',
+      body: notification.body,
+      tag: notification.roomId ? `${notification.type}-${notification.roomId}` : notification.type,
+      url: notification.link || '/',
+    })
+  })
 
   if (toasts.length === 0) return null
 

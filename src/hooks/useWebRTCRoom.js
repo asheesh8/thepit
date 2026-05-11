@@ -18,6 +18,13 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     return () => leaveMedia()
   }, [])
 
+  useEffect(() => {
+    if (!mediaState.joined || !localStreamRef.current) return
+    participants.forEach(participant => {
+      if (participant.user_id && participant.user_id !== userId) callPeer(participant.user_id)
+    })
+  }, [participants, mediaState.joined, userId])
+
   const attachLocalStream = (stream) => {
     localStreamRef.current = stream
     cameraTrackRef.current = stream.getVideoTracks()[0] || null
@@ -58,6 +65,13 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
       })
     }
 
+    peer.onconnectionstatechange = () => {
+      if (['failed', 'disconnected', 'closed'].includes(peer.connectionState)) {
+        peersRef.current.delete(peerId)
+        setRemoteStreams(prev => prev.filter(item => item.peerId !== peerId))
+      }
+    }
+
     const stream = localStreamRef.current
     if (stream) addMissingLocalTracks(peer, stream)
     peersRef.current.set(peerId, peer)
@@ -67,6 +81,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
   const callPeer = async (peerId) => {
     if (!localStreamRef.current || peerId === userId) return
     const peer = getOrCreatePeer(peerId)
+    if (peer.signalingState !== 'stable') return
     addMissingLocalTracks(peer, localStreamRef.current)
     const offer = await peer.createOffer()
     await peer.setLocalDescription(offer)
@@ -96,6 +111,7 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     setLocalStream(null)
     setRemoteStreams([])
     setMediaState({ joined: false, mic: true, camera: true, sharing: false, error: '' })
+    sendSignal(makePeerSignal({ kind: 'peer-left', from: userId }))
   }
 
   const toggleMic = () => {
