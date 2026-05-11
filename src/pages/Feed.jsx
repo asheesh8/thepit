@@ -73,10 +73,12 @@ export default function Feed({ session }) {
 
     if (feed === 'following') reflectionQuery = reflectionQuery.in('user_id', followingIds)
 
+    const tradesOnly = filter === 'winning' || filter === 'losing'
+
     const [entryResult, postResult, reflectionResult] = await Promise.all([
       entryQuery,
-      postQuery,
-      reflectionQuery,
+      tradesOnly ? { data: [] } : postQuery,
+      tradesOnly ? { data: [] } : reflectionQuery,
     ])
 
     const loadError = entryResult.error || postResult.error || reflectionResult.error
