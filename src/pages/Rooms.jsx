@@ -321,7 +321,7 @@ export default function Rooms({ session }) {
           <>
             <header className="dm-page-chat-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-                <button className="dm-page-back-btn" onClick={() => setMobileView('list')}>←</button>
+                <button className="dm-page-back-btn" onClick={() => { setMobileView('list'); setSelectedId(null) }}>←</button>
                 {selectedRoom?.room_type === 'group' ? <GroupIcon size={40} /> : <Avatar profile={dmPeer} size={40} />}
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.5rem', letterSpacing: '0.04em', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{chatTitle}</div>

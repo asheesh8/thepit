@@ -1564,16 +1564,19 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 }
 
 .room-chat-full {
+  flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .dm-message-list.full {
+  flex: 1;
   max-height: none;
   min-height: 0;
   margin-bottom: 14px;
   align-content: end;
+  overflow-y: auto;
 }
 
 .dm-chat-panel .dm-message-bubble {
@@ -2297,6 +2300,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   display: grid;
   grid-template-columns: 280px 1fr;
   height: 100vh;
+  height: 100dvh;
   padding-top: calc(56px + env(safe-area-inset-top, 0px));
   background: var(--black);
   overflow: hidden;

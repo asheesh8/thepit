@@ -188,12 +188,12 @@ export default function Profile({ session }) {
             <div className="profile-avatar-xl" style={{ background: profile.avatar_url ? `url(${profile.avatar_url}) center/cover` : 'var(--black)' }}>
               {!profile.avatar_url && profile.username?.slice(0, 1).toUpperCase()}
             </div>
-            <div style={{ minWidth: 0 }}>
-              <h1 style={{ fontFamily: 'Bebas Neue', fontSize: '3.5rem', letterSpacing: '0.05em', lineHeight: 1 }}>
+            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+              <h1 style={{ fontFamily: 'Bebas Neue', fontSize: 'clamp(1.6rem, 6vw, 3.5rem)', letterSpacing: '0.05em', lineHeight: 1, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                 @{profile.username}
               </h1>
               <div style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginTop: '4px' }}>
-                {followerCount} FOLLOWERS � {entries.length} PUBLIC TRADES
+                {followerCount} FOLLOWERS · {entries.length} PUBLIC TRADES
               </div>
             </div>
           </div>
