@@ -73,12 +73,10 @@ export default function Feed({ session }) {
 
     if (feed === 'following') reflectionQuery = reflectionQuery.in('user_id', followingIds)
 
-    const skipPosts = filter === 'winning' || filter === 'losing'
-
     const [entryResult, postResult, reflectionResult] = await Promise.all([
       entryQuery,
-      skipPosts ? { data: [] } : postQuery,
-      skipPosts ? { data: [] } : reflectionQuery,
+      postQuery,
+      reflectionQuery,
     ])
 
     const loadError = entryResult.error || postResult.error || reflectionResult.error

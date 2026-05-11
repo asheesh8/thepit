@@ -542,7 +542,40 @@ create policy "Users can delete own pinned rules"
 
 
 -- =============================================================================
--- SECTION 13 · LIVE ROOMS (DMs, group chats, open rooms)
+-- SECTION 13 · PROFILE RESOURCES
+-- =============================================================================
+
+create table if not exists public.resources (
+  id         uuid        primary key default gen_random_uuid(),
+  user_id    uuid        not null references public.profiles(id) on delete cascade,
+  title      text        not null,
+  url        text        not null,
+  category   text        not null default 'other'
+                         check (category in ('mentorship', 'psychology', 'strategy', 'tools', 'other')),
+  sort_order integer     not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists resources_user_id_idx on public.resources(user_id);
+create index if not exists resources_sort_idx    on public.resources(user_id, sort_order);
+
+alter table public.resources enable row level security;
+
+drop policy if exists "Resources are publicly readable" on public.resources;
+create policy "Resources are publicly readable"
+  on public.resources for select using (true);
+
+drop policy if exists "Users can add own resources" on public.resources;
+create policy "Users can add own resources"
+  on public.resources for insert to authenticated with check (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own resources" on public.resources;
+create policy "Users can delete own resources"
+  on public.resources for delete to authenticated using (auth.uid() = user_id);
+
+
+-- =============================================================================
+-- SECTION 14 · LIVE ROOMS (DMs, group chats, open rooms)
 -- =============================================================================
 -- room_type values:
 --   dm         → private 1-on-1 thread (requires mutual follows)
