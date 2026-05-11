@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState, Component } from 'react'
 import { supabase } from './lib/supabase'
 import { ensureProfile } from './lib/ensureProfile'
@@ -53,6 +53,49 @@ import WeeklyReviewGate from './components/WeeklyReviewGate'
 import Notifications from './pages/Notifications'
 import { primeDeviceNotificationPermission, registerDeviceNotifications } from './lib/deviceNotifications'
 
+function TransitionRoutes({ session }) {
+  const location = useLocation()
+  return (
+    <div key={location.pathname} className="page-enter">
+      <Routes>
+        <Route path="/" element={<Navigate to="/feed" />} />
+        <Route path="/auth" element={<Navigate to="/feed" />} />
+        <Route path="/feed" element={<Feed session={session} />} />
+        <Route path="/journal" element={<Journal session={session} />} />
+        <Route path="/new" element={<NewEntry session={session} />} />
+        <Route path="/search" element={<Search session={session} />} />
+        <Route path="/connections" element={<Connections session={session} />} />
+        <Route path="/strategies" element={<Strategies session={session} />} />
+        <Route path="/strategies/:id" element={<StrategyDetail session={session} />} />
+        <Route path="/backtesting" element={<Backtesting session={session} />} />
+        <Route path="/calendar" element={<Calendar session={session} />} />
+        <Route path="/rooms" element={<Rooms session={session} />} />
+        <Route path="/rooms/:id" element={<Rooms session={session} />} />
+        <Route path="/live/:id" element={<LiveRoom session={session} />} />
+        <Route path="/settings" element={<AccountSettings session={session} />} />
+        <Route path="/vault" element={<Vault session={session} />} />
+        <Route path="/notifications" element={<Notifications session={session} />} />
+        <Route path="/profile/:username" element={<Profile session={session} />} />
+        <Route path="*" element={<Navigate to="/feed" />} />
+      </Routes>
+    </div>
+  )
+}
+
+function GuestRoutes() {
+  const location = useLocation()
+  return (
+    <div key={location.pathname} className="page-enter">
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/feed" element={<GuestFeed />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </div>
+  )
+}
+
 export default function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -84,40 +127,15 @@ export default function App() {
       {session ? (
         <DailyCheckInGate session={session}>
           <WeeklyReviewGate session={session}>
-          <Navbar session={session} />
-          <NewFeaturesModal />
-          <NotificationToast session={session} />
-          <GlobalCallBanner session={session} />
-          <Routes>
-            <Route path="/" element={<Navigate to="/feed" />} />
-            <Route path="/auth" element={<Navigate to="/feed" />} />
-            <Route path="/feed" element={<Feed session={session} />} />
-            <Route path="/journal" element={<Journal session={session} />} />
-            <Route path="/new" element={<NewEntry session={session} />} />
-            <Route path="/search" element={<Search session={session} />} />
-            <Route path="/connections" element={<Connections session={session} />} />
-            <Route path="/strategies" element={<Strategies session={session} />} />
-            <Route path="/strategies/:id" element={<StrategyDetail session={session} />} />
-            <Route path="/backtesting" element={<Backtesting session={session} />} />
-            <Route path="/calendar" element={<Calendar session={session} />} />
-            <Route path="/rooms" element={<Rooms session={session} />} />
-            <Route path="/rooms/:id" element={<Rooms session={session} />} />
-            <Route path="/live/:id" element={<LiveRoom session={session} />} />
-            <Route path="/settings" element={<AccountSettings session={session} />} />
-            <Route path="/vault" element={<Vault session={session} />} />
-            <Route path="/notifications" element={<Notifications session={session} />} />
-            <Route path="/profile/:username" element={<Profile session={session} />} />
-            <Route path="*" element={<Navigate to="/feed" />} />
-          </Routes>
+            <Navbar session={session} />
+            <NewFeaturesModal />
+            <NotificationToast session={session} />
+            <GlobalCallBanner session={session} />
+            <TransitionRoutes session={session} />
           </WeeklyReviewGate>
         </DailyCheckInGate>
       ) : (
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/feed" element={<GuestFeed />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+        <GuestRoutes />
       )}
     </ErrorBoundary>
     </BrowserRouter>

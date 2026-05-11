@@ -35,6 +35,8 @@
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Safe area bottom padding for all scrollable page content */
@@ -143,10 +145,14 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: all 0.15s ease;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.08s ease, opacity 0.12s ease;
   cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .btn:hover { border-color: var(--text); background: var(--text); color: var(--black); }
+.btn:active { transform: scale(0.96); opacity: 0.85; transition: transform 0.05s ease, opacity 0.05s ease; }
 .btn-red { border-color: var(--red); color: var(--red); }
 .btn-red:hover { background: var(--red); color: var(--white); }
 .btn-green { border-color: var(--green); color: var(--green); }
@@ -208,15 +214,22 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 .app-nav-link {
   padding: 6px 14px;
   border: none;
-  border-bottom: 1px solid transparent;
+  border-bottom: 2px solid transparent;
   background: none;
   color: var(--dim);
   font-family: 'Space Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   line-height: 1.4;
-  transition: all 0.15s;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
   white-space: nowrap;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.app-nav-link:active {
+  transform: scale(0.94);
 }
 
 .app-nav-icon {
@@ -323,11 +336,27 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   text-decoration: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s;
+  transition: color 0.15s ease, transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mobile-tab:active {
+  transform: scale(0.88);
 }
 
 .mobile-tab.active {
   color: #e63946;
+}
+
+.mobile-tab.active .mobile-tab-icon {
+  animation: tab-bounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes tab-bounce {
+  from { transform: scale(0.82); }
+  to   { transform: scale(1); }
 }
 
 .mobile-tab-pip {
@@ -684,7 +713,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   white-space: nowrap;
 }
 
-.card { background: var(--card); border: 1px solid var(--border); transition: background 0.2s, border-color 0.2s; }
+.card { background: var(--card); border: 1px solid var(--border); transition: background 0.2s, border-color 0.2s, box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
 
 .tag {
   font-family: 'Space Mono', monospace;
@@ -701,11 +730,23 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 .pnl-neutral { color: var(--dim); }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.fade-in { animation: fadeIn 0.3s ease forwards; }
+.fade-in { animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* ── PAGE TRANSITIONS ── */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: page-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
 
 .landing-screen {
   min-height: 100vh;
@@ -4228,6 +4269,22 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 
 .pit-toast-close:hover {
   opacity: 1;
+}
+
+/* ── REDUCED MOTION ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── IOS INPUT ZOOM PREVENTION ──
+   iOS zooms the viewport when an input's font-size < 16px.
+   Force 16px on focus, then restore via JS-free technique. */
+input, textarea, select {
+  font-size: max(16px, 1em);
 }
 
 /* ── WEEKLY REVIEW GATE ── */
