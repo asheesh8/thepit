@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { getTradeContext } from '../lib/discipline'
 import CalloutThreadList from './CalloutThreadList'
 import Avatar from './Avatar'
+import { ensureProfile } from '../lib/ensureProfile'
 
 const haptic = (pattern = 10) => navigator.vibrate?.(pattern)
 
@@ -14,6 +15,7 @@ export default function EntryCard({ entry, session, showActions = true, onDelete
   const [showCallouts, setShowCallouts] = useState(false)
   const [reactions, setReactions] = useState({ props: entry.props_count || 0, callout: entry.callout_count || 0 })
   const [userReaction, setUserReaction] = useState(entry.user_reaction || null)
+  const [error, setError] = useState('')
   const [pitBossLoading, setPitBossLoading] = useState(false)
   const [pitBossResponse, setPitBossResponse] = useState(null)
   const [isPublic, setIsPublic] = useState(!!entry.is_public)
@@ -28,11 +30,16 @@ export default function EntryCard({ entry, session, showActions = true, onDelete
 
   const loadComments = async () => {
     if (showComments) { setShowComments(false); return }
-    const { data } = await supabase
+    setError('')
+    const { data, error: loadError } = await supabase
       .from('comments')
       .select('*, profiles(username, avatar_url)')
       .eq('entry_id', entry.id)
       .order('created_at', { ascending: true })
+    if (loadError) {
+      setError(loadError.message)
+      return
+    }
     setComments(data || [])
     setShowComments(true)
   }
@@ -40,28 +47,60 @@ export default function EntryCard({ entry, session, showActions = true, onDelete
   const submitComment = async (e) => {
     e.preventDefault()
     if (!commentText.trim()) return
-    const { data } = await supabase
+    setError('')
+    await ensureProfile(session)
+    const { data, error: insertError } = await supabase
       .from('comments')
       .insert({ entry_id: entry.id, user_id: session.user.id, body: commentText.trim() })
       .select('*, profiles(username, avatar_url)')
       .single()
+    if (insertError) {
+      setError(insertError.message)
+      return
+    }
     if (data) setComments(prev => [...prev, data])
     setCommentText('')
   }
 
   const handleReaction = async (type) => {
     haptic(10)
+    setError('')
+    await ensureProfile(session)
     if (userReaction === type) {
-      await supabase.from('reactions').delete().match({ entry_id: entry.id, user_id: session.user.id })
-      setReactions(prev => ({ ...prev, [type]: prev[type] - 1 }))
+      const { error: deleteError } = await supabase
+        .from('reactions')
+        .delete()
+        .match({ entry_id: entry.id, user_id: session.user.id })
+      if (deleteError) {
+        setError(deleteError.message)
+        return
+      }
+      setReactions(prev => ({ ...prev, [type]: Math.max(0, prev[type] - 1) }))
       setUserReaction(null)
     } else {
+      const previousReaction = userReaction
       if (userReaction) {
-        await supabase.from('reactions').delete().match({ entry_id: entry.id, user_id: session.user.id })
-        setReactions(prev => ({ ...prev, [userReaction]: prev[userReaction] - 1 }))
+        const { error: deleteError } = await supabase
+          .from('reactions')
+          .delete()
+          .match({ entry_id: entry.id, user_id: session.user.id })
+        if (deleteError) {
+          setError(deleteError.message)
+          return
+        }
       }
-      await supabase.from('reactions').upsert({ entry_id: entry.id, user_id: session.user.id, type })
-      setReactions(prev => ({ ...prev, [type]: prev[type] + 1 }))
+      const { error: upsertError } = await supabase
+        .from('reactions')
+        .upsert({ entry_id: entry.id, user_id: session.user.id, type }, { onConflict: 'entry_id,user_id' })
+      if (upsertError) {
+        setError(upsertError.message)
+        return
+      }
+      setReactions(prev => ({
+        ...prev,
+        ...(previousReaction ? { [previousReaction]: Math.max(0, prev[previousReaction] - 1) } : {}),
+        [type]: prev[type] + 1,
+      }))
       setUserReaction(type)
     }
   }
@@ -123,13 +162,18 @@ Give your honest assessment:`
 
   const togglePublic = async () => {
     const next = !isPublic
-    const { data } = await supabase
+    setError('')
+    const { data, error: updateError } = await supabase
       .from('entries')
       .update({ is_public: next })
       .eq('id', entry.id)
       .eq('user_id', session.user.id)
       .select('is_public')
       .single()
+    if (updateError) {
+      setError(updateError.message)
+      return
+    }
     if (data) setIsPublic(data.is_public)
   }
 
@@ -303,6 +347,12 @@ Give your honest assessment:`
         </div>
       )}
 
+      {error && (
+        <p role="alert" style={{ margin: '10px 0 0', fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--red)', letterSpacing: '0.08em' }}>
+          {error.toUpperCase()}
+        </p>
+      )}
+
       {showCallouts && <CalloutThreadList entry={entry} session={session} />}
 
       {showComments && (
@@ -333,4 +383,3 @@ Give your honest assessment:`
     </div>
   )
 }
-

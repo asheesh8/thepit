@@ -18,17 +18,24 @@ const POLL_INTERVAL = 5000
 export default function Feed({ session }) {
   const [items, setItems]     = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState('')
   const [feed, setFeed]       = useState('foryou')   // 'foryou' | 'following'
   const [filter, setFilter]   = useState('all')       // 'all' | 'winning' | 'losing'
   const pollRef               = useRef(null)
 
   const loadFeed = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
+    if (!silent) setError('')
 
     let followingIds = []
     if (feed === 'following') {
-      const { data: follows } = await supabase
+      const { data: follows, error: followsError } = await supabase
         .from('follows').select('following_id').eq('follower_id', session.user.id)
+      if (followsError) {
+        setError(followsError.message)
+        if (!silent) setLoading(false)
+        return
+      }
       followingIds = follows?.map(f => f.following_id) || []
       if (followingIds.length === 0) {
         setItems([])
@@ -67,42 +74,41 @@ export default function Feed({ session }) {
 
     const skipPosts = filter === 'winning' || filter === 'losing'
 
-    const [{ data: entries }, { data: posts }, { data: reflections }] = await Promise.all([
+    const [entryResult, postResult, reflectionResult] = await Promise.all([
       entryQuery,
       skipPosts ? { data: [] } : postQuery,
       skipPosts ? { data: [] } : reflectionQuery,
     ])
 
-    const processedEntries = (entries || []).map(e => ({
+    const loadError = entryResult.error || postResult.error || reflectionResult.error
+    if (loadError) {
+      setError(loadError.message)
+      if (!silent) setLoading(false)
+      return
+    }
+
+    const entries = entryResult.data || []
+    const posts = postResult.data || []
+    const reflections = reflectionResult.data || []
+
+    const processedEntries = entries.map(e => ({
       ...e, _type: 'entry',
       props_count:   e.reactions?.filter(r => r.type === 'props').length   || 0,
       callout_count: e.reactions?.filter(r => r.type === 'callout').length || 0,
       user_reaction: e.reactions?.find(r => r.user_id === session.user.id)?.type || null,
     }))
 
-    const processedPosts = (posts || []).map(p => ({
+    const processedPosts = posts.map(p => ({
       ...p, _type: 'post',
       props_count:   p.post_reactions?.filter(r => r.type === 'props').length   || 0,
       callout_count: p.post_reactions?.filter(r => r.type === 'callout').length || 0,
       user_reaction: p.post_reactions?.find(r => r.user_id === session.user.id)?.type || null,
     }))
 
-    const processedReflections = (reflections || []).map(r => ({ ...r, _type: 'backtest_reflection' }))
+    const processedReflections = reflections.map(r => ({ ...r, _type: 'backtest_reflection' }))
 
-    // For You: sort by score (reaction heat + recency). Following: pure recency.
-    let merged = [...processedEntries, ...processedPosts, ...processedReflections]
-    if (feed === 'foryou') {
-      const now = Date.now()
-      merged = merged.sort((a, b) => {
-        const scoreA = (a.props_count || 0) * 2 + (a.callout_count || 0) +
-          Math.max(0, 1 - (now - new Date(a.created_at).getTime()) / (1000 * 60 * 60 * 48))
-        const scoreB = (b.props_count || 0) * 2 + (b.callout_count || 0) +
-          Math.max(0, 1 - (now - new Date(b.created_at).getTime()) / (1000 * 60 * 60 * 48))
-        return scoreB - scoreA
-      })
-    } else {
-      merged = merged.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    }
+    const merged = [...processedEntries, ...processedPosts, ...processedReflections]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
     setItems(merged)
     if (!silent) setLoading(false)
@@ -224,6 +230,13 @@ export default function Feed({ session }) {
           {loading ? (
             <div className="mobile-empty-state" style={{ textAlign: 'center', padding: '60px', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)', letterSpacing: '0.1em' }}>
               LOADING THE FLOOR...
+            </div>
+          ) : error ? (
+            <div className="mobile-empty-state" style={{ textAlign: 'center', padding: '60px' }}>
+              <div style={{ fontFamily: 'Bebas Neue', fontSize: '2rem', color: 'var(--red)', marginBottom: '12px' }}>FLOOR ERROR</div>
+              <p style={{ fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)', lineHeight: 1.7 }}>
+                {error}
+              </p>
             </div>
           ) : items.length === 0 ? (
             <div className="mobile-empty-state" style={{ textAlign: 'center', padding: '60px' }}>

@@ -2,6 +2,7 @@
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
 import Avatar from './Avatar'
+import { ensureProfile } from '../lib/ensureProfile'
 
 const haptic = (pattern = 10) => navigator.vibrate?.(pattern)
 
@@ -11,6 +12,7 @@ export default function PostCard({ post, session }) {
   const [commentText, setCommentText] = useState('')
   const [reactions, setReactions] = useState({ props: post.props_count || 0, callout: post.callout_count || 0 })
   const [userReaction, setUserReaction] = useState(post.user_reaction || null)
+  const [error, setError] = useState('')
   const [lightbox, setLightbox] = useState(false)
   const [swipeFlash, setSwipeFlash] = useState(null)
   const swipeStart = useRef(null)
@@ -19,11 +21,16 @@ export default function PostCard({ post, session }) {
 
   const loadComments = async () => {
     if (showComments) { setShowComments(false); return }
-    const { data } = await supabase
+    setError('')
+    const { data, error: loadError } = await supabase
       .from('post_comments')
       .select('*, profiles(username, avatar_url)')
       .eq('post_id', post.id)
       .order('created_at', { ascending: true })
+    if (loadError) {
+      setError(loadError.message)
+      return
+    }
     setComments(data || [])
     setShowComments(true)
   }
@@ -31,28 +38,60 @@ export default function PostCard({ post, session }) {
   const submitComment = async (e) => {
     e.preventDefault()
     if (!commentText.trim()) return
-    const { data } = await supabase
+    setError('')
+    await ensureProfile(session)
+    const { data, error: insertError } = await supabase
       .from('post_comments')
       .insert({ post_id: post.id, user_id: session.user.id, body: commentText.trim() })
       .select('*, profiles(username, avatar_url)')
       .single()
+    if (insertError) {
+      setError(insertError.message)
+      return
+    }
     if (data) setComments(prev => [...prev, data])
     setCommentText('')
   }
 
   const handleReaction = async (type) => {
     haptic(10)
+    setError('')
+    await ensureProfile(session)
     if (userReaction === type) {
-      await supabase.from('post_reactions').delete().match({ post_id: post.id, user_id: session.user.id })
-      setReactions(prev => ({ ...prev, [type]: prev[type] - 1 }))
+      const { error: deleteError } = await supabase
+        .from('post_reactions')
+        .delete()
+        .match({ post_id: post.id, user_id: session.user.id })
+      if (deleteError) {
+        setError(deleteError.message)
+        return
+      }
+      setReactions(prev => ({ ...prev, [type]: Math.max(0, prev[type] - 1) }))
       setUserReaction(null)
     } else {
+      const previousReaction = userReaction
       if (userReaction) {
-        await supabase.from('post_reactions').delete().match({ post_id: post.id, user_id: session.user.id })
-        setReactions(prev => ({ ...prev, [userReaction]: prev[userReaction] - 1 }))
+        const { error: deleteError } = await supabase
+          .from('post_reactions')
+          .delete()
+          .match({ post_id: post.id, user_id: session.user.id })
+        if (deleteError) {
+          setError(deleteError.message)
+          return
+        }
       }
-      await supabase.from('post_reactions').upsert({ post_id: post.id, user_id: session.user.id, type })
-      setReactions(prev => ({ ...prev, [type]: prev[type] + 1 }))
+      const { error: upsertError } = await supabase
+        .from('post_reactions')
+        .upsert({ post_id: post.id, user_id: session.user.id, type }, { onConflict: 'post_id,user_id' })
+      if (upsertError) {
+        setError(upsertError.message)
+        return
+      }
+      setReactions(prev => ({
+        ...prev,
+        ...(previousReaction ? { [previousReaction]: Math.max(0, prev[previousReaction] - 1) } : {}),
+        [type]: prev[type] + 1,
+      }))
       setUserReaction(type)
     }
   }
@@ -172,6 +211,12 @@ export default function PostCard({ post, session }) {
           </button>
         </div>
 
+        {error && (
+          <p role="alert" style={{ margin: '10px 0 0', fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--red)', letterSpacing: '0.08em' }}>
+            {error.toUpperCase()}
+          </p>
+        )}
+
         {/* comments */}
         {showComments && (
           <div style={{ marginTop: '16px' }}>
@@ -202,4 +247,3 @@ export default function PostCard({ post, session }) {
     </>
   )
 }
-

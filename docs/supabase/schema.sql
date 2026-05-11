@@ -223,6 +223,36 @@ create policy "Users can remove own reaction"
 
 
 -- =============================================================================
+-- SECTION 5A · COMMENTS (on entries)
+-- =============================================================================
+
+create table if not exists public.comments (
+  id         uuid        primary key default gen_random_uuid(),
+  entry_id   uuid        not null references public.entries(id) on delete cascade,
+  user_id    uuid        not null references public.profiles(id) on delete cascade,
+  body       text        not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists comments_entry_id_idx on public.comments(entry_id);
+create index if not exists comments_user_id_idx  on public.comments(user_id);
+
+alter table public.comments enable row level security;
+
+drop policy if exists "Entry comments are publicly readable" on public.comments;
+create policy "Entry comments are publicly readable"
+  on public.comments for select using (true);
+
+drop policy if exists "Users can comment on entries" on public.comments;
+create policy "Users can comment on entries"
+  on public.comments for insert with check (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own entry comments" on public.comments;
+create policy "Users can delete own entry comments"
+  on public.comments for delete using (auth.uid() = user_id);
+
+
+-- =============================================================================
 -- SECTION 6 · POSTS (free-text floor posts)
 -- =============================================================================
 
@@ -283,6 +313,36 @@ create policy "Users can change own post reaction"
 drop policy if exists "Users can remove own post reaction" on public.post_reactions;
 create policy "Users can remove own post reaction"
   on public.post_reactions for delete using (auth.uid() = user_id);
+
+
+-- =============================================================================
+-- SECTION 7A · POST COMMENTS
+-- =============================================================================
+
+create table if not exists public.post_comments (
+  id         uuid        primary key default gen_random_uuid(),
+  post_id    uuid        not null references public.posts(id) on delete cascade,
+  user_id    uuid        not null references public.profiles(id) on delete cascade,
+  body       text        not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists post_comments_post_id_idx on public.post_comments(post_id);
+create index if not exists post_comments_user_id_idx on public.post_comments(user_id);
+
+alter table public.post_comments enable row level security;
+
+drop policy if exists "Post comments are publicly readable" on public.post_comments;
+create policy "Post comments are publicly readable"
+  on public.post_comments for select using (true);
+
+drop policy if exists "Users can comment on posts" on public.post_comments;
+create policy "Users can comment on posts"
+  on public.post_comments for insert with check (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own post comments" on public.post_comments;
+create policy "Users can delete own post comments"
+  on public.post_comments for delete using (auth.uid() = user_id);
 
 
 -- =============================================================================
