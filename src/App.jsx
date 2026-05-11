@@ -47,6 +47,7 @@ import Navbar from './components/Navbar'
 import DailyCheckInGate from './components/DailyCheckInGate'
 import GuestFeed from './pages/GuestFeed'
 import NewFeaturesModal from './components/NewFeaturesModal'
+import NotificationToast from './components/NotificationToast'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -76,6 +77,7 @@ export default function App() {
         <DailyCheckInGate session={session}>
           <Navbar session={session} />
           <NewFeaturesModal />
+          <NotificationToast session={session} />
           <Routes>
             <Route path="/" element={<Navigate to="/feed" />} />
             <Route path="/auth" element={<Navigate to="/feed" />} />
