@@ -43,6 +43,7 @@ export default function Navbar({ session }) {
 
   const desktopLinks = [
     { path: '/feed', label: 'FLOOR' },
+    { path: '/search', label: 'SEARCH' },
     { path: '/rooms', label: 'DMs' },
     { path: '/new', label: '+ LOG TRADE' },
   ]
@@ -59,9 +60,9 @@ export default function Navbar({ session }) {
 
   const bottomTabs = [
     { path: '/feed', label: 'FLOOR', icon: FloorIcon },
-    { path: '/rooms', label: 'DMs', icon: DmsIcon },
+    { path: '/search', label: 'SEARCH', icon: SearchIcon },
     { path: '/new', label: 'LOG', icon: null, isAction: true },
-    { path: '/journal', label: 'JOURNAL', icon: JournalIcon },
+    { path: '/rooms', label: 'DMs', icon: DmsIcon },
     { path: profilePath, label: 'PROFILE', icon: null, isProfile: true },
   ]
 
@@ -214,15 +215,13 @@ function DmsIcon({ active }) {
   )
 }
 
-function JournalIcon({ active }) {
+function SearchIcon({ active }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <rect x="4" y="2" width="16" height="20" rx="2"
+      <circle cx="11" cy="11" r="6.5"
         fill={active ? 'rgba(230,57,70,0.15)' : 'none'}
         stroke={active ? '#e63946' : 'currentColor'} strokeWidth="1.8"/>
-      <line x1="8" y1="8" x2="16" y2="8" stroke={active ? '#e63946' : 'currentColor'} strokeWidth="1.8" strokeLinecap="round"/>
-      <line x1="8" y1="12" x2="16" y2="12" stroke={active ? '#e63946' : 'currentColor'} strokeWidth="1.8" strokeLinecap="round"/>
-      <line x1="8" y1="16" x2="12" y2="16" stroke={active ? '#e63946' : 'currentColor'} strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="16" y1="16" x2="21" y2="21" stroke={active ? '#e63946' : 'currentColor'} strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   )
 }

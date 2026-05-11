@@ -1,143 +1,240 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Link } from 'react-router-dom'
 import Avatar from '../components/Avatar'
 
-function UserCard({ user, session }) {
-  const [following, setFollowing] = useState(false)
-  const [loadingFollow, setLoadingFollow] = useState(false)
+function dmTitleFor(a, b) {
+  return `DM:${[a, b].sort().join(':')}`
+}
 
-  useEffect(() => {
-    supabase.from('follows').select('follower_id').eq('follower_id', session.user.id).eq('following_id', user.id).maybeSingle()
-      .then(({ data }) => setFollowing(!!data))
-  }, [user.id])
+function relationLabel(user) {
+  if (user.isFollowing && user.isFollower) return 'MUTUAL'
+  if (user.isFollowing) return 'FOLLOWING'
+  if (user.isFollower) return 'FOLLOWS YOU'
+  return 'TRADER'
+}
 
-  const toggleFollow = async (e) => {
-    e.preventDefault()
-    setLoadingFollow(true)
-    if (following) {
+function UserCard({ user, session, onFollowChange }) {
+  const navigate = useNavigate()
+  const [busy, setBusy] = useState(false)
+
+  const toggleFollow = async (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setBusy(true)
+    if (user.isFollowing) {
       await supabase.from('follows').delete().match({ follower_id: session.user.id, following_id: user.id })
-      setFollowing(false)
+      onFollowChange(user.id, { isFollowing: false })
     } else {
       await supabase.from('follows').insert({ follower_id: session.user.id, following_id: user.id })
-      setFollowing(true)
+      onFollowChange(user.id, { isFollowing: true })
     }
-    setLoadingFollow(false)
+    setBusy(false)
+  }
+
+  const openDm = async (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (!user.isFollowing || !user.isFollower) return
+    setBusy(true)
+    const title = dmTitleFor(session.user.id, user.id)
+    const { data: existing } = await supabase
+      .from('live_rooms')
+      .select('id')
+      .eq('title', title)
+      .eq('room_type', 'dm')
+      .maybeSingle()
+    if (existing?.id) {
+      navigate(`/rooms/${existing.id}`)
+      return
+    }
+    const { data } = await supabase
+      .from('live_rooms')
+      .insert({
+        title,
+        room_type: 'dm',
+        is_public: false,
+        room_password: '',
+        host_id: session.user.id,
+        dm_peer_id: user.id,
+        status: 'live',
+        agenda: `Direct message with @${user.username}`,
+      })
+      .select('id')
+      .single()
+    setBusy(false)
+    if (data?.id) navigate(`/rooms/${data.id}`)
   }
 
   return (
-    <div className="card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>
-      <Link to={`/profile/${user.username}`} style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0, textDecoration: 'none' }}>
-        <Avatar url={user.avatar_url} username={user.username} size={42} />
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: 'Bebas Neue', fontSize: '1.2rem', letterSpacing: '0.05em', color: 'var(--text)' }}>@{user.username}</div>
-          {user.bio && (
-            <div style={{ fontFamily: 'DM Sans', fontSize: '12px', color: 'var(--dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>
-              {user.bio}
-            </div>
-          )}
-          {user.trading_categories?.length > 0 && (
-            <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
-              {user.trading_categories.slice(0, 3).map(cat => (
-                <span key={cat} className="tag" style={{ fontSize: '8px', color: 'var(--dim)', opacity: 0.7 }}>{cat.toUpperCase()}</span>
-              ))}
-            </div>
-          )}
+    <Link to={`/profile/${user.username}`} className="search-user-card">
+      <Avatar url={user.avatar_url} username={user.username} size={50} />
+      <div className="search-user-main">
+        <div className="search-user-topline">
+          <div className="search-user-name">@{user.username}</div>
+          <span className={`search-user-relation ${user.isFollowing && user.isFollower ? 'mutual' : ''}`}>
+            {relationLabel(user)}
+          </span>
         </div>
-      </Link>
-      {user.id !== session.user.id && (
-        <button onClick={toggleFollow} disabled={loadingFollow} className={`btn ${following ? '' : 'btn-red'}`} style={{ padding: '6px 14px', fontSize: '10px', flexShrink: 0 }}>
-          {loadingFollow ? '...' : following ? 'FOLLOWING' : 'FOLLOW'}
+        {user.bio && <div className="search-user-bio">{user.bio}</div>}
+        {user.trading_categories?.length > 0 && (
+          <div className="search-user-tags">
+            {user.trading_categories.slice(0, 4).map(category => (
+              <span key={category}>{category}</span>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="search-user-actions">
+        {user.isFollowing && user.isFollower && (
+          <button onClick={openDm} disabled={busy} className="btn btn-green">DM</button>
+        )}
+        <button onClick={toggleFollow} disabled={busy} className={`btn ${user.isFollowing ? '' : 'btn-red'}`}>
+          {busy ? '...' : user.isFollowing ? 'FOLLOWING' : user.isFollower ? 'FOLLOW BACK' : 'FOLLOW'}
         </button>
-      )}
-    </div>
+      </div>
+    </Link>
   )
 }
 
 export default function Search({ session }) {
-  const [query, setQuery]     = useState('')
+  const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
-  const [recent, setRecent]   = useState([])
+  const [recent, setRecent] = useState([])
+  const [followingIds, setFollowingIds] = useState(new Set())
+  const [followerIds, setFollowerIds] = useState(new Set())
   const [loading, setLoading] = useState(false)
 
+  const hydrateUsers = useCallback((users) => (
+    (users || []).map(user => ({
+      ...user,
+      isFollowing: followingIds.has(user.id),
+      isFollower: followerIds.has(user.id),
+    }))
+  ), [followerIds, followingIds])
+
+  const loadRelationships = useCallback(async () => {
+    const [followingRes, followerRes] = await Promise.all([
+      supabase.from('follows').select('following_id').eq('follower_id', session.user.id),
+      supabase.from('follows').select('follower_id').eq('following_id', session.user.id),
+    ])
+    setFollowingIds(new Set((followingRes.data || []).map(row => row.following_id)))
+    setFollowerIds(new Set((followerRes.data || []).map(row => row.follower_id)))
+  }, [session.user.id])
+
   useEffect(() => {
-    // Load recent/active traders to show before any search
+    loadRelationships()
+  }, [loadRelationships])
+
+  useEffect(() => {
     supabase.from('profiles')
       .select('id, username, bio, avatar_url, trading_categories')
       .neq('id', session.user.id)
       .order('created_at', { ascending: false })
-      .limit(12)
+      .limit(16)
       .then(({ data }) => setRecent(data || []))
-  }, [])
+  }, [session.user.id])
 
-  const search = useCallback(async (q) => {
-    if (!q.trim()) { setResults([]); return }
+  const search = useCallback(async (value) => {
+    const clean = value.trim().replace(/^@/, '')
+    if (!clean) {
+      setResults([])
+      setLoading(false)
+      return
+    }
     setLoading(true)
+    const safe = clean.replace(/[,%{}()[\]]/g, ' ').replace(/\s+/g, ' ').trim()
+    const category = safe.split(' ')[0]
+    if (!safe) {
+      setResults([])
+      setLoading(false)
+      return
+    }
     const { data } = await supabase
       .from('profiles')
       .select('id, username, bio, avatar_url, trading_categories')
-      .ilike('username', `%${q.trim()}%`)
+      .or(`username.ilike.%${safe}%,bio.ilike.%${safe}%,trading_categories.cs.{${category}}`)
       .neq('id', session.user.id)
       .order('username')
-      .limit(20)
+      .limit(30)
     setResults(data || [])
     setLoading(false)
   }, [session.user.id])
 
   useEffect(() => {
-    const t = setTimeout(() => search(query), 280)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => search(query), 180)
+    return () => clearTimeout(timer)
   }, [query, search])
 
+  const updateUserRelation = (userId, patch) => {
+    const apply = user => user.id === userId ? { ...user, ...patch } : user
+    setRecent(prev => prev.map(apply))
+    setResults(prev => prev.map(apply))
+    if ('isFollowing' in patch) {
+      setFollowingIds(prev => {
+        const next = new Set(prev)
+        if (patch.isFollowing) next.add(userId)
+        else next.delete(userId)
+        return next
+      })
+    }
+  }
+
   const showResults = query.trim().length > 0
-  const displayList = showResults ? results : recent
+  const displayList = useMemo(
+    () => hydrateUsers(showResults ? results : recent),
+    [hydrateUsers, recent, results, showResults]
+  )
+  const mutualCount = displayList.filter(user => user.isFollowing && user.isFollower).length
 
   return (
     <div style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', minHeight: '100vh' }}>
-      <div className="page-shell search-shell" style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 24px' }}>
-
-        <h1 style={{ fontSize: '3rem', letterSpacing: '0.05em', lineHeight: 1, marginBottom: '4px' }}>FIND TRADERS</h1>
-        <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)', letterSpacing: '0.1em', marginBottom: '24px' }}>
-          {showResults ? `${results.length} RESULTS` : 'RECENTLY JOINED'}
-        </p>
-
-        <div style={{ position: 'relative', marginBottom: '24px' }}>
-          <input
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="search by username..."
-            autoFocus
-            style={{
-              width: '100%', background: 'var(--dark)', border: '1px solid var(--border)',
-              padding: '14px 44px 14px 16px', color: 'var(--text)', fontSize: '14px', outline: 'none',
-              fontFamily: 'Space Mono', boxSizing: 'border-box', transition: 'border-color 0.15s',
-            }}
-            onFocus={e => e.target.style.borderColor = 'var(--red)'}
-            onBlur={e => e.target.style.borderColor = 'var(--border)'}
-          />
-          {query && (
-            <button onClick={() => setQuery('')} style={{
-              position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)',
-              background: 'none', border: 'none', color: 'var(--dim)', cursor: 'pointer', fontSize: '16px', lineHeight: 1,
-            }}>×</button>
-          )}
+      <div className="page-shell search-shell" style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 24px' }}>
+        <div className="search-hero">
+          <div>
+            <h1>FIND TRADERS</h1>
+            <p>{showResults ? `${displayList.length} RESULTS · ${mutualCount} MUTUAL` : 'SEARCH, FOLLOW BACK, OR DM MUTUALS'}</p>
+          </div>
+          <Link to="/connections" className="btn">CONNECTIONS</Link>
         </div>
 
-        {loading && (
-          <div style={{ textAlign: 'center', padding: '24px', fontFamily: 'Space Mono', fontSize: '11px', color: 'var(--dim)' }}>
-            SEARCHING...
+        <div className="search-box">
+          <span>@</span>
+          <input
+            value={query}
+            onChange={event => setQuery(event.target.value)}
+            placeholder="username, bio, market..."
+            autoFocus
+          />
+          {query && <button onClick={() => setQuery('')}>CLEAR</button>}
+        </div>
+
+        <div className="search-quick-row">
+          {['forex', 'futures', 'options', 'scalper'].map(term => (
+            <button key={term} onClick={() => setQuery(term)}>{term}</button>
+          ))}
+        </div>
+
+        {loading && <div className="search-empty">SEARCHING...</div>}
+
+        {!loading && showResults && displayList.length === 0 && (
+          <div className="search-empty">
+            <h2>NO MATCHES</h2>
+            <p>Try a username, market, style, or part of their bio.</p>
           </div>
         )}
 
-        {!loading && showResults && results.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <div style={{ fontFamily: 'Bebas Neue', fontSize: '2.5rem', color: 'var(--border)', marginBottom: '8px' }}>NO RESULTS</div>
-            <p style={{ fontFamily: 'Space Mono', fontSize: '10px', color: 'var(--dim)' }}>no traders found for "{query}"</p>
-          </div>
+        {!loading && !showResults && (
+          <div className="search-section-label">RECENT TRADERS</div>
         )}
 
         {!loading && displayList.map(user => (
-          <UserCard key={user.id} user={user} session={session} />
+          <UserCard
+            key={user.id}
+            user={user}
+            session={session}
+            onFollowChange={updateUserRelation}
+          />
         ))}
       </div>
     </div>
