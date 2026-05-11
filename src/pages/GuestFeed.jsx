@@ -232,7 +232,7 @@ export default function GuestFeed() {
 
   useEffect(() => {
     const load = async () => {
-      const [{ data: rawEntries }, { data: posts }] = await Promise.all([
+      const [{ data: rawEntries }, { data: rawPosts }] = await Promise.all([
         supabase
           .from('entries')
           .select('*, strategies(name)')
@@ -241,15 +241,16 @@ export default function GuestFeed() {
           .limit(30),
         supabase
           .from('posts')
-          .select('*, profiles(username, avatar_url)')
+          .select('*')
           .order('created_at', { ascending: false })
           .limit(20),
       ])
       const entries = await attachProfiles(rawEntries || [], 'id, username, avatar_url')
+      const posts = await attachProfiles(rawPosts || [], 'id, username, avatar_url')
 
       const merged = [
         ...entries.map(e => ({ ...e, _type: 'entry' })),
-        ...(posts || []).map(p => ({ ...p, _type: 'post' })),
+        ...posts.map(p => ({ ...p, _type: 'post' })),
       ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
       setItems(merged)

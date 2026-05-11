@@ -58,7 +58,7 @@ export default function Feed({ session }) {
 
     let postQuery = supabase
       .from('posts')
-      .select('*, profiles(username, avatar_url), post_reactions(type, user_id)')
+      .select('*, post_reactions(type, user_id)')
       .order('created_at', { ascending: false })
       .limit(30)
 
@@ -87,11 +87,12 @@ export default function Feed({ session }) {
     }
 
     let entries = entryResult.data || []
-    const posts = postResult.data || []
+    let posts = postResult.data || []
     const reflections = reflectionResult.data || []
 
     try {
       entries = await attachProfiles(entries, 'id, username, avatar_url')
+      posts = await attachProfiles(posts, 'id, username, avatar_url')
     } catch (profileError) {
       setError(profileError.message)
       if (!silent) setLoading(false)
