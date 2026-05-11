@@ -1,10 +1,12 @@
 ﻿import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
-import { getTradeContext } from '../lib/discipline'
+import { getTradeContext, TRADE_TAGS } from '../lib/discipline'
 import CalloutThreadList from './CalloutThreadList'
 import Avatar from './Avatar'
 import { ensureProfile } from '../lib/ensureProfile'
+
+const TAG_MAP = Object.fromEntries(TRADE_TAGS.map(t => [t.key, t]))
 
 const haptic = (pattern = 10) => navigator.vibrate?.(pattern)
 
@@ -258,6 +260,14 @@ Give your honest assessment:`
             <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.08em' }}>EXIT</div>
           </div>
         )}
+        {entry.risk_amount && entry.pnl ? (
+          <div>
+            <div style={{ fontFamily: 'Space Mono', fontSize: '12px', color: entry.pnl >= 0 ? 'var(--green)' : 'var(--red)' }}>
+              {(entry.pnl / entry.risk_amount).toFixed(2)}R
+            </div>
+            <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.08em' }}>R-MULT</div>
+          </div>
+        ) : null}
         {entry.mindset_rating && (
           <div>
             <div style={{ fontFamily: 'Space Mono', fontSize: '12px', color: 'var(--dim)' }}>{entry.mindset_rating}/10</div>
@@ -265,6 +275,26 @@ Give your honest assessment:`
           </div>
         )}
       </div>
+
+      {/* trade tags */}
+      {entry.tags?.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+          {entry.tags.map(tagKey => {
+            const tag = TAG_MAP[tagKey]
+            if (!tag) return null
+            const col = tag.color === 'red' ? 'var(--red)' : tag.color === 'green' ? 'var(--green)' : 'var(--dim)'
+            return (
+              <span key={tagKey} style={{
+                fontFamily: 'Space Mono', fontSize: '9px', letterSpacing: '0.06em',
+                padding: '3px 7px', border: `1px solid ${col}44`,
+                background: `${col}14`, color: col,
+              }}>
+                {tag.label}
+              </span>
+            )
+          })}
+        </div>
+      )}
 
       {/* chart image */}
       {entry.chart_url && (

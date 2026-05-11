@@ -1,3 +1,22 @@
+// ── Trade tags ────────────────────────────────────────────────────────────
+// color: 'red' = behavioral mistake, 'green' = solid execution, 'dim' = neutral
+export const TRADE_TAGS = [
+  { key: 'fomo',          label: '#FOMO',           color: 'red' },
+  { key: 'revenge',       label: '#REVENGE',         color: 'red' },
+  { key: 'oversized',     label: '#OVERSIZED',       color: 'red' },
+  { key: 'moved_stop',    label: '#MOVED STOP',      color: 'red' },
+  { key: 'chased',        label: '#CHASED',          color: 'red' },
+  { key: 'boredom',       label: '#BOREDOM',         color: 'red' },
+  { key: 'unplanned',     label: '#UNPLANNED',       color: 'red' },
+  { key: 'held_too_long', label: '#HELD TOO LONG',   color: 'red' },
+  { key: 'cut_early',     label: '#CUT EARLY',       color: 'red' },
+  { key: 'hesitated',     label: '#HESITATED',       color: 'dim' },
+  { key: 'planned',       label: '#PLANNED ✓',       color: 'green' },
+  { key: 'followed_rules',label: '#FOLLOWED RULES ✓',color: 'green' },
+  { key: 'clean_entry',   label: '#CLEAN ENTRY ✓',   color: 'green' },
+  { key: 'scaled_well',   label: '#SCALED WELL ✓',   color: 'green' },
+]
+
 export const TRADE_CONTEXTS = [
   { key: 'combine', label: 'Combine', shortLabel: 'COMBINE', color: 'var(--gold)' },
   { key: 'funded', label: 'Funded', shortLabel: 'FUNDED', color: 'var(--green)' },

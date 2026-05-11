@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import TradeContextPicker from '../components/TradeContextPicker'
 import StrategySelect from '../components/StrategySelect'
 import PinnedRulesPanel from '../components/PinnedRulesPanel'
-import { DEFAULT_TRADE_CONTEXT, TRADE_CONTEXTS } from '../lib/discipline'
+import { DEFAULT_TRADE_CONTEXT, TRADE_CONTEXTS, TRADE_TAGS } from '../lib/discipline'
 
 const MINDSET_LABELS = {
   1: 'Revenge trading', 2: 'Emotional wreck', 3: 'Distracted',
@@ -17,8 +17,8 @@ export default function NewEntry({ session }) {
   const navigate = useNavigate()
   const [form, setForm] = useState({
     symbol: '', direction: 'long', entry_price: '', exit_price: '',
-    pnl: '', mindset_rating: 5, reflection: '', what_id_do_differently: '', is_public: false,
-    trade_context: DEFAULT_TRADE_CONTEXT, strategy_id: null,
+    pnl: '', risk_amount: '', mindset_rating: 5, reflection: '', what_id_do_differently: '',
+    is_public: false, trade_context: DEFAULT_TRADE_CONTEXT, strategy_id: null, tags: [],
   })
   const [strategies, setStrategies] = useState([])
   const [strategiesLoading, setStrategiesLoading] = useState(true)
@@ -92,6 +92,8 @@ export default function NewEntry({ session }) {
       entry_price: form.entry_price ? parseFloat(form.entry_price) : null,
       exit_price: form.exit_price ? parseFloat(form.exit_price) : null,
       pnl: form.pnl ? parseFloat(form.pnl) : null,
+      risk_amount: form.risk_amount ? parseFloat(form.risk_amount) : null,
+      tags: form.tags,
       mindset_rating: form.mindset_rating,
       reflection: form.reflection,
       what_id_do_differently: form.what_id_do_differently,
@@ -169,6 +171,58 @@ export default function NewEntry({ session }) {
                   style={inputStyle} placeholder="0.00" />
               </div>
             ))}
+          </div>
+
+          {/* risk amount */}
+          <div>
+            <label style={labelStyle}>
+              $ RISKED — <span style={{ color: 'var(--text)' }}>
+                {form.risk_amount && form.pnl
+                  ? `${(parseFloat(form.pnl) / parseFloat(form.risk_amount)).toFixed(2)}R`
+                  : 'enter to compute R'}
+              </span>
+            </label>
+            <input
+              type="number" step="0.01" min="0"
+              value={form.risk_amount}
+              onChange={e => set('risk_amount', e.target.value)}
+              style={inputStyle}
+              placeholder="How much $ were you risking on this trade?"
+            />
+          </div>
+
+          {/* trade tags */}
+          <div>
+            <label style={labelStyle}>TRADE TAGS</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {TRADE_TAGS.map(tag => {
+                const selected = form.tags.includes(tag.key)
+                const col = tag.color === 'red' ? 'var(--red)' : tag.color === 'green' ? 'var(--green)' : 'var(--dim)'
+                return (
+                  <button
+                    type="button"
+                    key={tag.key}
+                    onClick={() => set('tags', selected
+                      ? form.tags.filter(t => t !== tag.key)
+                      : [...form.tags, tag.key]
+                    )}
+                    style={{
+                      padding: '5px 10px',
+                      fontFamily: 'Space Mono',
+                      fontSize: '10px',
+                      letterSpacing: '0.06em',
+                      cursor: 'pointer',
+                      border: `1px solid ${selected ? col : 'var(--border)'}`,
+                      background: selected ? `${col}18` : 'transparent',
+                      color: selected ? col : 'var(--muted)',
+                      transition: 'all 0.12s',
+                    }}
+                  >
+                    {tag.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* context + strategy */}

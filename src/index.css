@@ -4229,3 +4229,82 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 .pit-toast-close:hover {
   opacity: 1;
 }
+
+/* ── WEEKLY REVIEW GATE ── */
+.weekly-review-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+
+.weekly-review-modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.weekly-goal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.weekly-goal-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.weekly-goal-btn:hover {
+  border-color: var(--dim);
+  color: var(--text);
+}
+
+.weekly-goal-btn.selected {
+  border-color: var(--red);
+  background: rgba(230, 57, 70, 0.08);
+  color: var(--text);
+}
+
+.weekly-goal-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.weekly-goal-label {
+  line-height: 1.3;
+}
+
+@media (max-width: 480px) {
+  .weekly-review-modal {
+    padding: 24px 18px;
+  }
+  .weekly-goal-btn {
+    padding: 12px 8px;
+    font-size: 9px;
+  }
+  .weekly-goal-icon {
+    font-size: 18px;
+  }
+}
