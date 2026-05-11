@@ -7,7 +7,6 @@ import PostComposer from '../components/PostComposer'
 import NotificationsRail from '../components/NotificationsRail'
 import BacktestReflectionCard from '../components/BacktestReflectionCard'
 import { Link } from 'react-router-dom'
-import MarketSessionWidget from '../components/MarketSessionWidget'
 import ForexNewsPanel from '../components/ForexNewsPanel'
 import TradingGlobe from '../components/TradingGlobe'
 import PinnedRulesPanel from '../components/PinnedRulesPanel'
@@ -213,7 +212,6 @@ export default function Feed({ session }) {
           <ForexNewsPanel />
         </aside>
       </div>
-      <MarketSessionWidget />
     </div>
   )
 }
