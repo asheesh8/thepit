@@ -39,6 +39,7 @@ export default function ParticipantTile({
     }
 
     el.srcObject = stream
+    el.muted = muted   // React doesn't reliably reflect muted={false} to the DOM property
     el.play().catch(() => {})
     recheckVideo()
 
@@ -51,7 +52,7 @@ export default function ParticipantTile({
     }
     stream.addEventListener('addtrack', onAdd)
     return () => stream.removeEventListener('addtrack', onAdd)
-  }, [stream, recheckVideo])
+  }, [stream, muted, recheckVideo])
 
   // Volume is separate so it doesn't retrigger srcObject assignment
   useEffect(() => {
