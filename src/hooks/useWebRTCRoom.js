@@ -154,16 +154,26 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
   // ── Public API ────────────────────────────────────────────────────────────
   const joinMedia = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+      let stream
+      let hasCamera = true
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+      } catch {
+        // No camera or permission denied for camera — join audio-only
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+          hasCamera = false
+        } catch (audioErr) {
+          setMediaState(prev => ({ ...prev, error: audioErr.message || 'Mic permission denied.' }))
+          return
+        }
+      }
       localStreamRef.current = stream
       cameraTrackRef.current = stream.getVideoTracks()[0] || null
-      // Attach to any pre-existing peer connections (e.g. reconnecting)
       peersRef.current.forEach(peer => _addMissingTracks(peer, stream))
       setLocalStream(stream)
       if (localVideoRef.current) localVideoRef.current.srcObject = stream
-      setMediaState({ joined: true, mic: true, camera: true, sharing: false, error: '' })
-      // Announce readiness — the participants effect and peer-ready handler handle connections.
-      // We intentionally do NOT loop here; that would create offers simultaneously with peer-ready.
+      setMediaState({ joined: true, mic: true, camera: hasCamera, sharing: false, error: '' })
       await sendSignal(makePeerSignal({ kind: 'peer-ready', from: userId }))
     } catch (err) {
       setMediaState(prev => ({ ...prev, error: err.message || 'Camera / mic permission denied.' }))
