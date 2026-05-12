@@ -602,7 +602,7 @@ export default function Rooms({ session }) {
                 </div>
               </div>
               <div className="dm-call-header-actions">
-                <button className="btn" style={{ padding: '9px 14px', fontSize: '9px', letterSpacing: '0.12em' }} onClick={() => setShowCallNotes(prev => !prev)}>
+                <button className="btn dm-call-notes-btn" style={{ padding: '9px 14px', fontSize: '9px', letterSpacing: '0.12em' }} onClick={() => setShowCallNotes(prev => !prev)}>
                   {showCallNotes ? 'HIDE NOTES' : 'NOTES'}
                 </button>
                 <button className="btn btn-red" style={{ padding: '9px 18px', fontSize: '9px', letterSpacing: '0.12em' }} onClick={endCall}>END CALL</button>

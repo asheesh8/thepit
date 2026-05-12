@@ -1,3 +1,5 @@
+const canScreenShare = !!navigator.mediaDevices?.getDisplayMedia
+
 export default function CallControls({ mediaState, onJoin, onLeave, onMic, onCamera, onShare }) {
   return (
     <div className="call-dock">
@@ -7,7 +9,9 @@ export default function CallControls({ mediaState, onJoin, onLeave, onMic, onCam
         <>
           <button onClick={onMic} className={`btn ${mediaState.mic ? 'btn-green' : 'btn-red'}`} style={{ padding: '10px 14px', fontSize: '10px' }}>{mediaState.mic ? 'MIC ON' : 'MIC OFF'}</button>
           <button onClick={onCamera} className={`btn ${mediaState.camera ? 'btn-green' : 'btn-red'}`} style={{ padding: '10px 14px', fontSize: '10px' }}>{mediaState.camera ? 'CAM ON' : 'CAM OFF'}</button>
-          <button onClick={onShare} className="btn btn-gold" style={{ padding: '10px 14px', fontSize: '10px' }}>{mediaState.sharing ? 'STOP SCREEN' : 'SHARE SCREEN'}</button>
+          {canScreenShare && (
+            <button onClick={onShare} className="btn btn-gold" style={{ padding: '10px 14px', fontSize: '10px' }}>{mediaState.sharing ? 'STOP SCREEN' : 'SHARE SCREEN'}</button>
+          )}
           <button onClick={onLeave} className="btn btn-red" style={{ padding: '10px 14px', fontSize: '10px' }}>LEAVE CALL</button>
         </>
       )}

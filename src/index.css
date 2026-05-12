@@ -4086,7 +4086,8 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   }
 
   /* Hide notes on mobile — too cramped */
-  .dm-call-notes-wrap {
+  .dm-call-notes-wrap,
+  .dm-call-notes-btn {
     display: none !important;
   }
 
