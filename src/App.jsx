@@ -50,6 +50,8 @@ import NewFeaturesModal from './components/NewFeaturesModal'
 import NotificationToast from './components/NotificationToast'
 import GlobalCallBanner from './components/GlobalCallBanner'
 import WeeklyReviewGate from './components/WeeklyReviewGate'
+import FloatingCall from './components/FloatingCall'
+import { CallProvider } from './contexts/CallContext'
 import Notifications from './pages/Notifications'
 import { primeDeviceNotificationPermission, registerDeviceNotifications } from './lib/deviceNotifications'
 
@@ -125,15 +127,18 @@ export default function App() {
     <BrowserRouter>
     <ErrorBoundary>
       {session ? (
+        <CallProvider session={session}>
         <DailyCheckInGate session={session}>
           <WeeklyReviewGate session={session}>
             <Navbar session={session} />
             <NewFeaturesModal />
             <NotificationToast session={session} />
             <GlobalCallBanner session={session} />
+            <FloatingCall />
             <TransitionRoutes session={session} />
           </WeeklyReviewGate>
         </DailyCheckInGate>
+        </CallProvider>
       ) : (
         <GuestRoutes />
       )}

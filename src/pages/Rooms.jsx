@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import useRoomRealtime from '../hooks/useRoomRealtime'
-import useWebRTCRoom from '../hooks/useWebRTCRoom'
+import { useCall } from '../contexts/CallContext'
 import RoomChat from '../components/RoomChat'
 import LiveStage from '../components/LiveStage'
 import { showDeviceNotification } from '../lib/deviceNotifications'
@@ -53,20 +53,22 @@ export default function Rooms({ session }) {
   const [loading, setLoading] = useState(true)
   const [roomLoading, setRoomLoading] = useState(false)
   const [showNewDm, setShowNewDm] = useState(false)
-  const [callActive, setCallActive] = useState(false)
   const [callNotes, setCallNotes] = useState('')
   const [showGroupModal, setShowGroupModal] = useState(false)
   const [groupName, setGroupName] = useState('')
   const [groupMembers, setGroupMembers] = useState([])
   const [creatingGroup, setCreatingGroup] = useState(false)
   const [mobileView, setMobileView] = useState('list')
-  const [pendingSignals, setPendingSignals] = useState([])
   const [error, setError] = useState('')
   const [currentProfile, setCurrentProfile] = useState(null)
   const [incomingCall, setIncomingCall] = useState(null)
   const [callAnnounced, setCallAnnounced] = useState(false)
   const [showCallNotes, setShowCallNotes] = useState(false)
   const [pendingAutoJoin, setPendingAutoJoin] = useState(false)
+
+  const callCtx = useCall()
+  const rtc = callCtx.rtc
+  const callActive = !!callCtx.activeRoom && callCtx.activeRoom.id === selectedId
 
   const { participants, connected, sendSignal, broadcastRefresh } = useRoomRealtime({
     roomId: selectedId,
@@ -84,11 +86,11 @@ export default function Rooms({ session }) {
         })
         return
       }
-      setPendingSignals(prev => [...prev, signal])
+      // Forward to global RTC while on this page (belt-and-suspenders)
+      rtc.handleSignal(signal)
     },
     onRefresh: () => loadRoom(selectedId),
   })
-  const rtc = useWebRTCRoom({ userId: session.user.id, participants, sendSignal })
   const selectedThread = threads.find(t => t.id === selectedId)
   const dmPeer = selectedRoom?.room_type === 'dm'
     ? (selectedRoom.host_id === session.user.id ? selectedRoom.dm_peer : selectedRoom.profiles)
@@ -124,13 +126,6 @@ export default function Rooms({ session }) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAutoJoin, selectedRoom, roomLoading])
-
-  useEffect(() => {
-    if (pendingSignals.length === 0) return
-    const [next, ...rest] = pendingSignals
-    setPendingSignals(rest)
-    rtc.handleSignal(next)
-  }, [pendingSignals])
 
   useEffect(() => {
     if (!callActive) return
@@ -412,8 +407,12 @@ export default function Rooms({ session }) {
   const startCall = async ({ announce = true } = {}) => {
     setCallNotes('')
     setShowCallNotes(false)
-    setCallActive(true)
     setIncomingCall(null)
+    callCtx.startCall({
+      id: selectedId,
+      peerName: dmPeer?.username,
+      peerAvatar: dmPeer?.avatar_url,
+    })
     if (announce) await announceCall()
     await rtc.joinMedia()
   }
@@ -426,16 +425,18 @@ export default function Rooms({ session }) {
   const startScreenShare = async () => {
     setCallNotes('')
     setShowCallNotes(false)
-    setCallActive(true)
     setIncomingCall(null)
+    callCtx.startCall({
+      id: selectedId,
+      peerName: dmPeer?.username,
+      peerAvatar: dmPeer?.avatar_url,
+    })
     await announceCall()
     if (!rtc.mediaState.joined) await rtc.joinMedia()
     await rtc.shareScreen()
   }
 
   const endCall = async () => {
-    rtc.leaveMedia()
-    setCallActive(false)
     setIncomingCall(null)
     setCallAnnounced(false)
     setShowCallNotes(false)
@@ -445,6 +446,7 @@ export default function Rooms({ session }) {
       broadcastRefresh({ kind: 'chat' })
     }
     setCallNotes('')
+    callCtx.endCall()
   }
 
   const fmtTime = (iso) => {
