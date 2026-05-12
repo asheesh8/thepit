@@ -13,6 +13,12 @@ const MINDSET_LABELS = {
   7: 'In the zone', 8: 'Sharp', 9: 'Locked in', 10: 'Peak state'
 }
 
+const optionalNumber = (value) => {
+  if (value === '' || value == null) return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 export default function NewEntry({ session }) {
   const navigate = useNavigate()
   const [form, setForm] = useState({
@@ -34,6 +40,8 @@ export default function NewEntry({ session }) {
       ...context,
       shortLabel: categoryLabels[context.key]?.toUpperCase().slice(0, 12) || context.shortLabel,
     }))
+  const displayedRiskAmount = optionalNumber(form.risk_amount)
+  const displayedPnl = optionalNumber(form.pnl)
 
   const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }))
 
@@ -42,6 +50,12 @@ export default function NewEntry({ session }) {
     const stored = localStorage.getItem(`pit-category-labels:${session.user.id}`)
     if (stored) setCategoryLabels(JSON.parse(stored))
   }, [])
+
+  useEffect(() => {
+    return () => {
+      if (chartPreview) URL.revokeObjectURL(chartPreview)
+    }
+  }, [chartPreview])
 
   const loadStrategies = async () => {
     setStrategiesLoading(true)
@@ -58,6 +72,7 @@ export default function NewEntry({ session }) {
   const handleChartChange = (e) => {
     const file = e.target.files[0]
     if (!file) return
+    if (chartPreview) URL.revokeObjectURL(chartPreview)
     setChartFile(file)
     setChartPreview(URL.createObjectURL(file))
   }
@@ -67,7 +82,16 @@ export default function NewEntry({ session }) {
     setLoading(true)
     setError('')
 
-    let chart_url = null
+    let chart_url = ''
+    const symbol = form.symbol.trim().toUpperCase()
+    const riskAmount = optionalNumber(form.risk_amount)
+    const pnl = optionalNumber(form.pnl)
+
+    if (!symbol) {
+      setError('Symbol is required.')
+      setLoading(false)
+      return
+    }
 
     // upload chart screenshot if provided
     if (chartFile) {
@@ -87,16 +111,16 @@ export default function NewEntry({ session }) {
 
     const { error: insertError } = await supabase.from('entries').insert({
       user_id: session.user.id,
-      symbol: form.symbol.toUpperCase(),
+      symbol,
       direction: form.direction,
-      entry_price: form.entry_price ? parseFloat(form.entry_price) : null,
-      exit_price: form.exit_price ? parseFloat(form.exit_price) : null,
-      pnl: form.pnl ? parseFloat(form.pnl) : null,
-      risk_amount: form.risk_amount ? parseFloat(form.risk_amount) : null,
+      entry_price: optionalNumber(form.entry_price),
+      exit_price: optionalNumber(form.exit_price),
+      pnl,
+      risk_amount: riskAmount,
       tags: form.tags,
       mindset_rating: form.mindset_rating,
-      reflection: form.reflection,
-      what_id_do_differently: form.what_id_do_differently,
+      reflection: form.reflection.trim(),
+      what_id_do_differently: form.what_id_do_differently.trim(),
       is_public: form.is_public,
       trade_context: form.trade_context,
       strategy_id: form.strategy_id || null,
@@ -177,8 +201,8 @@ export default function NewEntry({ session }) {
           <div>
             <label style={labelStyle}>
               $ RISKED — <span style={{ color: 'var(--text)' }}>
-                {form.risk_amount && form.pnl
-                  ? `${(parseFloat(form.pnl) / parseFloat(form.risk_amount)).toFixed(2)}R`
+                {displayedRiskAmount > 0 && displayedPnl != null
+                  ? `${(displayedPnl / displayedRiskAmount).toFixed(2)}R`
                   : 'enter to compute R'}
               </span>
             </label>

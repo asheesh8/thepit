@@ -154,6 +154,8 @@ create table if not exists public.entries (
   entry_price           numeric,
   exit_price            numeric,
   pnl                   numeric,
+  risk_amount           numeric,
+  tags                  text[]      not null default '{}',
   mindset_rating        integer     check (mindset_rating between 1 and 10),
   reflection            text        not null default '',
   what_id_do_differently text       not null default '',

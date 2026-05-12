@@ -79,10 +79,12 @@ export default function Backtesting({ session }) {
         direction: entryForm.direction,
         pnl: entryForm.pnl ? Number(entryForm.pnl) : null,
         mindset_rating: Number(entryForm.mindset_rating),
-        reflection: entryForm.reflection,
+        reflection: entryForm.reflection.trim(),
+        what_id_do_differently: '',
         is_public: entryForm.is_public,
         trade_context: 'backtest',
         strategy_id: entryForm.strategy_id,
+        chart_url: '',
       })
       .select('*, strategies(name)')
       .single()

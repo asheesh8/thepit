@@ -1,8 +1,10 @@
 # THE PIT
 
-A trading journal and community built for futures traders who actually want to get better.
+A trading desk for futures traders who actually want to get better.
 
-Log trades. Face the truth. Get real feedback from people who've felt the same pain.
+Log the trade. Face the truth. Let the receipts show whether you followed your own rules.
+
+The Pit is built around one idea: most traders do not need another indicator first. They need better review, cleaner discipline, and people who will call out the pattern before it becomes another blown account.
 
 ---
 
@@ -10,7 +12,7 @@ Log trades. Face the truth. Get real feedback from people who've felt the same p
 
 The Pit is a full-stack web app (PWA + iOS via Capacitor) where traders can:
 
-- **Journal** every trade with reflection, mindset rating, and chart uploads
+- **Journal** every trade with P&L, risk, R-multiple, tags, reflection, mindset rating, and chart uploads
 - **Backtest** strategies and log what you actually learned from each batch
 - **Review** other traders' public trades and drop callouts — late entry, emotional trade, clean execution, all of it
 - **DM / Group Chat** your mutuals — direct messages and group threads with built-in voice/cam calls and screenshare via WebRTC
@@ -19,6 +21,18 @@ The Pit is a full-stack web app (PWA + iOS via Capacitor) where traders can:
 - **Daily check-in gate** — every session starts with a quick honesty check before you see the floor
 - **Pit Boss** — AI roast of your trade reflection, powered by Claude (Anthropic)
 - **The Floor** — public feed of trades, posts, and backtest reflections from everyone
+
+---
+
+## Positioning
+
+The Pit is not a brokerage, signal room, or performance promise. It is an accountability layer for active traders:
+
+- Be honest when you log the trade
+- Tag the behavior that caused the outcome
+- Review the setup, mindset, and follow-through
+- Keep private reps private or post to the floor for public feedback
+- Use DMs, group chats, calls, and screenshare when a trade needs a real review
 
 ---
 
@@ -62,6 +76,8 @@ cp .env.example .env.local
 ### 3. Set up Supabase
 
 **Fresh project (or after a wipe)** — go to Supabase > SQL Editor and run `docs/supabase/schema.sql`. That one file creates every table, index, RLS policy, and realtime subscription. Fully idempotent — safe to re-run.
+
+**Existing project entry-form patch** — if trade logging errors on `chart_url`, `risk_amount`, or `tags`, run `docs/supabase/entry-form-hardening.sql` once.
 
 **If you need to wipe first**, run this in the SQL Editor before the schema:
 
