@@ -1,11 +1,54 @@
 import ParticipantTile from './ParticipantTile'
 import CallControls from './CallControls'
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+
+const canPiP = typeof document !== 'undefined' && !!document.pictureInPictureEnabled
 
 export default function LiveStage({ localStream, localScreenStream, remoteStreams, mediaState, rtc }) {
   const [manualSpotlitId, setManualSpotlitId] = useState(null)
   const [audioPrefs, setAudioPrefs] = useState({})
   const [menu, setMenu] = useState(null)
+  const [isPiP, setIsPiP] = useState(false)
+
+  // Track PiP state changes
+  useEffect(() => {
+    if (!canPiP) return
+    const onEnter = () => setIsPiP(true)
+    const onLeave = () => setIsPiP(false)
+    document.addEventListener('enterpictureinpicture', onEnter)
+    document.addEventListener('leavepictureinpicture', onLeave)
+    return () => {
+      document.removeEventListener('enterpictureinpicture', onEnter)
+      document.removeEventListener('leavepictureinpicture', onLeave)
+    }
+  }, [])
+
+  const triggerPiP = useCallback(async () => {
+    if (!canPiP) return
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture()
+      } else {
+        const video = document.querySelector('.call-focus-main video')
+                   ?? document.querySelector('.call-strip-tile video')
+        if (video) await video.requestPictureInPicture()
+      }
+    } catch { /* user denied or not supported */ }
+  }, [])
+
+  // Auto-enter PiP when user switches tab/app mid-call
+  useEffect(() => {
+    if (!canPiP) return
+    const onHide = () => {
+      if (document.hidden && remoteStreams.length > 0 && !document.pictureInPictureElement) {
+        const video = document.querySelector('.call-focus-main video')
+                   ?? document.querySelector('.call-strip-tile video')
+        video?.requestPictureInPicture().catch(() => {})
+      }
+    }
+    document.addEventListener('visibilitychange', onHide)
+    return () => document.removeEventListener('visibilitychange', onHide)
+  }, [remoteStreams.length])
 
   const tiles = useMemo(() => [
     {
@@ -110,6 +153,25 @@ export default function LiveStage({ localStream, localScreenStream, remoteStream
               }}
             >
               AUTO FOCUS
+            </button>
+          )}
+          {canPiP && remoteStreams.length > 0 && (
+            <button
+              onClick={triggerPiP}
+              title={isPiP ? 'Exit picture-in-picture' : 'Pop out call'}
+              style={{
+                fontFamily: 'Space Mono', fontSize: '8px',
+                color: isPiP ? 'var(--green)' : 'var(--dim)',
+                background: 'none', border: '1px solid var(--border)',
+                padding: '4px 8px', cursor: 'pointer', letterSpacing: '0.1em',
+                display: 'flex', alignItems: 'center', gap: '5px',
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <rect x="12" y="11" width="8" height="6" rx="1" fill="currentColor" stroke="none"/>
+              </svg>
+              {isPiP ? 'CLOSE PIP' : 'POP OUT'}
             </button>
           )}
           <div style={{ fontFamily: 'Space Mono', fontSize: '9px', color: 'var(--dim)' }}>
