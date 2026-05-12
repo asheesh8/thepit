@@ -18,6 +18,10 @@ export function CallProvider({ session, children }) {
 
   const rtc = useWebRTCRoom({ userId: session.user.id, participants, sendSignal })
 
+  // Keep a stable ref to rtc so async callbacks always see the latest state
+  const rtcRef = useRef(rtc)
+  useEffect(() => { rtcRef.current = rtc })
+
   // Open / close the dedicated call channel whenever activeRoom changes
   useEffect(() => {
     if (!activeRoom) {
@@ -61,6 +65,7 @@ export function CallProvider({ session, children }) {
     } catch { /* ignore */ }
 
     const ch = supabase.channel(`call:${activeRoom.id}`)
+    channelRef.current = ch   // set ref BEFORE subscribe so sendSignal works immediately
     ch
       .on('broadcast', { event: 'signal' }, ({ payload }) =>
         setPending(p => [...p, payload])
@@ -71,10 +76,19 @@ export function CallProvider({ session, children }) {
         setParticipants(deduped)
       })
       .subscribe(async status => {
-        if (status === 'SUBSCRIBED') await ch.track({ user_id: session.user.id })
+        if (status === 'SUBSCRIBED') {
+          await ch.track({ user_id: session.user.id })
+          // Re-announce presence if already in a call — handles channel reconnects.
+          // The other peer's peer-ready handler will re-initiate if the connection dropped.
+          if (rtcRef.current.mediaState.joined) {
+            ch.send({
+              type: 'broadcast', event: 'signal',
+              payload: { kind: 'peer-ready', from: session.user.id },
+            })
+          }
+        }
       })
 
-    channelRef.current = ch
     return () => {
       ch.untrack()
       supabase.removeChannel(ch)
@@ -82,13 +96,14 @@ export function CallProvider({ session, children }) {
     }
   }, [activeRoom?.id, session.user.id])
 
-  // Drain signal queue into the persistent RTC instance
+  // Drain signal queue into the persistent RTC instance.
+  // Use rtcRef so we always call the latest handleSignal without adding it as a dep.
   useEffect(() => {
     if (!pending.length) return
     const [next, ...rest] = pending
     setPending(rest)
-    rtc.handleSignal(next)
-  }, [pending, rtc])
+    rtcRef.current.handleSignal(next)
+  }, [pending])
 
   const startCall = useCallback((roomInfo) => setActiveRoom(roomInfo), [])
 

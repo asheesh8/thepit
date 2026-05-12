@@ -306,7 +306,8 @@ export default function Rooms({ session }) {
       if (options.syncUrl !== false && routeRoomId !== threadId) navigate(`/rooms/${threadId}`)
       return
     }
-    if (callActive) { rtc.leaveMedia(); setCallActive(false); setCallNotes('') }
+    // Don't end an active call when switching threads — FloatingCall keeps it alive
+    if (callActive) { setCallNotes('') }
     setSelectedId(threadId)
     setMobileView('chat')
     if (options.syncUrl !== false && routeRoomId !== threadId) navigate(`/rooms/${threadId}`)

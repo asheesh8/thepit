@@ -124,7 +124,12 @@ export default function useWebRTCRoom({ userId, participants, sendSignal }) {
     }
 
     peer.onconnectionstatechange = () => {
-      if (['failed', 'closed'].includes(peer.connectionState)) {
+      if (peer.connectionState === 'failed') {
+        // ICE restart may still recover — don't delete yet, just attempt restart
+        try { peer.restartIce() } catch (_) {}
+      }
+      if (peer.connectionState === 'closed') {
+        // Truly gone — clean up
         peersRef.current.delete(peerId)
         setRemoteStreams(prev => prev.filter(r => r.peerId !== peerId))
       }

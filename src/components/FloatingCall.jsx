@@ -8,8 +8,10 @@ export default function FloatingCall() {
   const navigate = useNavigate()
   const videoRef = useRef(null)
 
-  const isOnRoomsPage = location.pathname.startsWith('/rooms')
-  const show = !!activeRoom && rtc.mediaState.joined && !isOnRoomsPage
+  // Only hide when the user is actually viewing the active call room (full overlay visible)
+  // Keep showing on other /rooms threads or any other page
+  const isViewingActiveCall = !!activeRoom && location.pathname === `/rooms/${activeRoom.id}`
+  const show = !!activeRoom && rtc.mediaState.joined && !isViewingActiveCall
 
   const remoteStream = rtc.remoteStreams[0]?.stream
   const hasVideo = rtc.remoteStreams.some(r =>
