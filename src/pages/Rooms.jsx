@@ -72,7 +72,10 @@ export default function Rooms({ session }) {
   const callCtx = useCall()
   const rtc = callCtx.rtc
   const callActive = !!callCtx.activeRoom && callCtx.activeRoom.id === selectedId
-  const isCalling = (callActive && rtc.mediaState.joined && rtc.remoteStreams.length === 0) || dialingRoomId === selectedId
+  const isCalling = !!selectedId && (
+    (callActive && rtc.mediaState.joined && rtc.remoteStreams.length === 0) ||
+    dialingRoomId === selectedId
+  )
 
   useRingtone(!!incomingCall && !callActive, incomingCall ? `incoming:${incomingCall.roomId || selectedId}` : 'incoming-room')
   useRingtone(isCalling, selectedId ? `outgoing:${selectedId}` : 'outgoing-room')
