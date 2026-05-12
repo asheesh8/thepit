@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { showDeviceNotification } from '../lib/deviceNotifications'
+import useRingtone from '../hooks/useRingtone'
 
 /**
  * Listens on the user's personal broadcast channel `user-calls-{userId}` and
@@ -16,6 +17,8 @@ export default function GlobalCallBanner({ session }) {
   const dismissTimer = useRef(null)
   const navigate = useNavigate()
   const userId = session?.user?.id
+
+  useRingtone(!!call, call ? `incoming:${call.roomId}` : 'incoming')
 
   useEffect(() => {
     if (!userId) return
@@ -43,7 +46,6 @@ export default function GlobalCallBanner({ session }) {
       clearTimeout(dismissTimer.current)
       supabase.removeChannel(ch)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId])
 
   if (!call) return null

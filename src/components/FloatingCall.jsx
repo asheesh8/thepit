@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useCall } from '../contexts/CallContext'
+import useRingtone from '../hooks/useRingtone'
 
 /**
  * Persistent audio player for a single remote stream.
@@ -48,6 +49,9 @@ export default function FloatingCall() {
   const hasVideo = !!rtc.remoteStreams.find(r =>
     r.stream?.getVideoTracks().some(t => t.readyState !== 'ended')
   )
+  const isCalling = !!activeRoom && rtc.mediaState.joined && rtc.remoteStreams.length === 0
+
+  useRingtone(isCalling, activeRoom ? `outgoing:${activeRoom.id}` : 'outgoing')
 
   // Wire the visual video element
   useEffect(() => {

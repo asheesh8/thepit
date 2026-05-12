@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications'
 import { showDeviceNotification } from '../lib/deviceNotifications'
+import useRingtone from '../hooks/useRingtone'
 
 function useToastQueue() {
   const [toasts, setToasts] = useState([])
@@ -32,6 +33,7 @@ function typeIcon(type) {
 function Toast({ toast, onDismiss }) {
   const navigate = useNavigate()
   const swipeX = useRef(0)
+  useRingtone(toast.type === 'call', `toast-call:${toast.roomId || toast.id}`)
 
   const go = () => {
     onDismiss(toast.id)

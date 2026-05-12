@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import useRoomRealtime from '../hooks/useRoomRealtime'
+import useRingtone from '../hooks/useRingtone'
 import { useCall } from '../contexts/CallContext'
 import RoomChat from '../components/RoomChat'
 import LiveStage from '../components/LiveStage'
 import { showDeviceNotification } from '../lib/deviceNotifications'
+import { unlockRingtone } from '../lib/ringtone'
 
 function Avatar({ profile, size = 42 }) {
   return (
@@ -65,12 +67,22 @@ export default function Rooms({ session }) {
   const [callAnnounced, setCallAnnounced] = useState(false)
   const [showCallNotes, setShowCallNotes] = useState(false)
   const [pendingAutoJoin, setPendingAutoJoin] = useState(false)
+  const [dialingRoomId, setDialingRoomId] = useState(null)
 
   const callCtx = useCall()
   const rtc = callCtx.rtc
   const callActive = !!callCtx.activeRoom && callCtx.activeRoom.id === selectedId
+  const isCalling = (callActive && rtc.mediaState.joined && rtc.remoteStreams.length === 0) || dialingRoomId === selectedId
 
-  const { participants, connected, sendSignal, broadcastRefresh } = useRoomRealtime({
+  useRingtone(!!incomingCall && !callActive, incomingCall ? `incoming:${incomingCall.roomId || selectedId}` : 'incoming-room')
+  useRingtone(isCalling, selectedId ? `outgoing:${selectedId}` : 'outgoing-room')
+
+  useEffect(() => {
+    if (!rtc.remoteStreams.length) return
+    setDialingRoomId(null)
+  }, [rtc.remoteStreams.length])
+
+  const { participants, sendSignal, broadcastRefresh } = useRoomRealtime({
     roomId: selectedId,
     userId: session.user.id,
     onSignal: signal => {
@@ -124,7 +136,6 @@ export default function Rooms({ session }) {
       setPendingAutoJoin(false)
       startCall({ announce: false })
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAutoJoin, selectedRoom, roomLoading])
 
   useEffect(() => {
@@ -406,9 +417,11 @@ export default function Rooms({ session }) {
   }
 
   const startCall = async ({ announce = true } = {}) => {
+    unlockRingtone()
     setCallNotes('')
     setShowCallNotes(false)
     setIncomingCall(null)
+    setDialingRoomId(selectedId)
     callCtx.startCall({
       id: selectedId,
       peerName: dmPeer?.username,
@@ -416,6 +429,7 @@ export default function Rooms({ session }) {
     })
     if (announce) await announceCall()
     await rtc.joinMedia()
+    setDialingRoomId(null)
   }
 
   const joinIncomingCall = () => {
@@ -424,9 +438,11 @@ export default function Rooms({ session }) {
   }
 
   const startScreenShare = async () => {
+    unlockRingtone()
     setCallNotes('')
     setShowCallNotes(false)
     setIncomingCall(null)
+    setDialingRoomId(selectedId)
     callCtx.startCall({
       id: selectedId,
       peerName: dmPeer?.username,
@@ -434,11 +450,13 @@ export default function Rooms({ session }) {
     })
     await announceCall()
     if (!rtc.mediaState.joined) await rtc.joinMedia()
+    setDialingRoomId(null)
     await rtc.shareScreen()
   }
 
   const endCall = async () => {
     setIncomingCall(null)
+    setDialingRoomId(null)
     setCallAnnounced(false)
     setShowCallNotes(false)
     if (callNotes.trim() && selectedId) {
