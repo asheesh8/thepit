@@ -3667,6 +3667,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 
   .call-stage {
     min-height: 0;
+    height: 100%;
     grid-template-rows: auto 1fr auto;
   }
 
@@ -3700,6 +3701,13 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   .participant-tile-featured {
     min-height: 140px;
     aspect-ratio: 4 / 3;
+  }
+
+  /* spotlight tile must fill its container — no aspect-ratio lock */
+  .call-focus-main .participant-tile {
+    min-height: 0;
+    height: 100%;
+    aspect-ratio: unset;
   }
 
   .call-waiting-overlay {
@@ -4061,6 +4069,14 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   .dm-call-stage-wrap {
     flex: 1;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dm-call-stage-wrap .call-stage {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
   }
 
   .dm-call-overlay-header {
