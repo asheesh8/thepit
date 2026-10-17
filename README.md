@@ -8,6 +8,8 @@ The Pit is built around one idea: most traders do not need another indicator fir
 
 ---
 
+**Live:** https://thepit-kappa.vercel.app
+
 ## What it is
 
 The Pit is a full-stack web app (PWA + iOS via Capacitor) where traders can:
